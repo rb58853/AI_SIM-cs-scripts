@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Dijkstra_Algorithm;
+using Point_Map;
 
 namespace Triangle_Map
 {
@@ -22,15 +23,34 @@ namespace Triangle_Map
             else
                 compatibility.Add(material, value);
         }
+        public void setCurrentNode(MapNode node)
+        {
+            currentNode = node;
+        }
 
-        public List<MapNode> getWayToNode(MapNode endNode)
+        public List<MapNode> getPathToNode(MapNode endNode)
         {
             Dijkstra dijkstra = new Dijkstra(map, currentNode, endNode, this);
-            return dijkstra.GetWay();
+            return dijkstra.GetPath();
+        }
+        public List<Arist> getAritsPathToNode(MapNode endNode)
+        {
+            Dijkstra dijkstra = new Dijkstra(map, currentNode, endNode, this);
+            return dijkstra.ToArist(dijkstra.GetPath());
         }
         public static void NewMap()
         {
             map = new Map();
+        }
+        public void GetPointPath()
+        {
+            MapNode end = map.nodes[27];
+            Point p1 = currentNode.triangle.barycenter;
+            Point p2 = end.triangle.barycenter;
+            List<Arist> aritPath = getAritsPathToNode(end);
+            List<PointNode> mapPoints = PointNode.CreatePointMap(aritPath, p1, p2);
+            DijkstraPoint dijkstra = new DijkstraPoint(mapPoints[0], mapPoints[mapPoints.Count - 1], mapPoints);
+            List<PointNode> pointPath = dijkstra.GetPath();
         }
     }
     class Map
@@ -53,7 +73,7 @@ namespace Triangle_Map
         public Dictionary<Agent, bool> visited { get; private set; }
         public Dictionary<Agent, MapNode> father { get; private set; }
 
-        /// <summary> Distance from the initial node of the way up to this node.</summary>
+        /// <summary> Distance from the initial node of the Path up to this node.</summary>
         public Dictionary<Agent, float> distance { get; private set; }
         /// <summary> The node of an agent's heap on which this node is located</summary>
         public Dictionary<Agent, HeapNode> heapNodes { get; private set; }

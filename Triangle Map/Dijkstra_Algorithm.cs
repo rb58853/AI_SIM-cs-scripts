@@ -11,7 +11,7 @@ namespace Dijkstra_Algorithm
         private MapNode endNode;
         private Agent agent;
         private Map map;
-        private List<MapNode> endWay;
+        private List<MapNode> endPath;
         public Dijkstra(Map map, MapNode init, MapNode end, Agent agent)
         {
             this.map = map;
@@ -20,24 +20,24 @@ namespace Dijkstra_Algorithm
             this.agent = agent;
         }
 
-        public List<MapNode> GetWay()
+        public List<MapNode> GetPath()
         {
             Start();
-            endWay.Reverse();
-            return endWay;
+            endPath.Reverse();
+            return endPath;
         }
-        public List<Arist> ToArist()
+        public List<Arist> ToArist(List<MapNode> path)
         {
             List<Arist> result = new List<Arist>();
-            for (int i = 0; i < endWay.Count - 1; i++)
-                result.Add(endWay[i].adjacents[endWay[i + 1]]);
+            for (int i = 0; i < path.Count - 1; i++)
+                result.Add(path[i].adjacents[path[i + 1]]);
             return result;
         }
-        void GetWay(MapNode node)
+        void GetPath(MapNode node)
         {
-            endWay.Add(node);
+            endPath.Add(node);
             if (node.father != null)
-                GetWay(node.father[agent]);
+                GetPath(node.father[agent]);
         }
 
         void Start()

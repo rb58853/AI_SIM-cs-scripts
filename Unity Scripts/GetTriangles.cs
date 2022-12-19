@@ -15,6 +15,9 @@ public class GetTriangles : MonoBehaviour
     {
         GetTrianglesFromNavMesh();
         DrawTriangles();
+        Agent agent = new Agent();
+        agent.setCurrentNode(Agent.map.nodes[3]);
+        agent.GetPointPath();
     }
     void GetTrianglesFromNavMesh()
     {

@@ -9,17 +9,23 @@ namespace Assets.Triangle_Map
 {
     class PointNode
     {
-        public static PointNode CreatePointMap(List<Arist> arists, Point init, Point end, int n = 4)
+        public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, int n = 4)
         {
             List<List<PointNode>> points = new List<List<PointNode>>();
+            List<PointNode> result = new List<PointNode>();
 
             PointNode initNode = new PointNode(init);
+            result.Add(initNode);
 
             foreach (Arist arist in arists)
             {
                 points.Add(new List<PointNode>());
                 foreach (Point point in arist.Points(n))
-                    points[points.Count - 1].Add(new PointNode(point));
+                {
+                    PointNode node = new PointNode(point);
+                    points[points.Count - 1].Add(node);
+                    result.Add(node);
+                }
             }
             foreach(PointNode node in points[0])
             {
@@ -36,11 +42,12 @@ namespace Assets.Triangle_Map
                 }
             }
             PointNode endNode = new PointNode(end);
-            foreach(PointNode node in points[points.Count-1])
+            result.Add(endNode);
+            foreach (PointNode node in points[points.Count-1])
             {
                 node.AddAdjacent(endNode);
             }
-            return initNode;
+            return result;
         }
 
         Point point;
@@ -111,6 +118,7 @@ namespace Assets.Triangle_Map
         {
             this.initNode = init;
             this.endNode = end;
+            this.map = map;
         }
 
         public List<PointNode> GetPath()

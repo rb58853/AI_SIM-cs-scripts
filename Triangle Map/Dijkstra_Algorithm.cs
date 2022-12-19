@@ -26,6 +26,13 @@ namespace Dijkstra_Algorithm
             endWay.Reverse();
             return endWay;
         }
+        public List<Arist> ToArist()
+        {
+            List<Arist> result = new List<Arist>();
+            for (int i = 0; i < endWay.Count - 1; i++)
+                result.Add(endWay[i].adjacents[endWay[i + 1]]);
+            return result;
+        }
         void GetWay(MapNode node)
         {
             endWay.Add(node);
@@ -35,12 +42,12 @@ namespace Dijkstra_Algorithm
 
         void Start()
         {
-            initNode.SetDistance(0,agent);
+            initNode.SetDistance(0, agent);
             List<MapNode> nodes = map.nodes;
 
             MapNode root = nodes[0];
 
-            HeapNode Q = new HeapNode(root,agent,endNode);
+            HeapNode Q = new HeapNode(root, agent, endNode);
             Stack<MapNode> A = new Stack<MapNode>();
 
             foreach (MapNode node in nodes.GetRange(1, nodes.Count - 1))
@@ -50,23 +57,22 @@ namespace Dijkstra_Algorithm
             {
                 MapNode node = Q.Pop();
                 if (node == endNode) break;
-                foreach(MapNode adj in node.adjacents.Keys)
+                foreach (MapNode adj in node.adjacents.Keys)
                     if (!adj.visited[agent])
                         Relax(adj, node);
             }
         }
         void Relax(MapNode v, MapNode u)
         {
-            if (v.distance[agent] > (u.distance[agent] + v.CostForMoveToNodeByAgent(u,agent)))
+            if (v.distance[agent] > (u.distance[agent] + v.CostForMoveToNodeByAgent(u, agent)))
             {
-                v.SetDistance(u.distance[agent] + v.CostForMoveToNodeByAgent(u, agent),agent);
-                v.SetFather(u,agent);
+                v.SetDistance(u.distance[agent] + v.CostForMoveToNodeByAgent(u, agent), agent);
+                v.SetFather(u, agent);
                 v.SetVisited(agent);
                 v.heapNodes[agent].Heapify(true);
             }
         }
     }
-
     class HeapNode
     {
         internal Agent agent;
@@ -173,7 +179,7 @@ namespace Dijkstra_Algorithm
 
             return result;
         }
-        public void Push(MapNode value)
+        public virtual void Push(MapNode value)
         {
             root.size++;
 
@@ -184,4 +190,5 @@ namespace Dijkstra_Algorithm
                 root.currentLeafByInsert = lastleafsByInsert.Dequeue();
         }
     }
+
 }

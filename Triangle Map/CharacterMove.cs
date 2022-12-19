@@ -186,6 +186,7 @@ namespace Triangle_Map
         }
 
     }
+   
     class Point
     {
         public float x { get; private set; }
@@ -214,14 +215,6 @@ namespace Triangle_Map
             this.p1 = p1;
             this.p2 = p2;
         }
-    }
-    class WayPoints
-    {
-        public Point getProyectedWayPoint(Point point)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }
 

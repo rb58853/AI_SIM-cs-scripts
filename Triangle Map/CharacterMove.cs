@@ -52,7 +52,7 @@ namespace Triangle_Map
 
         public Dictionary<Agent, bool> visited { get; private set; }
         public Dictionary<Agent, MapNode> father { get; private set; }
-        
+
         /// <summary> Distance from the initial node of the way up to this node.</summary>
         public Dictionary<Agent, float> distance { get; private set; }
         /// <summary> The node of an agent's heap on which this node is located</summary>
@@ -76,7 +76,7 @@ namespace Triangle_Map
             if (distance.ContainsKey(agent))
                 distance[agent] = value;
             else
-                distance.Add(agent,value);
+                distance.Add(agent, value);
         }
         public void SetFather(MapNode node, Agent agent)
         {
@@ -153,10 +153,10 @@ namespace Triangle_Map
             else
                 distance.Add(agent, float.MaxValue);
         }
-        
+
         public int CompareTo(MapNode other, Agent agent, MapNode end)
         {
-            return this.Value(agent,end).CompareTo(other.Value(agent,end));
+            return this.Value(agent, end).CompareTo(other.Value(agent, end));
         }
     }
     class Triangle
@@ -184,9 +184,8 @@ namespace Triangle_Map
             float z = (vertex1.z + vertex2.z + vertex3.z) / 3;
             return new Point(x, y, z);
         }
-
     }
-   
+
     class Point
     {
         public float x { get; private set; }
@@ -205,6 +204,56 @@ namespace Triangle_Map
             temp += (point.z - this.z) * (point.z - this.z);
             return (float)Math.Sqrt(temp);
         }
+        public static Point operator *(Point point, float a)
+        {
+            return new Point(a * point.x, a * point.y, point.z * a);
+        }
+        public static Point operator +(Point point1, Point point2)
+        {
+            return new Point(point1.x + point2.x, point1.y + point2.y, point1.z + point2.z);
+        }
+        public static Point operator -(Point point1, Point point2)
+        {
+            return new Point(point1.x - point2.x, point1.y - point2.y, point1.z - point2.z);
+        }
+        public static Point Max(Point point1, Point point2, string eye)
+        {
+            if (eye == "x")
+            {
+                if (point1.x > point2.x)
+                    return point1;
+                return point2;
+            }
+            if (eye == "y")
+            {
+                if (point1.y > point2.y)
+                    return point1;
+                return point2;
+            }
+            if (point1.z > point2.z)
+                return point1;
+            return point2;
+
+        }
+        public static Point Min(Point point1, Point point2, string eye)
+        {
+            if (eye == "x")
+            {
+                if (point1.x < point2.x)
+                    return point1;
+                return point2;
+            }
+            if (eye == "y")
+            {
+                if (point1.y < point2.y)
+                    return point1;
+                return point2;
+            }
+            if (point1.z < point2.z)
+                return point1;
+            return point2;
+
+        }
     }
     class Arist
     {
@@ -215,7 +264,34 @@ namespace Triangle_Map
             this.p1 = p1;
             this.p2 = p2;
         }
+        public List<Point> Points(int n = 4)
+        {
+            string eye;
+            if (p1.x != p2.x)
+                eye = "x";
+            else
+            {
+                if (p1.y != p2.z)
+                    eye = "y";
+                else
+                    eye = "z";
+            }
+
+            float x = (Point.Max(p1, p2, "x") - Point.Min(p1, p2, eye)).x;
+            float y = (Point.Max(p1, p2, "x") - Point.Min(p1, p2, eye)).y;
+            float z = (Point.Max(p1, p2, "x") - Point.Min(p1, p2, eye)).z;
+
+            Point vector = new Point(x, y, z);
+
+            List<Point> result = new List<Point>();
+
+            for (int i = 0; i < n + 1; i++)
+            {
+                float alfa = i / n;
+                Point temp = Point.Min(p1, p2, eye) + vector * alfa;
+                result.Add(temp);
+            }
+            return result;
+        }
     }
 }
-
-

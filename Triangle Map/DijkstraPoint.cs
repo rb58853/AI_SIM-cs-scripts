@@ -9,9 +9,38 @@ namespace Assets.Triangle_Map
 {
     class PointNode
     {
-        public static void CreatePointMap(List<Arist> arists)
+        public static PointNode CreatePointMap(List<Arist> arists, Point init, Point end, int n = 4)
         {
+            List<List<PointNode>> points = new List<List<PointNode>>();
 
+            PointNode initNode = new PointNode(init);
+
+            foreach (Arist arist in arists)
+            {
+                points.Add(new List<PointNode>());
+                foreach (Point point in arist.Points(n))
+                    points[points.Count - 1].Add(new PointNode(point));
+            }
+            foreach(PointNode node in points[0])
+            {
+                initNode.AddAdjacent(node);
+            }
+            for (int i = 0; i < points.Count-1; i++)
+            {
+                for (int j = 0; j < points[i].Count; j++)
+                {
+                    for (int k = 0; k < points[i+1].Count; k++)
+                    {
+                        points[i][j].AddAdjacent(points[i+1][k]);
+                    }
+                }
+            }
+            PointNode endNode = new PointNode(end);
+            foreach(PointNode node in points[points.Count-1])
+            {
+                node.AddAdjacent(endNode);
+            }
+            return initNode;
         }
 
         Point point;
@@ -26,6 +55,11 @@ namespace Assets.Triangle_Map
         public PointNode(Point point)
         {
             this.point = point;
+            adjacents = new List<PointNode>();
+        }
+        public void AddAdjacent(PointNode node)
+        {
+            adjacents.Add(node);
         }
         public float CostForMoveToNode(PointNode node)
         {
@@ -170,7 +204,7 @@ namespace Assets.Triangle_Map
         }
         void InsertChild(PointNode value)
         {
-            this.childs.Add(new HeapPoint(value,endNode, this));
+            this.childs.Add(new HeapPoint(value, endNode, this));
             root.lastleafsByInsert.Enqueue(childs[childs.Count - 1]);
             root.LeafsByDelete.Push(childs[childs.Count - 1]);
         }

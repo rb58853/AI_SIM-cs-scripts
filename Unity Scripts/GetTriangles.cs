@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Triangle_Map;
+using System;
+
 public class GetTriangles : MonoBehaviour
 {
     static List<Vector3[]> Triangles;
@@ -112,22 +114,39 @@ public class GetTriangles : MonoBehaviour
             map.AddNode(node);
         }
         foreach (MapNode node in map.nodes)
-            foreach (Vector3[] adjVector in GetAdjacents(triangleByNode[node]))
-                node.AddAdjacent(nodeByTriangle[adjVector]);
+            foreach (Tuple<Vector3[], Arist> adjVector in GetAdjacents(triangleByNode[node]))
+                node.AddAdjacent(nodeByTriangle[adjVector.Item1], adjVector.Item2);
     }
-    List<Vector3[]> GetAdjacents(Vector3[] triangle)
+    List<Tuple<Vector3[], Arist>> GetAdjacents(Vector3[] triangle)
     {
-        List<Vector3[]> result = new List<Vector3[]>();
+        List<Tuple<Vector3[], Arist>> result = new List<Tuple<Vector3[], Arist>>();
 
         Vector3[] e1 = new Vector3[] { triangle[0], triangle[1] };
         Vector3[] e2 = new Vector3[] { triangle[1], triangle[2] };
         Vector3[] e3 = new Vector3[] { triangle[2], triangle[0] };
 
-        foreach (Vector3[] polygon in triangleByArist[e1[0]][e1[1]]) if (polygon != triangle) result.Add(polygon);
-        foreach (Vector3[] polygon in triangleByArist[e2[0]][e2[1]]) if (polygon != triangle) result.Add(polygon);
-        foreach (Vector3[] polygon in triangleByArist[e3[0]][e3[1]]) if (polygon != triangle) result.Add(polygon);
+        foreach (Vector3[] polygon in triangleByArist[e1[0]][e1[1]])
+            if (polygon != triangle)
+                result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e1)));
+
+        foreach (Vector3[] polygon in triangleByArist[e2[0]][e2[1]])
+            if (polygon != triangle)
+                result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e2)));
+
+        foreach (Vector3[] polygon in triangleByArist[e3[0]][e3[1]])
+            if (polygon != triangle)
+                result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e3)));
 
         return result;
+    }
+    Arist eToArist(Vector3[] e)
+    {
+        float x = e[0][0]; float y = e[0][1]; float z = e[0][2];
+        Point p1 = new Point(x, y, z);
+        x = e[1][0]; y = e[1][1]; z = e[1][2];
+        Point p2 = new Point(x, y, z);
+
+        return new Arist(p1, p2);
     }
 
 }

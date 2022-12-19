@@ -28,6 +28,10 @@ namespace Triangle_Map
             Dijkstra dijkstra = new Dijkstra(map, currentNode, endNode, this);
             return dijkstra.GetWay();
         }
+        public static void NewMap()
+        {
+            map = new Map();
+        }
     }
     class Map
     {
@@ -36,11 +40,15 @@ namespace Triangle_Map
         {
             nodes = new List<MapNode>();
         }
+        public void AddNode(MapNode node)
+        {
+            nodes.Add(node);
+        }
     }
     class MapNode
     {
         internal Triangle triangle { get; private set; }
-        public List<MapNode> adjacents { get; private set; }
+        public Dictionary<MapNode, Arist> adjacents { get; private set; }
 
         public Dictionary<Agent, bool> visited { get; private set; }
         public Dictionary<Agent, MapNode> father { get; private set; }
@@ -56,7 +64,7 @@ namespace Triangle_Map
         public MapNode(Triangle triangle)
         {
             this.triangle = triangle;
-            adjacents = new List<MapNode>();
+            adjacents = new Dictionary<MapNode, Arist>();
             DefaultValues();
         }
         public void SetMaterial(Material material)
@@ -90,6 +98,14 @@ namespace Triangle_Map
                 heapNodes[agent] = heapNode;
             else
                 heapNodes.Add(agent, heapNode);
+        }
+        public void AddAdjacent(MapNode node, Arist arist)
+        {
+            adjacents.Add(node, arist);
+        }
+        public void AddAdjacent(MapNode node, Point p1, Point p2)
+        {
+            adjacents.Add(node, new Arist(p1, p2));
         }
         /// <summary>Total cost to move to a node with heuristics</summary>
         public float Value(Agent agent, MapNode end)
@@ -187,6 +203,16 @@ namespace Triangle_Map
             temp += (point.y - this.y) * (point.y - this.y);
             temp += (point.z - this.z) * (point.z - this.z);
             return (float)Math.Sqrt(temp);
+        }
+    }
+    class Arist
+    {
+        public Point p1 { get; private set; }
+        public Point p2 { get; private set; }
+        public Arist(Point p1, Point p2)
+        {
+            this.p1 = p1;
+            this.p2 = p2;
         }
     }
     class WayPoints

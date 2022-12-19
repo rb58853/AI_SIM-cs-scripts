@@ -50,7 +50,7 @@ namespace Dijkstra_Algorithm
             {
                 MapNode node = Q.Pop();
                 if (node == endNode) break;
-                foreach (MapNode adj in node.adjacents)
+                foreach(MapNode adj in node.adjacents.Keys)
                     if (!adj.visited[agent])
                         Relax(adj, node);
             }

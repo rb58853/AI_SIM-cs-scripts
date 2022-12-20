@@ -18,25 +18,18 @@ public class GetTriangles : MonoBehaviour
 
         List<Vector3[]> t = new List<Vector3[]>();
         t.Add(Triangles[40]);
-        t.Add(Triangles[200]);
+        t.Add(Triangles[170]);
         DrawTriangles(t);
 
 
         SetMapWithTriangles();
         Agent agent = new Agent();
-        agent.setCurrentNode(Agent.map.nodes[100]);
+        agent.setCurrentNode(Agent.map.nodes[40]);
 
 
-        List<MapNode> path = agent.getPathToNode(Agent.map.nodes[100]);
+        List<MapNode> path = agent.getPathToNode(Agent.map.nodes[170]);
         //Debug.Log("Count de MapNodes: " + path.Count);
-        Debug.Log("Agent.map.nodes[100].distance = " + Agent.map.nodes[100].distance[agent]);
-        foreach (MapNode node in Agent.map.nodes)
-        {
-            if (node.distance.ContainsKey(agent))
-            {
-                Debug.Log("Alguna distancia = " + node.distance[agent]);
-            }
-        }
+        Debug.Log("Agent.map.nodes[100].distance = " + Agent.map.nodes[100].GetDistance(agent));
         List<PointNode> points = agent.GetPointPath();
     }
     void GetTrianglesFromNavMesh()

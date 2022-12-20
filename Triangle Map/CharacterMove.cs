@@ -105,6 +105,12 @@ namespace Triangle_Map
                 return distance[agent];
             return float.MaxValue;
         }
+        public MapNode GetFather(Agent agent)
+        {
+            if (father.ContainsKey(agent))
+                return father[agent];
+            return null;
+        }
         public void SetDistance(float value, Agent agent)
         {
             if (distance.ContainsKey(agent))

@@ -41,8 +41,8 @@ namespace Dijkstra_Algorithm
         void GetPath(MapNode node)
         {
             endPath.Add(node);
-            if (node.father.ContainsKey(agent) && node.father[agent] != null)
-                GetPath(node.father[agent]);
+            if (node.GetFather(agent) != null)
+                GetPath(node.GetFather(agent));
         }
         void Start()
         {
@@ -61,7 +61,7 @@ namespace Dijkstra_Algorithm
             while (Q.size > 0)
             {
                 MapNode node = Q.Pop();
-                Debug.Log("Pop del heap = " + node.distance[agent]);
+                Debug.Log("Pop del heap = " + node.GetDistance(agent));
                 A.Push(node);
                 if (node == endNode) break;
                 foreach (MapNode adj in node.adjacents.Keys)

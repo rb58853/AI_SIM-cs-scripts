@@ -5,17 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Triangle_Map;
 
-namespace Assets.Triangle_Map
+namespace Point_Map
 {
     class PointNode
     {
         public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, int n = 4)
         {
+
             List<List<PointNode>> points = new List<List<PointNode>>();
             List<PointNode> result = new List<PointNode>();
 
             PointNode initNode = new PointNode(init);
             result.Add(initNode);
+
+            if (arists.Count == 0)
+                return result;
 
             foreach (Arist arist in arists)
             {
@@ -27,23 +31,23 @@ namespace Assets.Triangle_Map
                     result.Add(node);
                 }
             }
-            foreach(PointNode node in points[0])
+            foreach (PointNode node in points[0])
             {
                 initNode.AddAdjacent(node);
             }
-            for (int i = 0; i < points.Count-1; i++)
+            for (int i = 0; i < points.Count - 1; i++)
             {
                 for (int j = 0; j < points[i].Count; j++)
                 {
-                    for (int k = 0; k < points[i+1].Count; k++)
+                    for (int k = 0; k < points[i + 1].Count; k++)
                     {
-                        points[i][j].AddAdjacent(points[i+1][k]);
+                        points[i][j].AddAdjacent(points[i + 1][k]);
                     }
                 }
             }
             PointNode endNode = new PointNode(end);
             result.Add(endNode);
-            foreach (PointNode node in points[points.Count-1])
+            foreach (PointNode node in points[points.Count - 1])
             {
                 node.AddAdjacent(endNode);
             }
@@ -63,6 +67,7 @@ namespace Assets.Triangle_Map
         {
             this.point = point;
             adjacents = new List<PointNode>();
+            distance = float.MaxValue;
         }
         public void AddAdjacent(PointNode node)
         {
@@ -107,6 +112,10 @@ namespace Assets.Triangle_Map
         {
             return this.Value(end).CompareTo(other.Value(end));
         }
+        public override string ToString()
+        {
+            return point.ToString();
+        }
     }
     class DijkstraPoint
     {
@@ -124,6 +133,8 @@ namespace Assets.Triangle_Map
         public List<PointNode> GetPath()
         {
             Start();
+            endPath = new List<PointNode>();
+            GetPath(endNode);
             endPath.Reverse();
             return endPath;
         }
@@ -267,7 +278,8 @@ namespace Assets.Triangle_Map
 
             PointNode result = root.value;
             HeapPoint leaf = root.LeafsByDelete.Pop();
-            leaf.father.DeleteChild(leaf);
+            if (leaf.father != null)
+                leaf.father.DeleteChild(leaf);
             InsertValueInRoot(leaf.value);
 
             return result;

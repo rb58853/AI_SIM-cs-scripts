@@ -16,6 +16,10 @@ namespace Triangle_Map
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
 
+        public Agent()
+        {
+            compatibility = new Dictionary<Material, float>();
+        }
         public void SetCompatibility(Material material, float value)
         {
             if (compatibility.ContainsKey(material))
@@ -42,15 +46,19 @@ namespace Triangle_Map
         {
             map = new Map();
         }
-        public void GetPointPath()
+        public List<PointNode> GetPointPath()
         {
-            MapNode end = map.nodes[27];
+            MapNode end = map.nodes[40];
             Point p1 = currentNode.triangle.barycenter;
             Point p2 = end.triangle.barycenter;
             List<Arist> aritPath = getAritsPathToNode(end);
             List<PointNode> mapPoints = PointNode.CreatePointMap(aritPath, p1, p2);
+            if (mapPoints.Count == 0)
+                return new List<PointNode>();
+
             DijkstraPoint dijkstra = new DijkstraPoint(mapPoints[0], mapPoints[mapPoints.Count - 1], mapPoints);
             List<PointNode> pointPath = dijkstra.GetPath();
+            return pointPath;
         }
     }
     class Map
@@ -91,6 +99,12 @@ namespace Triangle_Map
         {
             this.material = material;
         }
+        public float GetDistance(Agent agent)
+        {
+            if (distance.ContainsKey(agent))
+                return distance[agent];
+            return float.MaxValue;
+        }
         public void SetDistance(float value, Agent agent)
         {
             if (distance.ContainsKey(agent))
@@ -130,7 +144,10 @@ namespace Triangle_Map
         /// <summary>Total cost to move to a node with heuristics</summary>
         public float Value(Agent agent, MapNode end)
         {
-            float g = distance[agent];
+            float g = float.MaxValue;
+            if (distance.ContainsKey(agent))
+                g = distance[agent];
+
             float h = Heuristic(end);
 
             return g + h;
@@ -148,7 +165,7 @@ namespace Triangle_Map
 
             float averageMaterial = (material1 + material2) / 2;
 
-            return node.EuclideanDistance(this) / averageMaterial;
+            return node.EuclideanDistance(this);
         }
 
         float EuclideanDistance(MapNode node)
@@ -178,6 +195,10 @@ namespace Triangle_Map
         {
             return this.Value(agent, end).CompareTo(other.Value(agent, end));
         }
+        public override string ToString()
+        {
+            return triangle.ToString();
+        }
     }
     class Triangle
     {
@@ -203,6 +224,10 @@ namespace Triangle_Map
             float y = (vertex1.y + vertex2.y + vertex3.y) / 3;
             float z = (vertex1.z + vertex2.z + vertex3.z) / 3;
             return new Point(x, y, z);
+        }
+        public override string ToString()
+        {
+            return barycenter.ToString();
         }
     }
 
@@ -273,6 +298,10 @@ namespace Triangle_Map
                 return point1;
             return point2;
 
+        }
+        public override string ToString()
+        {
+            return "<" + x + "," + y + "," + z + ">";
         }
     }
     class Arist

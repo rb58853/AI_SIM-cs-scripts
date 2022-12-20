@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using Triangle_Map;
 using System;
+using Point_Map;
 
 public class GetTriangles : MonoBehaviour
 {
@@ -14,10 +15,29 @@ public class GetTriangles : MonoBehaviour
     public void Start()
     {
         GetTrianglesFromNavMesh();
-        DrawTriangles();
+
+        List<Vector3[]> t = new List<Vector3[]>();
+        t.Add(Triangles[40]);
+        t.Add(Triangles[200]);
+        DrawTriangles(t);
+
+
+        SetMapWithTriangles();
         Agent agent = new Agent();
-        agent.setCurrentNode(Agent.map.nodes[3]);
-        agent.GetPointPath();
+        agent.setCurrentNode(Agent.map.nodes[100]);
+
+
+        List<MapNode> path = agent.getPathToNode(Agent.map.nodes[100]);
+        //Debug.Log("Count de MapNodes: " + path.Count);
+        Debug.Log("Agent.map.nodes[100].distance = " + Agent.map.nodes[100].distance[agent]);
+        foreach (MapNode node in Agent.map.nodes)
+        {
+            if (node.distance.ContainsKey(agent))
+            {
+                Debug.Log("Alguna distancia = " + node.distance[agent]);
+            }
+        }
+        List<PointNode> points = agent.GetPointPath();
     }
     void GetTrianglesFromNavMesh()
     {
@@ -39,6 +59,7 @@ public class GetTriangles : MonoBehaviour
             AddArist(v2, v3, triangle);
             AddArist(v3, v1, triangle);
         }
+
     }
     void AddArist(Vector3 v1, Vector3 v2, Vector3[] triangle)
     {
@@ -117,8 +138,15 @@ public class GetTriangles : MonoBehaviour
             map.AddNode(node);
         }
         foreach (MapNode node in map.nodes)
+        {
             foreach (Tuple<Vector3[], Arist> adjVector in GetAdjacents(triangleByNode[node]))
+            {
+                if (node.adjacents.ContainsKey(nodeByTriangle[adjVector.Item1]))
+                    continue;
                 node.AddAdjacent(nodeByTriangle[adjVector.Item1], adjVector.Item2);
+                nodeByTriangle[adjVector.Item1].AddAdjacent(node, adjVector.Item2);
+            }
+        }
     }
     List<Tuple<Vector3[], Arist>> GetAdjacents(Vector3[] triangle)
     {
@@ -127,7 +155,7 @@ public class GetTriangles : MonoBehaviour
         Vector3[] e1 = new Vector3[] { triangle[0], triangle[1] };
         Vector3[] e2 = new Vector3[] { triangle[1], triangle[2] };
         Vector3[] e3 = new Vector3[] { triangle[2], triangle[0] };
-
+        
         foreach (Vector3[] polygon in triangleByArist[e1[0]][e1[1]])
             if (polygon != triangle)
                 result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e1)));

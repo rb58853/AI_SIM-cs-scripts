@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Triangle_Map;
+using UnityEngine;
 
 namespace Dijkstra_Algorithm
 {
@@ -23,7 +24,11 @@ namespace Dijkstra_Algorithm
         public List<MapNode> GetPath()
         {
             Start();
+            endPath = new List<MapNode>();
+            GetPath(endNode);
             endPath.Reverse();
+            //Debug.Log("Count de camino: " + endPath.Count);
+            Debug.Log("Distancia nodo final: " + endNode.GetDistance(agent));
             return endPath;
         }
         public List<Arist> ToArist(List<MapNode> path)
@@ -36,37 +41,40 @@ namespace Dijkstra_Algorithm
         void GetPath(MapNode node)
         {
             endPath.Add(node);
-            if (node.father != null)
+            if (node.father.ContainsKey(agent) && node.father[agent] != null)
                 GetPath(node.father[agent]);
         }
-
         void Start()
         {
             initNode.SetDistance(0, agent);
-            List<MapNode> nodes = map.nodes;
+            Debug.Log(initNode.distance[agent]);
+            //List<MapNode> nodes = map.nodes;
 
-            MapNode root = nodes[0];
+            MapNode root = map.nodes[0];
 
             HeapNode Q = new HeapNode(root, agent, endNode);
             Stack<MapNode> A = new Stack<MapNode>();
 
-            foreach (MapNode node in nodes.GetRange(1, nodes.Count - 1))
+            foreach (MapNode node in map.nodes.GetRange(1, map.nodes.Count - 1))
                 Q.Push(node);
 
             while (Q.size > 0)
             {
                 MapNode node = Q.Pop();
+                Debug.Log("Pop del heap = " + node.distance[agent]);
+                A.Push(node);
                 if (node == endNode) break;
                 foreach (MapNode adj in node.adjacents.Keys)
-                    if (!adj.visited[agent])
+                    if (!adj.visited.ContainsKey(agent) || !adj.visited[agent])
                         Relax(adj, node);
             }
+            //Hasta aqui pincha bien.....................................................................................
         }
         void Relax(MapNode v, MapNode u)
         {
-            if (v.distance[agent] > (u.distance[agent] + v.CostForMoveToNodeByAgent(u, agent)))
+            if (v.GetDistance(agent) > (u.GetDistance(agent) + v.CostForMoveToNodeByAgent(u, agent)))
             {
-                v.SetDistance(u.distance[agent] + v.CostForMoveToNodeByAgent(u, agent), agent);
+                v.SetDistance(u.GetDistance(agent) + v.CostForMoveToNodeByAgent(u, agent), agent);
                 v.SetFather(u, agent);
                 v.SetVisited(agent);
                 v.heapNodes[agent].Heapify(true);

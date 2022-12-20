@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Dijkstra_Algorithm;
@@ -48,7 +49,7 @@ namespace Triangle_Map
         }
         public List<PointNode> GetPointPath()
         {
-            MapNode end = map.nodes[40];
+            MapNode end = map.nodes[170];
             Point p1 = currentNode.triangle.barycenter;
             Point p2 = end.triangle.barycenter;
             List<Arist> aritPath = getAritsPathToNode(end);
@@ -64,6 +65,7 @@ namespace Triangle_Map
     class Map
     {
         internal List<MapNode> nodes { get; private set; }
+
         public Map()
         {
             nodes = new List<MapNode>();
@@ -98,6 +100,12 @@ namespace Triangle_Map
         public void SetMaterial(Material material)
         {
             this.material = material;
+        }
+        public bool GetVisited(Agent agent)
+        {
+            if (visited.ContainsKey(agent))
+                return visited[agent];
+            return false;
         }
         public float GetDistance(Agent agent)
         {

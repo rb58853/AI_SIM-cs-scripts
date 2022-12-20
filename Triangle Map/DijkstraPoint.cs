@@ -69,6 +69,10 @@ namespace Point_Map
             adjacents = new List<PointNode>();
             distance = float.MaxValue;
         }
+        public float get_x() { return point.x; }
+        public float get_y() { return point.y; }
+        public float get_z() { return point.z; }
+
         public void AddAdjacent(PointNode node)
         {
             adjacents.Add(node);

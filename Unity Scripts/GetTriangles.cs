@@ -17,20 +17,39 @@ public class GetTriangles : MonoBehaviour
         GetTrianglesFromNavMesh();
 
         List<Vector3[]> t = new List<Vector3[]>();
-        t.Add(Triangles[40]);
-        t.Add(Triangles[170]);
-        DrawTriangles(t);
+        //t.Add(Triangles[40]);
+        //t.Add(Triangles[170]);
+        ////DrawTriangles(t);
 
+        //DrawTriangles(Triangles);
 
         SetMapWithTriangles();
         Agent agent = new Agent();
-        agent.setCurrentNode(Agent.map.nodes[40]);
+        agent.setCurrentNode(Agent.map.nodes[70]);
+        //DFSDraw(Agent.map.nodes[170], agent);
 
-
-        List<MapNode> path = agent.getPathToNode(Agent.map.nodes[170]);
-        //Debug.Log("Count de MapNodes: " + path.Count);
-        Debug.Log("Agent.map.nodes[100].distance = " + Agent.map.nodes[100].GetDistance(agent));
+        //List<MapNode> path = agent.getPathToNode(Agent.map.nodes[170]);
         List<PointNode> points = agent.GetPointPath();
+        Debug.Log("Agent.map.nodes[170].distance = " + Agent.map.nodes[170].GetDistance(agent));
+
+        DrawPath(points);
+    }
+    void DrawPath(List<PointNode> points)
+    {
+        for (int i = 0; i < points.Count-1; i++)
+        {
+            Vector3 p1 = new Vector3(points[i].get_x(), points[i].get_y(), points[i].get_z());
+            Vector3 p2 = new Vector3(points[i+1].get_x(), points[i+1].get_y(), points[i+1].get_z());
+            Debug.DrawLine(p1, p2, Color.blue, 50f);
+        }
+    }
+    void DFSDraw(MapNode node, Agent agent)
+    {
+        DrawByTriangle(node.triangle);
+        node.SetVisited(agent);
+        foreach (MapNode adj in node.adjacents.Keys)
+            if (!adj.GetVisited(agent))
+                DFSDraw(adj, agent);
     }
     void GetTrianglesFromNavMesh()
     {
@@ -104,11 +123,23 @@ public class GetTriangles : MonoBehaviour
             triangles = Triangles;
 
         foreach (Vector3[] triangle in triangles)
-        {
-            Debug.DrawLine(triangle[0], triangle[1], Color.red, 50f);
-            Debug.DrawLine(triangle[1], triangle[2], Color.red, 50f);
-            Debug.DrawLine(triangle[2], triangle[0], Color.red, 50f);
-        }
+            DrawOnlyTriangle(triangle);
+    }
+    void DrawOnlyTriangle(Vector3[] triangle)
+    {
+        Debug.DrawLine(triangle[0], triangle[1], Color.red, 50f);
+        Debug.DrawLine(triangle[1], triangle[2], Color.red, 50f);
+        Debug.DrawLine(triangle[2], triangle[0], Color.red, 50f);
+    }
+    void DrawByTriangle(Triangle triangle)
+    {
+        Vector3 p1 = new Vector3(triangle.vertex1.x, triangle.vertex1.y, triangle.vertex1.z);
+        Vector3 p2 = new Vector3(triangle.vertex2.x, triangle.vertex2.y, triangle.vertex2.z);
+        Vector3 p3 = new Vector3(triangle.vertex3.x, triangle.vertex3.y, triangle.vertex3.z);
+
+        Debug.DrawLine(p1, p2, Color.red, 50f);
+        Debug.DrawLine(p2, p3, Color.red, 50f);
+        Debug.DrawLine(p3, p1, Color.red, 50f);
     }
     void SetMapWithTriangles()
     {
@@ -148,7 +179,7 @@ public class GetTriangles : MonoBehaviour
         Vector3[] e1 = new Vector3[] { triangle[0], triangle[1] };
         Vector3[] e2 = new Vector3[] { triangle[1], triangle[2] };
         Vector3[] e3 = new Vector3[] { triangle[2], triangle[0] };
-        
+
         foreach (Vector3[] polygon in triangleByArist[e1[0]][e1[1]])
             if (polygon != triangle)
                 result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e1)));

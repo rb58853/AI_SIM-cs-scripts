@@ -5,6 +5,8 @@ using UnityEngine.AI;
 using Triangle_Map;
 using System;
 using Point_Map;
+using Agent_Space;
+using BaseNode;
 
 public class GetTriangles : MonoBehaviour
 {
@@ -25,31 +27,33 @@ public class GetTriangles : MonoBehaviour
 
         SetMapWithTriangles();
         Agent agent = new Agent();
-        agent.setCurrentNode(Agent.map.nodes[70]);
-        //DFSDraw(Agent.map.nodes[170], agent);
+        agent.setCurrentNode(Agent.map.nodes[70] as MapNode);
 
-        //List<MapNode> path = agent.getPathToNode(Agent.map.nodes[170]);
-        List<PointNode> points = agent.GetPointPath();
-        Debug.Log("Agent.map.nodes[170].distance = " + Agent.map.nodes[170].GetDistance(agent));
+        DFSDraw(Agent.map.nodes[170] as MapNode);
+
+        Debug.Log((Agent.map.nodes[0] as MapNode).triangle);
+
+        PointNode[] points = agent.GetPointPath(Agent.map.nodes[170] as MapNode);
+        Debug.Log("Agent.map.nodes[170].distance = " + Agent.map.nodes[170].distance);
 
         DrawPath(points);
     }
-    void DrawPath(List<PointNode> points)
+    void DrawPath(PointNode[] points)
     {
-        for (int i = 0; i < points.Count-1; i++)
+        for (int i = 0; i < points.Length - 1; i++)
         {
             Vector3 p1 = new Vector3(points[i].get_x(), points[i].get_y(), points[i].get_z());
-            Vector3 p2 = new Vector3(points[i+1].get_x(), points[i+1].get_y(), points[i+1].get_z());
+            Vector3 p2 = new Vector3(points[i + 1].get_x(), points[i + 1].get_y(), points[i + 1].get_z());
             Debug.DrawLine(p1, p2, Color.blue, 50f);
         }
     }
-    void DFSDraw(MapNode node, Agent agent)
+    void DFSDraw(MapNode node)
     {
         DrawByTriangle(node.triangle);
-        node.SetVisited(agent);
+        node.SetVisited();
         foreach (MapNode adj in node.adjacents.Keys)
-            if (!adj.GetVisited(agent))
-                DFSDraw(adj, agent);
+            if (!adj.visited)
+                DFSDraw(adj);
     }
     void GetTrianglesFromNavMesh()
     {
@@ -141,6 +145,7 @@ public class GetTriangles : MonoBehaviour
         Debug.DrawLine(p2, p3, Color.red, 50f);
         Debug.DrawLine(p3, p1, Color.red, 50f);
     }
+
     void SetMapWithTriangles()
     {
         nodeByTriangle = new Dictionary<Vector3[], MapNode>();

@@ -18,23 +18,12 @@ public class GetTriangles : MonoBehaviour
     {
         GetTrianglesFromNavMesh();
 
-        List<Vector3[]> t = new List<Vector3[]>();
-        //t.Add(Triangles[40]);
-        //t.Add(Triangles[170]);
-        ////DrawTriangles(t);
-
-        //DrawTriangles(Triangles);
-
         SetMapWithTriangles();
+
         Agent agent = new Agent();
         agent.setCurrentNode(Agent.map.nodes[70] as MapNode);
 
-        DFSDraw(Agent.map.nodes[170] as MapNode);
-
-        Debug.Log((Agent.map.nodes[0] as MapNode).triangle);
-
         PointNode[] points = agent.GetPointPath(Agent.map.nodes[170] as MapNode);
-        Debug.Log("Agent.map.nodes[170].distance = " + Agent.map.nodes[170].distance);
 
         DrawPath(points);
     }
@@ -62,7 +51,6 @@ public class GetTriangles : MonoBehaviour
         NavMeshTriangulation navMesh = NavMesh.CalculateTriangulation();
         Vector3[] vertices = navMesh.vertices;
         int[] polygons = navMesh.indices;
-
 
         for (int i = 0; i < polygons.Length; i += 3)
         {
@@ -145,7 +133,6 @@ public class GetTriangles : MonoBehaviour
         Debug.DrawLine(p2, p3, Color.red, 50f);
         Debug.DrawLine(p3, p1, Color.red, 50f);
     }
-
     void SetMapWithTriangles()
     {
         nodeByTriangle = new Dictionary<Vector3[], MapNode>();
@@ -208,5 +195,4 @@ public class GetTriangles : MonoBehaviour
 
         return new Arist(p1, p2);
     }
-
 }

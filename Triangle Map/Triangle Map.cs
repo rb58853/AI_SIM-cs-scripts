@@ -31,11 +31,14 @@ namespace Triangle_Map
         }
         public MapNode(MapNode origin, Agent agent, MapNode end)
         {
+            this.triangle = origin.triangle;
+            adjacents = new Dictionary<MapNode, Arist>();
+
             this.agent = agent;
             this.end = end;
             this.origin = origin;
-            this.triangle = origin.triangle;
             this.material = origin.material;
+            DefaultValues();
         }
         public void SetEndNode(MapNode endNode) { this.end = endNode; }
         public void SetMaterial(Agent_Space.Material material) { this.material = material; }
@@ -45,8 +48,6 @@ namespace Triangle_Map
         public override float Value() { return distance + Heuristic(); }
         float EuclideanDistance(MapNode node)
         {
-            Debug.Log("this: " + this.triangle);
-            Debug.Log("node: " + node.triangle);
             return triangle.EuclideanDistance(node.triangle);
         }
         float Heuristic()
@@ -127,7 +128,12 @@ namespace Triangle_Map
             this.p1 = p1;
             this.p2 = p2;
         }
-        public List<Point> Points(int n = 4)
+        public Arist(Arist a)
+        {
+            p1 = a.p1;
+            p2 = a.p2;
+        }
+        public List<Point> ToPoints(int n = 4)
         {
             string eye;
             if (p1.x != p2.x)

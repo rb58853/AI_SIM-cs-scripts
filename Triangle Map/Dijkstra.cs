@@ -7,6 +7,7 @@ using Triangle_Map;
 using BaseNode;
 using Agent_Space;
 using Point_Map;
+using UnityEngine;
 
 namespace DijkstraSpace
 {
@@ -38,14 +39,14 @@ namespace DijkstraSpace
             if (node.father != null)
                 GetPath(node.father);
         }
-
+        
         void Start()
         {
             initNode.SetDistance(0);
 
             List<Node> nodes = this.nodes.ToList<Node>();
 
-            HeapNode Q = new HeapNode(nodes[0], endNode);
+            HeapNode Q = new HeapNode(nodes[0]);
             Stack<Node> A = new Stack<Node>();
 
             foreach (Node node in nodes.GetRange(1, nodes.Count - 1))
@@ -54,7 +55,9 @@ namespace DijkstraSpace
             while (Q.size > 0)
             {
                 Node node = Q.Pop();
-                if (node == endNode) break;
+                if (node == endNode)
+                    break;
+
                 foreach (Node adj in node.GetAdyacents())
                     if (!adj.visited)
                         Relax(adj, node);
@@ -74,7 +77,6 @@ namespace DijkstraSpace
     class HeapNode
     {
         internal Agent agent;
-        internal Node endNode;
         public int size { get; private set; }
 
         private HeapNode father;
@@ -86,12 +88,11 @@ namespace DijkstraSpace
         private HeapNode currentLeafByInsert;
 
 
-        public HeapNode(Node value, Node endNode, HeapNode father = null)
+        public HeapNode(Node value, HeapNode father = null)
         {
             this.father = father;
             this.value = value;
             this.childs = new List<HeapNode>();
-            this.endNode = endNode;
 
             value.SetHeapNode(this);
 
@@ -116,7 +117,7 @@ namespace DijkstraSpace
         }
         void InsertChild(Node value)
         {
-            this.childs.Add(new HeapNode(value, endNode, this));
+            this.childs.Add(new HeapNode(value, this));
             root.lastleafsByInsert.Enqueue(childs[childs.Count - 1]);
             root.LeafsByDelete.Push(childs[childs.Count - 1]);
         }

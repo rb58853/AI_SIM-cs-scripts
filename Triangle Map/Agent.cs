@@ -15,7 +15,9 @@ namespace Agent_Space
         public static Map map;
 
         private MapNode currentNode;
+        private Point position;
         private Queue<MapNode> trianglePath;
+        private Stack<PointNode> pointPath;
 
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
@@ -46,13 +48,14 @@ namespace Agent_Space
 
 
         public void setCurrentNode(MapNode node) { currentNode = node; }
+        public void setPosition(Point point) { position = point; }
 
 
-        Tuple<MapNode[], MapNode, MapNode> LocalMap(MapNode endNode)
+        Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
         {
-            return BFS(endNode);
+            return BFS(endPoint);
         }
-        Tuple<MapNode[], MapNode, MapNode> BFS(MapNode endNode)
+        Tuple<MapNode[], MapNode, MapNode> BFS(Point endPoint)
         {
             List<MapNode> localMap = new List<MapNode>();
 
@@ -61,13 +64,15 @@ namespace Agent_Space
 
             Queue<MapNode> q = new Queue<MapNode>();
 
-            MapNode end = new MapNode(endNode, this, endNode); end.SetEndNode(end);
+            //MapNode end = new MapNode(endNode, this, endNode); end.SetEndNode(end);
+            MapNode end = null;
 
-            r.Add(currentNode, new MapNode(currentNode, this, end));
+            //r.Add(currentNode, new MapNode(currentNode, this, end));
+            r.Add(currentNode, new MapNode(currentNode, this));
             visited.Add(currentNode);
 
             localMap.Add(r[currentNode]);
-            r[currentNode].SetDistance(0);
+            //r[currentNode].SetDistance(0);
 
             q.Enqueue(currentNode);
 
@@ -79,11 +84,11 @@ namespace Agent_Space
                     if (!visited.Contains(adj))
                     {
                         visited.Add(adj);
-                        MapNode temp = new MapNode(adj, this, end);
+                        MapNode temp = new MapNode(adj, this);
 
-                        if (adj == endNode)
+                        if (adj.triangle.PointIn(endPoint))
                         {
-                            temp = end;
+                            end = temp;
                             //Hacer mas cosas
                         }
 
@@ -107,35 +112,45 @@ namespace Agent_Space
                 }
             }
 
+            if (end != null)
+                foreach (MapNode node in localMap)
+                    node.SetEndNode(end);
+            else
+                localMap = new List<MapNode>();
+
             return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], end);
         }
 
-        public List<Node> GetTrianglePath(MapNode endNode)
+        public Node[] GetTrianglePath(Point endPoint)
         {
-            Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endNode);
+            Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
             Node[] nodes = localMap.Item1;
             Node init = localMap.Item2;
             Node end = localMap.Item3;
 
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
-            return dijkstra.GetPath();
+            //return tools.ToArrayAsMapNode(dijkstra.GetPath());
+            return new Node[2] { currentNode, end };
         }
-        public List<Arist> GetAritsPath(MapNode endNode)
+        List<Arist> GetAritsPath(Point endPoint)
         {
-            Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endNode);
+            Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
             Node[] nodes = localMap.Item1; Node init = localMap.Item2; Node end = localMap.Item3;
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
             MapNode[] path = tools.ToArrayAsMapNode(dijkstra.GetPath());/// Si se puede, mejorar la eficiencia con lo default
 
+            if (nodes.Length == 0)
+            {
+                throw new Exception("No existe camino");
+            }
+
             return Arist.ToAristList(path);
         }
-        public PointNode[] GetPointPath(MapNode end)
+        public PointNode[] GetPointPath(Point endPoint)
         {
-            //= map.nodes[170] as MapNode;
-            Point p1 = currentNode.triangle.barycenter;
-            Point p2 = end.triangle.barycenter;
-            List<Arist> aritPath = GetAritsPath(end);
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, p1, p2);
+            float n = 1f;///Density
+            List<Arist> aritPath = GetAritsPath(endPoint);
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, n);
 
             if (mapPoints.Count == 0)
                 return new PointNode[0];
@@ -146,6 +161,12 @@ namespace Agent_Space
             List<Node> pointPath = dijkstra.GetPath();
 
             return tools.ToArrayAsPointNode(pointPath);
+        }
+        public void SetPointPath(Point point)
+        {
+            PointNode[] path = GetPointPath(point);
+            for (int i = path.Length - 1; i >= 0; i--)
+                pointPath.Push(path[i]);
         }
         internal class tools
         {

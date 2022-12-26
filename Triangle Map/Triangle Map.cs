@@ -29,7 +29,7 @@ namespace Triangle_Map
 
             DefaultValues();
         }
-        public MapNode(MapNode origin, Agent agent, MapNode end)
+        public MapNode(MapNode origin, Agent agent, MapNode end = null)
         {
             this.triangle = origin.triangle;
             adjacents = new Dictionary<MapNode, Arist>();
@@ -96,7 +96,6 @@ namespace Triangle_Map
         public Point vertex3 { get; private set; }
         public Point barycenter { get => Barycenter(); }
 
-
         public Triangle(Point v1, Point v2, Point v3)
         {
             this.vertex1 = v1;
@@ -113,6 +112,16 @@ namespace Triangle_Map
             float y = (vertex1.y + vertex2.y + vertex3.y) / 3;
             float z = (vertex1.z + vertex2.z + vertex3.z) / 3;
             return new Point(x, y, z);
+        }
+        public bool PointIn(Point p)
+        {
+            Point a = vertex1; Point b = vertex2; Point c = vertex3;
+            Point d = b - a; Point e = c - a;
+
+            float w1 = (e.x * (a.z - p.z) + e.z * (p.x - a.x)) / (d.x * e.z - d.z * e.x);
+            float w2 = (p.z - a.z - w1 * d.z) / e.z;
+
+            return (w1 >= 0.0) && (w2 >= 0.0) && ((w1 + w2) <= 1.0);
         }
         public override string ToString()
         {
@@ -133,7 +142,7 @@ namespace Triangle_Map
             p1 = a.p1;
             p2 = a.p2;
         }
-        public List<Point> ToPoints(int n = 4)
+        public List<Point> ToPoints(float n = 1)
         {
             string eye;
             if (p1.x != p2.x)
@@ -153,10 +162,14 @@ namespace Triangle_Map
             Point vector = new Point(x, y, z);
 
             List<Point> result = new List<Point>();
+            result.Add(p1);
+            result.Add(p2);
 
-            for (int i = 0; i < n + 1; i++)
+            float k = p1.Distance(p2) * n;
+
+            for (int i = 1; i < k; i++)
             {
-                float alfa = i / n;
+                float alfa = (float)i / (float)k;
                 Point temp = Point.Min(p1, p2, eye) + vector * alfa;
                 result.Add(temp);
             }

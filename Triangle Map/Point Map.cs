@@ -3,7 +3,7 @@ using Triangle_Map;
 using BaseNode;
 using DijkstraSpace;
 using UnityEngine;
-  
+
 namespace Point_Map
 {
     class PointNode : Node
@@ -63,7 +63,7 @@ namespace Point_Map
 
         internal class Static
         {
-            public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, int n = 4)
+            public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, float n = 1)
             {
                 List<List<PointNode>> points = new List<List<PointNode>>();
                 List<PointNode> result = new List<PointNode>();
@@ -92,6 +92,9 @@ namespace Point_Map
                 {
                     initNode.AddAdjacent(node);
 
+                    //Vector3 a = new Vector3(initNode.point.x, initNode.point.y, initNode.point.z);
+                    //Vector3 b = new Vector3(node.point.x, node.point.y, node.point.z);
+                    //Debug.DrawLine(a, b, Color.red, 50f);
                 }
                 for (int i = 0; i < points.Count - 1; i++)
                 {
@@ -100,12 +103,19 @@ namespace Point_Map
                         for (int k = 0; k < points[i + 1].Count; k++)
                         {
                             points[i][j].AddAdjacent(points[i + 1][k]);
+                            //Vector3 a = new Vector3(points[i][j].point.x, points[i][j].point.y, points[i][j].point.z);
+                            //Vector3 b = new Vector3(points[i + 1][k].point.x, points[i + 1][k].point.y, points[i + 1][k].point.z);
+                            //Debug.DrawLine(a, b, Color.black, 50f);
+
                         }
                     }
                 }
                 foreach (PointNode node in points[points.Count - 1])
                 {
                     node.AddAdjacent(endNode);
+                    //Vector3 a = new Vector3(node.point.x, node.point.y, node.point.z);
+                    //Vector3 b = new Vector3(endNode.point.x, endNode.point.y, endNode.point.z);
+                    //Debug.DrawLine(a, b, Color.black, 50f);
                 }
                 return result;
             }

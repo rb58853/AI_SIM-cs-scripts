@@ -11,31 +11,16 @@ using BaseNode;
 public class GetTriangles : MonoBehaviour
 {
     static List<Vector3[]> Triangles;
-    static Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>> triangleByArist;
-    static Dictionary<Vector3[], MapNode> nodeByTriangle;
-    static Dictionary<MapNode, Vector3[]> triangleByNode;
+    static Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>> triangleFromArist;
+    static Dictionary<Vector3[], MapNode> nodeFromTriangle;
+    static Dictionary<MapNode, Vector3[]> triangleFromNode;
     public void Start()
     {
         GetTrianglesFromNavMesh();
-
         SetMapWithTriangles();
-
-        Agent agent = new Agent();
-        agent.setCurrentNode(Agent.map.nodes[70] as MapNode);
-
-        PointNode[] points = agent.GetPointPath(Agent.map.nodes[170] as MapNode);
-
-        DrawPath(points);
+        DFSDraw(Agent.map.nodes[80] as MapNode);
     }
-    void DrawPath(PointNode[] points)
-    {
-        for (int i = 0; i < points.Length - 1; i++)
-        {
-            Vector3 p1 = new Vector3(points[i].get_x(), points[i].get_y(), points[i].get_z());
-            Vector3 p2 = new Vector3(points[i + 1].get_x(), points[i + 1].get_y(), points[i + 1].get_z());
-            Debug.DrawLine(p1, p2, Color.blue, 50f);
-        }
-    }
+
     void DFSDraw(MapNode node)
     {
         DrawByTriangle(node.triangle);
@@ -46,7 +31,7 @@ public class GetTriangles : MonoBehaviour
     }
     void GetTrianglesFromNavMesh()
     {
-        triangleByArist = new Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>>();
+        triangleFromArist = new Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>>();
         Triangles = new List<Vector3[]>();
         NavMeshTriangulation navMesh = NavMesh.CalculateTriangulation();
         Vector3[] vertices = navMesh.vertices;
@@ -69,24 +54,29 @@ public class GetTriangles : MonoBehaviour
     {
         ///if v1 dont' exist then v2 does not exist either, because the refelxive relation in arists
 
-        if (triangleByArist.ContainsKey(v1))
+        if (triangleFromArist.ContainsKey(v1))
         {
-            if (triangleByArist[v1].ContainsKey(v2))
+            if (triangleFromArist[v1].ContainsKey(v2))
+            {
                 ///Add to <v1,v2> and <v2,v1>, because the value(list) is the same reference
-                triangleByArist[v1][v2].Add(triangle);
+                triangleFromArist[v1][v2].Add(triangle);
+                if (!triangleFromArist[v2][v1].Contains(triangle))///Estas 2 lineas(v) realmente sobra 
+                    triangleFromArist[v2][v1].Add(triangle);
+            }
+
             else
             {
                 ///Add to <v1,v2> and <v2,v1> the same reference of list, reflexive relation in arists
                 List<Vector3[]> list = new List<Vector3[]>(); list.Add(triangle);
-                triangleByArist[v1].Add(v2, list);
+                triangleFromArist[v1].Add(v2, list);
 
-                if (triangleByArist.ContainsKey(v2))
-                    triangleByArist[v2].Add(v1, list);
+                if (triangleFromArist.ContainsKey(v2))
+                    triangleFromArist[v2].Add(v1, list);
                 else
                 {
                     Dictionary<Vector3, List<Vector3[]>> dict = new Dictionary<Vector3, List<Vector3[]>>();
                     dict.Add(v1, list);
-                    triangleByArist.Add(v2, dict);
+                    triangleFromArist.Add(v2, dict);
                 }
             }
         }
@@ -95,18 +85,18 @@ public class GetTriangles : MonoBehaviour
             ///Add to <v1,v2> and <v2,v1> the same reference of list, reflexive relation in arists
             List<Vector3[]> list = new List<Vector3[]>(); list.Add(triangle);
 
-            if (!triangleByArist.ContainsKey(v2))
+            if (!triangleFromArist.ContainsKey(v2))
             {
                 Dictionary<Vector3, List<Vector3[]>> dict1 = new Dictionary<Vector3, List<Vector3[]>>();
                 dict1.Add(v1, list);
-                triangleByArist.Add(v2, dict1);
+                triangleFromArist.Add(v2, dict1);
             }
             else
-                triangleByArist[v2].Add(v1, list);
+                triangleFromArist[v2].Add(v1, list);
 
             Dictionary<Vector3, List<Vector3[]>> dict2 = new Dictionary<Vector3, List<Vector3[]>>();
             dict2.Add(v2, list);
-            triangleByArist.Add(v1, dict2);
+            triangleFromArist.Add(v1, dict2);
         }
     }
     void DrawTriangles(List<Vector3[]> triangles = null)
@@ -135,8 +125,8 @@ public class GetTriangles : MonoBehaviour
     }
     void SetMapWithTriangles()
     {
-        nodeByTriangle = new Dictionary<Vector3[], MapNode>();
-        triangleByNode = new Dictionary<MapNode, Vector3[]>();
+        nodeFromTriangle = new Dictionary<Vector3[], MapNode>();
+        triangleFromNode = new Dictionary<MapNode, Vector3[]>();
 
         Agent.NewMap();
         Map map = Agent.map;
@@ -148,19 +138,21 @@ public class GetTriangles : MonoBehaviour
             Point p3 = new Point(triangle[2].x, triangle[2].y, triangle[2].z);
 
             MapNode node = new MapNode(new Triangle(p1, p2, p3));
-            nodeByTriangle.Add(triangle, node);
-            triangleByNode.Add(node, triangle);
+            nodeFromTriangle.Add(triangle, node);
+            triangleFromNode.Add(node, triangle);
 
             map.AddNode(node);
         }
         foreach (MapNode node in map.nodes)
         {
-            foreach (Tuple<Vector3[], Arist> adjVector in GetAdjacents(triangleByNode[node]))
+            foreach (Tuple<Vector3[], Arist> adjVector in GetAdjacents(triangleFromNode[node]))
             {
-                if (node.adjacents.ContainsKey(nodeByTriangle[adjVector.Item1]))
-                    continue;
-                node.AddAdjacent(nodeByTriangle[adjVector.Item1], adjVector.Item2);
-                nodeByTriangle[adjVector.Item1].AddAdjacent(node, adjVector.Item2);
+                MapNode adjNode = nodeFromTriangle[adjVector.Item1];
+
+                if (!node.adjacents.ContainsKey(adjNode))
+                    node.AddAdjacent(adjNode, adjVector.Item2);
+                if (!adjNode.adjacents.ContainsKey(node))
+                    adjNode.AddAdjacent(node, adjVector.Item2);
             }
         }
     }
@@ -172,15 +164,15 @@ public class GetTriangles : MonoBehaviour
         Vector3[] e2 = new Vector3[] { triangle[1], triangle[2] };
         Vector3[] e3 = new Vector3[] { triangle[2], triangle[0] };
 
-        foreach (Vector3[] polygon in triangleByArist[e1[0]][e1[1]])
+        foreach (Vector3[] polygon in triangleFromArist[e1[0]][e1[1]])
             if (polygon != triangle)
                 result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e1)));
 
-        foreach (Vector3[] polygon in triangleByArist[e2[0]][e2[1]])
+        foreach (Vector3[] polygon in triangleFromArist[e2[0]][e2[1]])
             if (polygon != triangle)
                 result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e2)));
 
-        foreach (Vector3[] polygon in triangleByArist[e3[0]][e3[1]])
+        foreach (Vector3[] polygon in triangleFromArist[e3[0]][e3[1]])
             if (polygon != triangle)
                 result.Add(new Tuple<Vector3[], Arist>(polygon, eToArist(e3)));
 

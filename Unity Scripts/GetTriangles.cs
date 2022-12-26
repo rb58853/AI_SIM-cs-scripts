@@ -18,12 +18,14 @@ public class GetTriangles : MonoBehaviour
     {
         GetTrianglesFromNavMesh();
         SetMapWithTriangles();
-        DFSDraw(Agent.map.nodes[80] as MapNode);
+        //DFSDraw(Agent.map.nodes[80] as MapNode);
+        //foreach(Node node in Agent.map.nodes)
+        //    DrawFromTriangle((node as MapNode).triangle);
     }
 
     void DFSDraw(MapNode node)
     {
-        DrawByTriangle(node.triangle);
+        DrawFromTriangle(node.triangle);
         node.SetVisited();
         foreach (MapNode adj in node.adjacents.Keys)
             if (!adj.visited)
@@ -36,6 +38,12 @@ public class GetTriangles : MonoBehaviour
         NavMeshTriangulation navMesh = NavMesh.CalculateTriangulation();
         Vector3[] vertices = navMesh.vertices;
         int[] polygons = navMesh.indices;
+
+        for (int i = 0; i < polygons.Length; i++)
+            for (int j = i + 1; j < polygons.Length; j++)
+                if (vertices[polygons[i]] == vertices[polygons[j]])
+                    ///Change the reference, fixed Mesh Default
+                    polygons[j] = polygons[i];
 
         for (int i = 0; i < polygons.Length; i += 3)
         {
@@ -113,15 +121,15 @@ public class GetTriangles : MonoBehaviour
         Debug.DrawLine(triangle[1], triangle[2], Color.red, 50f);
         Debug.DrawLine(triangle[2], triangle[0], Color.red, 50f);
     }
-    void DrawByTriangle(Triangle triangle)
+    void DrawFromTriangle(Triangle triangle)
     {
         Vector3 p1 = new Vector3(triangle.vertex1.x, triangle.vertex1.y, triangle.vertex1.z);
         Vector3 p2 = new Vector3(triangle.vertex2.x, triangle.vertex2.y, triangle.vertex2.z);
         Vector3 p3 = new Vector3(triangle.vertex3.x, triangle.vertex3.y, triangle.vertex3.z);
 
-        Debug.DrawLine(p1, p2, Color.red, 50f);
-        Debug.DrawLine(p2, p3, Color.red, 50f);
-        Debug.DrawLine(p3, p1, Color.red, 50f);
+        Debug.DrawLine(p1, p2, Color.yellow, 50f);
+        Debug.DrawLine(p2, p3, Color.yellow, 50f);
+        Debug.DrawLine(p3, p1, Color.yellow, 50f);
     }
     void SetMapWithTriangles()
     {

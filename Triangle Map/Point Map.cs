@@ -65,8 +65,20 @@ namespace Point_Map
         {
             public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, float n = 1)
             {
-                List<List<PointNode>> points = new List<List<PointNode>>();
                 List<PointNode> result = new List<PointNode>();
+
+                if (arists.Count == 0)
+                {
+                    PointNode e = new PointNode(end);
+                    PointNode i = new PointNode(init, e);
+                    e.SetEnd(e);
+                    i.AddAdjacent(e);
+                    result.Add(e);
+                    result.Add(i);
+                    return result;
+                }
+
+                List<List<PointNode>> points = new List<List<PointNode>>();
 
                 PointNode endNode = new PointNode(end);
                 endNode.SetEnd(endNode);

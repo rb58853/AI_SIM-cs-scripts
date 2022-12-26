@@ -179,6 +179,8 @@ namespace Triangle_Map
         public static List<Arist> ToAristList(MapNode[] path)
         {
             List<Arist> result = new List<Arist>();
+            if (path.Length == 0) return result;
+
             for (int i = 0; i < path.Length - 1; i++)
                 result.Add(path[i].adjacents[path[i + 1]]);
             return result;

@@ -65,9 +65,9 @@ namespace DijkstraSpace
         }
         void Relax(Node v, Node u)
         {
-            if (v.distance > (u.distance + v.Distance(u)))
+            if (v.distance > (u.distance + u.Distance(v)))
             {
-                v.SetDistance(u.distance + v.Distance(u));
+                v.SetDistance(u.distance + u.Distance(v));
                 v.SetFather(u);
                 v.SetVisited();
                 v.heapNode.Heapify(true);

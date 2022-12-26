@@ -35,7 +35,6 @@ public class Move : MonoBehaviour
 
     void Update()
     {
-
         if (agent != null)
             if (endPosition != sphere.transform.position)
             {
@@ -44,6 +43,7 @@ public class Move : MonoBehaviour
 
                 endPosition = sphere.transform.position;
                 Point end = new Point(sphere.transform.position.x, sphere.transform.position.y, sphere.transform.position.z);
+
                 points = agent.GetPointPath(end);
 
                 tempT = agent.GetTrianglePath(end);

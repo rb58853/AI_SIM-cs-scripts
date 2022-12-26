@@ -11,13 +11,13 @@ namespace Point_Map
 
         PointNode end;
         Point point;
-        public List<PointNode> adjacents { get; private set; }
+        public Dictionary<PointNode, float> adjacents { get; private set; }
 
 
         public PointNode(Point point, PointNode end = null)
         {
             this.point = point;
-            adjacents = new List<PointNode>();
+            adjacents = new Dictionary<PointNode, float>();
             distance = float.MaxValue;
             this.end = end;
         }
@@ -26,7 +26,7 @@ namespace Point_Map
         public float get_z() { return point.z; }
 
         public void SetEnd(PointNode node) { end = node; }
-        public void AddAdjacent(PointNode node) { adjacents.Add(node); }
+        public void AddAdjacent(PointNode node, float value = 1) { adjacents.Add(node, value); }
         public float EuclideanDistance(PointNode node) { return node.point.Distance(point); }
         float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
         public override float Value()
@@ -50,14 +50,14 @@ namespace Point_Map
             /// Esto en cuanto a eficiencia es malo, se esta sacrificando en eficiencia para ganar en genaricidad
             /// Cambiar el uso de lista por el uso de array en caso que deje usar el .toArray que no se cuanto cuesta tampoco
             List<Node> result = new List<Node>();
-            foreach (Node adj in adjacents)
+            foreach (Node adj in adjacents.Keys)
                 result.Add(adj);
             return result;
         }
 
         public override float Distance(Node node)
         {
-            return EuclideanDistance(node as PointNode);
+            return EuclideanDistance(node as PointNode) * adjacents[node as PointNode];
         }
 
 
@@ -72,7 +72,7 @@ namespace Point_Map
                     PointNode e = new PointNode(end);
                     PointNode i = new PointNode(init, e);
                     e.SetEnd(e);
-                    i.AddAdjacent(e);
+                    i.AddAdjacent(e, arists[0].materialCost);
                     result.Add(e);
                     result.Add(i);
                     return result;
@@ -102,7 +102,7 @@ namespace Point_Map
                 }
                 foreach (PointNode node in points[0])
                 {
-                    initNode.AddAdjacent(node);
+                    initNode.AddAdjacent(node, 1);
 
                     //Vector3 a = new Vector3(initNode.point.x, initNode.point.y, initNode.point.z);
                     //Vector3 b = new Vector3(node.point.x, node.point.y, node.point.z);
@@ -114,7 +114,7 @@ namespace Point_Map
                     {
                         for (int k = 0; k < points[i + 1].Count; k++)
                         {
-                            points[i][j].AddAdjacent(points[i + 1][k]);
+                            points[i][j].AddAdjacent(points[i + 1][k], arists[i].materialCost);
                             //Vector3 a = new Vector3(points[i][j].point.x, points[i][j].point.y, points[i][j].point.z);
                             //Vector3 b = new Vector3(points[i + 1][k].point.x, points[i + 1][k].point.y, points[i + 1][k].point.z);
                             //Debug.DrawLine(a, b, Color.black, 50f);
@@ -124,15 +124,13 @@ namespace Point_Map
                 }
                 foreach (PointNode node in points[points.Count - 1])
                 {
-                    node.AddAdjacent(endNode);
+                    node.AddAdjacent(endNode, arists[points.Count - 1].materialCost);
                     //Vector3 a = new Vector3(node.point.x, node.point.y, node.point.z);
                     //Vector3 b = new Vector3(endNode.point.x, endNode.point.y, endNode.point.z);
                     //Debug.DrawLine(a, b, Color.black, 50f);
                 }
                 return result;
             }
-
-
         }
     }
 

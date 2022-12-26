@@ -162,7 +162,7 @@ namespace Agent_Space
         }
         public PointNode[] GetPointPath(Point endPoint)
         {
-            float n = 12f;///Density
+            float n = 0.7f;///Density
             List<Arist> aritPath = GetAritsPath(endPoint);
             List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, n);
 

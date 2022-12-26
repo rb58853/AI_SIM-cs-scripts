@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Triangle_Map;
 using UnityEngine;
 
-public class Move : MonoBehaviour
+public class DebuguerMove : MonoBehaviour
 {
     public GameObject sphere;
     Vector3 endPosition;

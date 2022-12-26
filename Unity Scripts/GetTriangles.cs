@@ -143,8 +143,8 @@ public class GetTriangles : MonoBehaviour
         nodeFromTriangle = new Dictionary<Vector3[], MapNode>();
         triangleFromNode = new Dictionary<MapNode, Vector3[]>();
 
-        Agent.NewMap();
-        Map map = Agent.map;
+        //NavMeshAI.Environment.NewMap();
+        Map map = Agent_Space.Environment.map;
 
         foreach (Vector3[] triangle in Triangles)
         {

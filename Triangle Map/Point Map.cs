@@ -10,7 +10,7 @@ namespace Point_Map
     {
 
         PointNode end;
-        Point point;
+        public Point point { get; private set; }
         public Dictionary<PointNode, float> adjacents { get; private set; }
 
 

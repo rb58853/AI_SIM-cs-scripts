@@ -8,16 +8,17 @@ using UnityEngine;
 
 namespace Agent_Space
 {
-    public enum Material { basic = 10 }
-
     class Agent
     {
-        public static Map map;
-
         public MapNode currentNode { get; private set; }
-        private Point position;
+        public Point position { get; private set; }
+        public PointNode currentPosition { get; private set; }
+        private PointNode nextPosition;
         private Queue<MapNode> trianglePath;
         private Stack<PointNode> pointPath;
+
+        public Stack<Point> visualPath { get; private set; }
+        public bool inMove = false;
 
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
@@ -25,6 +26,9 @@ namespace Agent_Space
         public Agent()
         {
             compatibility = new Dictionary<Material, float>();
+            trianglePath = new Queue<MapNode>();
+            pointPath = new Stack<PointNode>();
+            visualPath = new Stack<Point>();
         }
         public void SetCompatibility(Material material, float value)
         {
@@ -33,31 +37,17 @@ namespace Agent_Space
             else
                 compatibility.Add(material, value);
         }
-        public static void NewMap()
-        {
-            map = new Map();
-        }
-
-
-
-
-
-
-
 
         public void searchCurrentNode()
         {
-            foreach (Node node in map.nodes)
+            foreach (Node node in Environment.map.nodes)
                 if ((node as MapNode).triangle.PointIn(position))
                 {
                     currentNode = node as MapNode;
                     break;
                 }
         }
-
-        void setCurrentNode(MapNode node) { currentNode = node; }
         public void setPosition(Point point) { position = point; }
-
 
         Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
         {
@@ -65,6 +55,8 @@ namespace Agent_Space
         }
         Tuple<MapNode[], MapNode, MapNode> BFS(Point endPoint)
         {
+            bool endWasFound = false;
+            int countAfterFound = 10;
 
             List<MapNode> localMap = new List<MapNode>();
 
@@ -73,19 +65,17 @@ namespace Agent_Space
 
             Queue<MapNode> q = new Queue<MapNode>();
 
-            //MapNode end = new MapNode(endNode, this, endNode); end.SetEndNode(end);
             MapNode end = null;
 
-            //r.Add(currentNode, new MapNode(currentNode, this, end));
             r.Add(currentNode, new MapNode(currentNode, this));
             visited.Add(currentNode);
 
             localMap.Add(r[currentNode]);
-            //r[currentNode].SetDistance(0);
 
 
             if (currentNode.triangle.PointIn(endPoint))
             {
+                ///If endPoint is in Current node, return only current node as path, init and endNode
                 r[currentNode].SetEndNode(r[currentNode]);
                 return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], r[currentNode]);
             }
@@ -94,6 +84,12 @@ namespace Agent_Space
 
             while (q.Count > 0)
             {
+                if (endWasFound == true)
+                {
+                    countAfterFound--;
+                    if (countAfterFound <= 0) break;
+                }
+
                 MapNode n = q.Dequeue();
                 foreach (MapNode adj in n.adjacents.Keys)
                 {
@@ -105,7 +101,7 @@ namespace Agent_Space
                         if (adj.triangle.PointIn(endPoint))
                         {
                             end = temp;
-                            //Hacer mas cosas
+                            endWasFound = true;
                         }
 
                         r.Add(adj, temp);
@@ -137,15 +133,23 @@ namespace Agent_Space
             return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], end);
         }
 
-        public Node[] GetTrianglePath(Point endPoint)
+        public MapNode[] GetTrianglePath(Point endPoint)
         {
+            trianglePath.Clear();
+
             Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
             Node[] nodes = localMap.Item1;
             Node init = localMap.Item2;
             Node end = localMap.Item3;
 
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
-            return tools.ToArrayAsMapNode(dijkstra.GetPath());
+
+            MapNode[] result = tools.ToArrayAsMapNode(dijkstra.GetPath());
+
+            foreach (MapNode node in result)
+                trianglePath.Enqueue(node);
+
+            return result;
         }
         List<Arist> GetAritsPath(Point endPoint)
         {
@@ -162,9 +166,8 @@ namespace Agent_Space
         }
         public PointNode[] GetPointPath(Point endPoint)
         {
-            float n = 0.7f;///Density
             List<Arist> aritPath = GetAritsPath(endPoint);
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, n);
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, Environment.densityPath);
 
             if (mapPoints.Count == 0)
                 return new PointNode[1] { new PointNode(position) };
@@ -178,9 +181,44 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
+            GetTrianglePath(point);
             PointNode[] path = GetPointPath(point);
             for (int i = path.Length - 1; i >= 0; i--)
                 pointPath.Push(path[i]);
+
+            nextPosition = pointPath.Pop();
+            NextPoint();
+        }
+        public void NextMove()
+        {
+            if (inMove)
+            {
+                position = visualPath.Pop();
+                if (visualPath.Count == 0) NextPoint();
+            }
+        }
+        void NextPoint()
+        {
+            if (pointPath.Count == 0)
+                inMove = false;
+            else
+                inMove = true;
+
+            visualPath.Clear();
+
+            currentNode = trianglePath.Dequeue();
+            currentPosition = nextPosition;
+            nextPosition = pointPath.Pop();
+
+            float cost = currentPosition.adjacents[nextPosition] * 5;
+            List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
+
+            for (int i = temp.Count - 1; i >= 0; i--)
+                visualPath.Push(temp[i]);
+        }
+        public Point getDirection()
+        {
+            return nextPosition.point - currentPosition.point;
         }
         internal class tools
         {
@@ -200,5 +238,4 @@ namespace Agent_Space
             }
         }
     }
-
 }

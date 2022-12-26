@@ -85,7 +85,7 @@ namespace Triangle_Map
         {
             List<Point> points = adjacents[node as MapNode].ToPoints(1f);
             Point mid = MinMid(points, triangle.barycenter, (node as MapNode).triangle.barycenter);
-            drawToNode(node, mid);
+            //drawToNode(node, mid);
 
             float d1 = triangle.barycenter.Distance(mid) * MaterialCost();
             float d2 = (node as MapNode).triangle.barycenter.Distance(mid) * (node as MapNode).MaterialCost();

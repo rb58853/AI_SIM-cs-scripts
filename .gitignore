@@ -14,3 +14,6 @@ Triangle Map/Node.cs.meta
 Triangle Map/Point Map.cs.meta
 Triangle Map/Triangle Map.cs.meta
 Unity Scripts/Move.cs.meta
+Triangle Map/Environment.cs.meta
+Unity Scripts/AgentMove.cs.meta
+Unity Scripts/DebuguerMove.cs.meta

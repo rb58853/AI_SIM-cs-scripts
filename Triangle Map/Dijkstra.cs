@@ -39,7 +39,7 @@ namespace DijkstraSpace
             if (node.father != null)
                 GetPath(node.father);
         }
-        
+
         void Start()
         {
             initNode.SetDistance(0);
@@ -54,7 +54,9 @@ namespace DijkstraSpace
 
             while (Q.size > 0)
             {
+ 
                 Node node = Q.Pop();
+                node.SetVisited();
                 if (node == endNode)
                     break;
 
@@ -69,7 +71,6 @@ namespace DijkstraSpace
             {
                 v.SetDistance(u.distance + u.Distance(v));
                 v.SetFather(u);
-                v.SetVisited();
                 v.heapNode.Heapify(true);
             }
         }

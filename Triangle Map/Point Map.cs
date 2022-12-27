@@ -27,7 +27,7 @@ namespace Point_Map
 
         public void SetEnd(PointNode node) { end = node; }
         public void AddAdjacent(PointNode node, float value = 1) { adjacents.Add(node, value); }
-        public float EuclideanDistance(PointNode node) { return node.point.Distance(point); }
+        public float EuclideanDistance(PointNode node) { return point.Distance(node.point); }
         float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
         public override float Value()
         {
@@ -57,7 +57,7 @@ namespace Point_Map
 
         public override float Distance(Node node)
         {
-            return EuclideanDistance(node as PointNode) * adjacents[node as PointNode];
+            return EuclideanDistance(node as PointNode);// * adjacents[node as PointNode];
         }
 
 
@@ -106,7 +106,7 @@ namespace Point_Map
 
                     //Vector3 a = new Vector3(initNode.point.x, initNode.point.y, initNode.point.z);
                     //Vector3 b = new Vector3(node.point.x, node.point.y, node.point.z);
-                    //Debug.DrawLine(a, b, Color.red, 50f);
+                    //Debug.DrawLine(a, b, Color.black, 50f);
                 }
                 for (int i = 0; i < points.Count - 1; i++)
                 {

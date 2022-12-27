@@ -6,7 +6,7 @@ namespace Agent_Space
     class Environment
     {
         public static Map map = new Map();
-        public static float densityPath = 3;
+        public static float densityPath = 3f;
     }
 
 }

@@ -189,7 +189,14 @@ namespace Agent_Space
             nextPosition = pointPath.Pop();
             NextPoint();
         }
-        public void NextMove()
+
+        public void NextMove(int n = 1)
+        {
+            for (int i = 0; i < n; i++)
+                //if (inMove)
+                    NextMoveBasic();
+        }
+        void NextMoveBasic()
         {
             if (inMove)
             {
@@ -200,7 +207,10 @@ namespace Agent_Space
         void NextPoint()
         {
             if (pointPath.Count == 0)
+            {
                 inMove = false;
+                return;
+            }
             else
                 inMove = true;
 
@@ -210,15 +220,12 @@ namespace Agent_Space
             currentPosition = nextPosition;
             nextPosition = pointPath.Pop();
 
-            float cost = currentPosition.adjacents[nextPosition] * 5;
+            float cost = currentPosition.adjacents[nextPosition] * 25;
+
             List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
 
-            for (int i = temp.Count - 1; i >= 0; i--)
+            for (int i = temp.Count - 1; i >= 1; i--)
                 visualPath.Push(temp[i]);
-        }
-        public Point getDirection()
-        {
-            return nextPosition.point - currentPosition.point;
         }
         internal class tools
         {

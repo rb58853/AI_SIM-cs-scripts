@@ -189,35 +189,21 @@ namespace Triangle_Map
         }
         public List<Point> ToPoints(float n = 1)
         {
-            string eye;
-            if (Math.Abs(p1.x - p2.x) > 0.0001f)
-                eye = "x";
-            else
-            {
-                if (Math.Abs(p1.z - p2.z) > 0.0001f)
-                    eye = "z";
-                else
-                    eye = "y";
-            }
 
-            float x = (Point.Max(p1, p2, eye) - Point.Min(p1, p2, eye)).x;
-            float y = (Point.Max(p1, p2, eye) - Point.Min(p1, p2, eye)).y;
-            float z = (Point.Max(p1, p2, eye) - Point.Min(p1, p2, eye)).z;
-
-            Point vector = new Point(x, y, z);
+            Point vector = p2 - p1;
 
             List<Point> result = new List<Point>();
-            result.Add(p1);
-            result.Add(p2);
 
             float k = p1.Distance(p2) * n;
 
+            result.Add(p1);
             for (int i = 1; i < k; i++)
             {
                 float alfa = (float)i / (float)k;
-                Point temp = Point.Min(p1, p2, eye) + vector * alfa;
-                result.Add(temp);
+                result.Add(p1 + vector * alfa);
             }
+            result.Add(p2);
+
             return result;
         }
         public void SetMaterialCost(float value)

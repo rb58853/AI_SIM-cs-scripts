@@ -14,31 +14,20 @@ public class GetTriangles : MonoBehaviour
     static Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>> triangleFromArist;
     static Dictionary<Vector3[], MapNode> nodeFromTriangle;
     static Dictionary<MapNode, Vector3[]> triangleFromNode;
-    public void Start()
+
+    static bool start = false;
+    public static void Start()
     {
-        GetTrianglesFromNavMesh();
-        SetMapWithTriangles();
+        if (!start)
+        {
+            GetTrianglesFromNavMesh();
+            SetMapWithTriangles();
+        }
+        start = true;
     }
 
     Triangle temp = null;
-    IEnumerator s(Triangle triangle)
-    {
-        if (temp != null)
-            DrawFromTriangle(temp, Color.white);
-        yield return new WaitForEndOfFrame();
-        DrawFromTriangle(triangle, Color.red);
-        temp = triangle;
-    }
-
-    void DFSDraw(MapNode node)
-    {
-        DrawFromTriangle(node.triangle, Color.yellow);
-        node.SetVisited();
-        foreach (MapNode adj in node.adjacents.Keys)
-            if (!adj.visited)
-                DFSDraw(adj);
-    }
-    void GetTrianglesFromNavMesh()
+    static void GetTrianglesFromNavMesh()
     {
         triangleFromArist = new Dictionary<Vector3, Dictionary<Vector3, List<Vector3[]>>>();
         Triangles = new List<Vector3[]>();
@@ -65,7 +54,7 @@ public class GetTriangles : MonoBehaviour
         }
 
     }
-    void AddArist(Vector3 v1, Vector3 v2, Vector3[] triangle)
+    static void AddArist(Vector3 v1, Vector3 v2, Vector3[] triangle)
     {
         ///if v1 dont' exist then v2 does not exist either, because the refelxive relation in arists
 
@@ -114,36 +103,11 @@ public class GetTriangles : MonoBehaviour
             triangleFromArist.Add(v1, dict2);
         }
     }
-    void DrawTriangles(List<Vector3[]> triangles = null)
-    {
-        if (triangles == null)
-            triangles = Triangles;
-
-        foreach (Vector3[] triangle in triangles)
-            DrawOnlyTriangle(triangle);
-    }
-    void DrawOnlyTriangle(Vector3[] triangle)
-    {
-        Debug.DrawLine(triangle[0], triangle[1], Color.red, 50f);
-        Debug.DrawLine(triangle[1], triangle[2], Color.red, 50f);
-        Debug.DrawLine(triangle[2], triangle[0], Color.red, 50f);
-    }
-    void DrawFromTriangle(Triangle triangle, Color color)
-    {
-        Vector3 p1 = new Vector3(triangle.vertex1.x, triangle.vertex1.y, triangle.vertex1.z);
-        Vector3 p2 = new Vector3(triangle.vertex2.x, triangle.vertex2.y, triangle.vertex2.z);
-        Vector3 p3 = new Vector3(triangle.vertex3.x, triangle.vertex3.y, triangle.vertex3.z);
-
-        Debug.DrawLine(p1, p2, color, 50f);
-        Debug.DrawLine(p2, p3, color, 50f);
-        Debug.DrawLine(p3, p1, color, 50f);
-    }
-    void SetMapWithTriangles()
+    static void SetMapWithTriangles()
     {
         nodeFromTriangle = new Dictionary<Vector3[], MapNode>();
         triangleFromNode = new Dictionary<MapNode, Vector3[]>();
 
-        //NavMeshAI.Environment.NewMap();
         Map map = Agent_Space.Environment.map;
 
         foreach (Vector3[] triangle in Triangles)
@@ -171,7 +135,7 @@ public class GetTriangles : MonoBehaviour
             }
         }
     }
-    List<Tuple<Vector3[], Arist>> GetAdjacents(Vector3[] triangle)
+    static List<Tuple<Vector3[], Arist>> GetAdjacents(Vector3[] triangle)
     {
         List<Tuple<Vector3[], Arist>> result = new List<Tuple<Vector3[], Arist>>();
 
@@ -193,7 +157,7 @@ public class GetTriangles : MonoBehaviour
 
         return result;
     }
-    Arist eToArist(Vector3[] e)
+    static Arist eToArist(Vector3[] e)
     {
         float x = e[0][0]; float y = e[0][1]; float z = e[0][2];
         Point p1 = new Point(x, y, z);

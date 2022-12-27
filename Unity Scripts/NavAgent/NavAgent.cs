@@ -6,24 +6,18 @@ using Agent_Space;
 using BaseNode;
 using System;
 
-public class AgentMove : MonoBehaviour
+public class NavAgent : MonoBehaviour
 {
     Agent agent;
-    public GameObject sphere;
     public int speed = 15;
     public float water = 1;
+    public float fire = 1;
     void Start()
     {
+        GetTriangles.Start();
         agent = new Agent();
-        StartCoroutine(start());
-    }
-    IEnumerator start()
-    {
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForEndOfFrame();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         agent.searchCurrentNode();
-        agent.SetPointPath(new Point(sphere.transform.position.x, sphere.transform.position.y, sphere.transform.position.z));
     }
 
     int countFrames = 0;
@@ -42,13 +36,14 @@ public class AgentMove : MonoBehaviour
             Vector3 agentPos = new Vector3(agent.position.x, agent.position.y, agent.position.z);
             dir = (agentPos - transform.position) / 5;
         }
-
-        Debug.Log("Desplazamiento del vector: " + Mathf.Sqrt((dir.x * dir.x) + (dir.y * dir.y) + (dir.z * dir.z)));
         transform.Translate(dir);
     }
-
     public void SetDestination(Vector3 destination)
     {
         agent.SetPointPath(new Point(destination.x, destination.y, destination.z));
+    }
+    public bool InMove()
+    {
+        return agent.inMove;
     }
 }

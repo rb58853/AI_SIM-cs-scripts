@@ -56,7 +56,7 @@ namespace Agent_Space
         Tuple<MapNode[], MapNode, MapNode> BFS(Point endPoint)
         {
             bool endWasFound = false;
-            int countAfterFound = 10;
+            int countAfterFound = Environment.bfsArea;
 
             List<MapNode> localMap = new List<MapNode>();
 
@@ -67,7 +67,7 @@ namespace Agent_Space
 
             MapNode end = null;
 
-            r.Add(currentNode, new MapNode(currentNode, this));
+            r.Add(currentNode, new MapNode(currentNode, this, endPoint));
             visited.Add(currentNode);
 
             localMap.Add(r[currentNode]);
@@ -76,7 +76,7 @@ namespace Agent_Space
             if (currentNode.triangle.PointIn(endPoint))
             {
                 ///If endPoint is in Current node, return only current node as path, init and endNode
-                r[currentNode].SetEndNode(r[currentNode]);
+                r[currentNode].SetEndPoint(endPoint);
                 return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], r[currentNode]);
             }
 
@@ -96,7 +96,7 @@ namespace Agent_Space
                     if (!visited.Contains(adj))
                     {
                         visited.Add(adj);
-                        MapNode temp = new MapNode(adj, this);
+                        MapNode temp = new MapNode(adj, this, endPoint);
 
                         if (adj.triangle.PointIn(endPoint))
                         {
@@ -124,10 +124,7 @@ namespace Agent_Space
                 }
             }
 
-            if (end != null)
-                foreach (MapNode node in localMap)
-                    node.SetEndNode(end);
-            else
+            if (end == null)
                 localMap = new List<MapNode>();
 
             return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], end);
@@ -141,6 +138,9 @@ namespace Agent_Space
             Node[] nodes = localMap.Item1;
             Node init = localMap.Item2;
             Node end = localMap.Item3;
+
+            if (end == null)
+                return new MapNode[0];
 
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
 
@@ -158,7 +158,7 @@ namespace Agent_Space
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
 
             if (nodes.Length == 0)
-                throw new Exception("No existe camino");
+                return new List<Arist>();
 
             MapNode[] path = tools.ToArrayAsMapNode(dijkstra.GetPath());/// Si se puede, mejorar la eficiencia con lo default
 
@@ -167,10 +167,11 @@ namespace Agent_Space
         public PointNode[] GetPointPath(Point endPoint)
         {
             List<Arist> aritPath = GetAritsPath(endPoint);
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, Environment.densityPath);
 
-            if (mapPoints.Count == 0)
+            if (aritPath.Count == 0)
                 return new PointNode[1] { new PointNode(position) };
+
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, Environment.densityPath);
 
             ///MapPoints[0] = endNode
             ///MapPoints[1] = initNode
@@ -194,7 +195,7 @@ namespace Agent_Space
         {
             for (int i = 0; i < n; i++)
                 //if (inMove)
-                    NextMoveBasic();
+                NextMoveBasic();
         }
         void NextMoveBasic()
         {

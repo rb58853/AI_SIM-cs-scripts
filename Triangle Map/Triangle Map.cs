@@ -17,7 +17,7 @@ namespace Triangle_Map
         public MapNode origin { get; private set; }
         public float materialCost { get => MaterialCost(); }
 
-        MapNode end;
+        Point end;
         Agent agent;///esto importa por compatibilidad de materiales
         public MapNode(Triangle triangle)
         {
@@ -30,7 +30,7 @@ namespace Triangle_Map
 
             DefaultValues();
         }
-        public MapNode(MapNode origin, Agent agent, MapNode end = null)
+        public MapNode(MapNode origin, Agent agent, Point end = null)
         {
             this.triangle = origin.triangle;
             adjacents = new Dictionary<MapNode, Arist>();
@@ -41,14 +41,14 @@ namespace Triangle_Map
             this.material = origin.material;
             DefaultValues();
         }
-        public void SetEndNode(MapNode endNode) { this.end = endNode; }
+        public void SetEndPoint(Point point) { this.end = point; }
         public void SetMaterial(Agent_Space.Material material) { this.material = material; }
 
         public void AddAdjacent(MapNode node, Arist arist) { adjacents.Add(node, arist); }
         public void AddAdjacent(MapNode node, Point p1, Point p2) { adjacents.Add(node, new Arist(p1, p2)); }
         public override float Value()
         {
-            float hWeigth = 2;
+            float hWeigth = Agent_Space.Environment.heuristicTriangleWeigth;
             float gWeigth = 1;
             return distance * gWeigth + Heuristic() * hWeigth;
         }
@@ -58,7 +58,7 @@ namespace Triangle_Map
         }
         float Heuristic()
         {
-            return EuclideanDistance(end);
+            return triangle.barycenter.Distance(end);
         }
         public void DefaultValues()
         {
@@ -85,7 +85,8 @@ namespace Triangle_Map
         {
             List<Point> points = adjacents[node as MapNode].ToPoints(1f);
             Point mid = MinMid(points, triangle.barycenter, (node as MapNode).triangle.barycenter);
-            //drawToNode(node, mid);
+
+            drawToNode(node, mid);
 
             float d1 = triangle.barycenter.Distance(mid) * MaterialCost();
             float d2 = (node as MapNode).triangle.barycenter.Distance(mid) * (node as MapNode).MaterialCost();

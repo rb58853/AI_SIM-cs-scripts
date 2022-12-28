@@ -8,7 +8,6 @@ using UnityEngine;
 
 public class DebuguerMove : MonoBehaviour
 {
-    public GameObject sphere;
     Vector3 endPosition;
     Agent agent;
 
@@ -19,13 +18,13 @@ public class DebuguerMove : MonoBehaviour
     IEnumerator start()
     {
         yield return new WaitForEndOfFrame();
-        agent = new Agent();
-        agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
-        agent.searchCurrentNode();
+        agent = GetComponent<move>().navAgent.agent;
+        
+        //agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
+        //agent.searchCurrentNode();
         DFSDraw(agent.currentNode, Color.yellow);
 
         endPosition = new Vector3(1, 1, 1);
-
     }
     // Update is called once per frame
 
@@ -35,24 +34,24 @@ public class DebuguerMove : MonoBehaviour
 
     void Update()
     {
-        if (agent != null)
-            if (endPosition != sphere.transform.position)
+        if (agent == null) return;
+
+        if (Input.GetMouseButton(1))
+        {
+            DrawPath(tempT, Color.yellow);
+            DrawPath(points, Color.white);
+
+            RaycastHit hit;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
             {
-                DrawPath(tempT, Color.yellow);
-                DrawPath(points, Color.white);
 
-                endPosition = sphere.transform.position;
-                Point end = new Point(sphere.transform.position.x, sphere.transform.position.y, sphere.transform.position.z);
-
+                Point end = new Point(hit.point.x, hit.point.y, hit.point.z);
                 points = agent.GetPointPath(end);
-
                 tempT = agent.GetTrianglePath(end);
-
                 DrawPath(tempT, Color.red);
-
                 DrawPath(points, Color.blue);
-
             }
+        }
     }
     void DrawPath(PointNode[] points, Color color)
     {

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Point_Map
 {
-    class PointNode : Node
+    public class PointNode : Node
     {
 
         PointNode end;
@@ -63,7 +63,7 @@ namespace Point_Map
 
         internal class Static
         {
-            public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, float n = 1)
+            public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, float n = 1, float cost = 1)
             {
                 List<PointNode> result = new List<PointNode>();
 
@@ -72,7 +72,7 @@ namespace Point_Map
                     PointNode e = new PointNode(end);
                     PointNode i = new PointNode(init, e);
                     e.SetEnd(e);
-                    i.AddAdjacent(e, arists[0].materialCost);
+                    i.AddAdjacent(e, cost);
                     result.Add(e);
                     result.Add(i);
                     return result;
@@ -102,7 +102,7 @@ namespace Point_Map
                 }
                 foreach (PointNode node in points[0])
                 {
-                    initNode.AddAdjacent(node, 1);
+                    initNode.AddAdjacent(node, cost);
 
                     //Vector3 a = new Vector3(initNode.point.x, initNode.point.y, initNode.point.z);
                     //Vector3 b = new Vector3(node.point.x, node.point.y, node.point.z);

@@ -4,22 +4,19 @@ using UnityEngine;
 
 public class move : MonoBehaviour
 {
-    NavAgent navAgent;
-    public GameObject end;
+    public NavAgent navAgent;
     void Start()
     {
         navAgent = GetComponent<NavAgent>();
-        StartCoroutine(s());
     }
-    IEnumerator s()
-    {
-        yield return new WaitForEndOfFrame();
-        navAgent.SetDestination(end.transform.position);
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetMouseButton(1))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
+                navAgent.SetDestination(hit.point);
+        }
+
     }
 }

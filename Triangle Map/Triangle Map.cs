@@ -8,7 +8,7 @@ using BaseNode;
 
 namespace Triangle_Map
 {
-    class MapNode : Node
+    public class MapNode : Node
     {
         public Agent_Space.Material material { get; private set; }
 
@@ -124,8 +124,14 @@ namespace Triangle_Map
                 return agent.compatibility[this.material];
             return (float)this.material / 10f;
         }
+        public float MaterialCost(Agent agent)
+        {
+            if (agent.compatibility.ContainsKey(this.material))
+                return agent.compatibility[this.material];
+            return (float)this.material / 10f;
+        }
     }
-    class Triangle
+    public class Triangle
     {
         public Point vertex1 { get; private set; }
         public Point vertex2 { get; private set; }
@@ -173,7 +179,7 @@ namespace Triangle_Map
             return barycenter.ToString();
         }
     }
-    class Arist
+    public class Arist
     {
         public float materialCost { get; private set; }
         public Point p1 { get; private set; }

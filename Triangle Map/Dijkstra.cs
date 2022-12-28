@@ -75,7 +75,7 @@ namespace DijkstraSpace
             }
         }
     }
-    class HeapNode
+    public class HeapNode
     {
         internal Agent agent;
         public int size { get; private set; }

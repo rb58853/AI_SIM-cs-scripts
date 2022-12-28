@@ -1,3 +1,3 @@
-# AI_SIM-cs-scripts
+# AI_SIM
 
-Only scripts .cs from proyect in Unity and Visual Studio:
+NavMesh Unity Asset

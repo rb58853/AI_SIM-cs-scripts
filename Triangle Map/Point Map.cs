@@ -163,26 +163,27 @@ namespace Point_Map
                         another2 = new PointNode(GeneratedPoint(init.point, agent, collision.Item2, negative: true), endNode);
                         //Debug.Log(another);
 
-                        if (!Collision(init, another1, agent, mapNode).Item1)
-                        {
-                            init.AddAdjacent(another1, cost);
-                            result.Add(another1);
-                            another1.visitedInCreation = true;
-                            visitedObstacles.Add(collision.Item2);
-                            List<Agent> temp = new List<Agent>();
-                            temp.Add(collision.Item2);
-                            CreateSimplePath(another1, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, temp);
-                        }
-                        if (!Collision(init, another2, agent, mapNode).Item1)
-                        {
-                            init.AddAdjacent(another2, cost);
-                            result.Add(another2);
-                            another2.visitedInCreation = true;
-                            visitedObstacles.Add(collision.Item2);
-                            List<Agent> temp = new List<Agent>();
-                            temp.Add(collision.Item2);
-                            CreateSimplePath(another2, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, temp);
-                        }
+                        if (mapNode.triangle.PointIn(another1.point))
+                            if (!Collision(init, another1, agent, mapNode).Item1)
+                            {
+                                init.AddAdjacent(another1, cost);
+                                result.Add(another1);
+                                another1.visitedInCreation = true;
+                                visitedObstacles.Add(collision.Item2);
+                                CreateSimplePath(another1, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
+                                //visitedObstacles.Remove(collision.Item2); ///More path, but very much complex
+                            }
+
+                        if (mapNode.triangle.PointIn(another2.point))
+                            if (!Collision(init, another2, agent, mapNode).Item1)
+                            {
+                                init.AddAdjacent(another2, cost);
+                                result.Add(another2);
+                                another2.visitedInCreation = true;
+                                visitedObstacles.Add(collision.Item2);
+                                CreateSimplePath(another2, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
+                                //visitedObstacles.Remove(collision.Item2); ///More path, but very much complex
+                            }
 
                         continue;
                     }
@@ -207,8 +208,8 @@ namespace Point_Map
                 Point unitVector2 = vector2 / den;
 
                 if (negative)
-                    return collision.position + unitVector2 * (agent.radius + collision.radius) * -2;
-                return collision.position + unitVector2 * (agent.radius + collision.radius) * 2;
+                    return collision.position + unitVector2 * (agent.radius + collision.radius) * -1.6f;
+                return collision.position + unitVector2 * (agent.radius + collision.radius) * 1.6f;
             }
             static Point IntersectedOrtogonalVectors(Point init, Point end, Point obstacle)
             {

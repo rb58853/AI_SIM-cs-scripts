@@ -8,12 +8,14 @@ using System;
 
 public class NavAgent : MonoBehaviour
 {
-    public readonly Agent agent = new Agent();
+    public float radius = 1;
+    public Agent agent { get; private set; }
     public int speed = 15;
     public float water = 1;
     public float fire = 1;
     void Start()
     {
+        agent = new Agent(radius);
         GetTriangles.Start();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         agent.searchCurrentNode();

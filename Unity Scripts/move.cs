@@ -4,13 +4,15 @@ using UnityEngine;
 
 public class move : MonoBehaviour
 {
-    public NavAgent navAgent;
+    public NavAgent navAgent { get; private set; }
+    public bool noMove;
     void Start()
     {
         navAgent = GetComponent<NavAgent>();
     }
     void Update()
     {
+        if (noMove) return;
         if (Input.GetMouseButton(1))
         {
             RaycastHit hit;

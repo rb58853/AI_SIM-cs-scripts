@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DijkstraSpace;
 using Point_Map;
+using Triangle_Map;
 using UnityEngine;
 namespace BaseNode
 {
@@ -64,6 +65,11 @@ namespace BaseNode
         {
             return new Point(a * point.x, a * point.y, point.z * a);
         }
+        public static Point operator /(Point point, float a)
+        {
+            return new Point(point.x / a, point.y / a, point.z / a);
+        }
+
         public static Point operator +(Point point1, Point point2)
         {
             return new Point(point1.x + point2.x, point1.y + point2.y, point1.z + point2.z);
@@ -118,5 +124,32 @@ namespace BaseNode
         {
             return new Vector3(x, y, z);
         }
+        public float DistanceToLine(Point l1, Point l2)
+        {
+            float a, b, c;
+            if (l1.x == l2.x)
+            {
+                a = 1;
+                b = 0;
+            }
+            else
+            {
+                a = (l2.z - l1.z) / (l1.x - l2.x);
+                b = 1;
+            }
+            c = -(a * l1.x + b * l1.z);
+
+            return (float)(Math.Abs(a * this.x + b * this.z + c) / Math.Sqrt(a * a + b * b));
+        }
+        public float DistanceToTriangle(Triangle triangle)
+        {
+            float d1 = DistanceToLine(triangle.vertex1, triangle.vertex2);
+            float d2 = DistanceToLine(triangle.vertex1, triangle.vertex3);
+            float d3 = DistanceToLine(triangle.vertex3, triangle.vertex2);
+            return Math.Min(Math.Min(d1, d2), d3);
+        }
+        public void ResetX(float x) { this.x = x; }
+        public void ResetY(float Y) { this.y = y; }
+        public void ResetZ(float Z) { this.z = z; }
     }
 }

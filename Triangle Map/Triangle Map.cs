@@ -16,6 +16,7 @@ namespace Triangle_Map
         public Dictionary<MapNode, Arist> adjacents { get; private set; }
         public MapNode origin { get; private set; }
         public float materialCost { get => MaterialCost(); }
+        public List<Agent> agentsIn { get; private set; }
 
         Point end;
         Agent agent;///esto importa por compatibilidad de materiales
@@ -23,7 +24,7 @@ namespace Triangle_Map
         {
             this.triangle = triangle;
             adjacents = new Dictionary<MapNode, Arist>();
-
+            agentsIn = new List<Agent>();
             this.agent = null;
             this.end = null;
             this.origin = null;
@@ -34,12 +35,21 @@ namespace Triangle_Map
         {
             this.triangle = origin.triangle;
             adjacents = new Dictionary<MapNode, Arist>();
+            agentsIn = new List<Agent>();
 
             this.agent = agent;
             this.end = end;
             this.origin = origin;
             this.material = origin.material;
             DefaultValues();
+        }
+        public void AddAgent(Agent agent)
+        {
+            agentsIn.Add(agent);
+        }
+        public void RemoveAgent(Agent agent)
+        {
+            agentsIn.Remove(agent);
         }
         public void SetEndPoint(Point point) { this.end = point; }
         public void SetMaterial(Agent_Space.Material material) { this.material = material; }
@@ -86,7 +96,7 @@ namespace Triangle_Map
             List<Point> points = adjacents[node as MapNode].ToPoints(1f);
             Point mid = MinMid(points, triangle.barycenter, (node as MapNode).triangle.barycenter);
 
-            drawToNode(node, mid);
+            //drawToNode(node, mid);
 
             float d1 = triangle.barycenter.Distance(mid) * MaterialCost();
             float d2 = (node as MapNode).triangle.barycenter.Distance(mid) * (node as MapNode).MaterialCost();

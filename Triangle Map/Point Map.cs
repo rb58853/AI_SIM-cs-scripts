@@ -120,21 +120,27 @@ namespace Point_Map
 
                 foreach (Agent agentObstacle in mapNode.agentsIn)
                 {
+                    float lenSegment = l1.Distance(l2);
+                    Point intersected = IntersectedOrtogonalVectors(l1, l2, agentObstacle.position);
+                    bool inSegment = intersected.Distance(l1) < lenSegment && intersected.Distance(l2) < lenSegment;
+
                     if (agentObstacle == agent) continue;
-                    //bool t = agentObstacle.position.DistanceToLine(l1, l2) < agent.radius + agentObstacle.radius;
-                    if (agentObstacle.position.DistanceToLine(l1, l2) < agent.radius + agentObstacle.radius)
-                        /// Collision
-                        return new Tuple<bool, Agent>(true, agentObstacle);
+
+                    //if (agentObstacle.position.DistanceToLine(l1, l2) < agent.radius + agentObstacle.radius)
+                    if (inSegment)
+                        if (intersected.Distance(agentObstacle.position) < agent.radius + agentObstacle.radius)
+                            /// Collision
+                            return new Tuple<bool, Agent>(true, agentObstacle);
                 }
 
                 return new Tuple<bool, Agent>(false, null);
             }
 
-            static void CreateSimplePath(PointNode init, List<PointNode> list, 
-                Agent agent, MapNode mapNode, float cost, PointNode endNode, 
+            static void CreateSimplePath(PointNode init, List<PointNode> list,
+                Agent agent, MapNode mapNode, float cost, PointNode endNode,
                 List<PointNode> result, List<Agent> visitedObstacles)
             {
-                
+
                 if (!init.visitedInCreation) return;
                 PointNode before = null;
                 int index = 0;
@@ -206,10 +212,6 @@ namespace Point_Map
             }
             static Point IntersectedOrtogonalVectors(Point init, Point end, Point obstacle)
             {
-                Debug.Log("Init " + init);
-                Debug.Log("End " + end);
-                Debug.Log("Obstacle " + obstacle);
-
                 Point vector1 = end - init;
                 Point vectorInitToObstacle = obstacle - init;
                 Point vector2 = new Point(-vectorInitToObstacle.z, 0, vectorInitToObstacle.x);///Ortogonal

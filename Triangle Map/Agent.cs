@@ -37,7 +37,6 @@ namespace Agent_Space
             pointPath = new Stack<PointNode>();
             visualPath = new Stack<Point>();
             ocupedNodes = new List<MapNode>();
-
             this.radius = radius;
             inMove = false;
         }
@@ -69,32 +68,50 @@ namespace Agent_Space
         public void SetOcupedFromPosition()
         {
             Queue<MapNode> ocuped = new Queue<MapNode>();
-            return;
-            foreach (MapNode node in ocupedNodes)
+
+            ocuped.Enqueue(currentNode);
+
+            if (!ocupedNodes.Contains(currentNode))
             {
+                ocupedNodes.Add(currentNode);
+                currentNode.AddAgent(this);
+            }
+
+            for (int i = 0; i < ocupedNodes.Count; i++)
+            {
+                MapNode node = ocupedNodes[i];
                 if (node != currentNode)
+                {
                     if (position.DistanceToTriangle(node.triangle) > radius)
                     {
                         node.RemoveAgent(this);
                         ocupedNodes.Remove(node);
+                        i -= 1;
                     }
-                ocuped.Enqueue(node);
+                    else
+                        ocuped.Enqueue(node);
+                }
             }
+            //Debug.Log("nodes despues de remover = " + ocupedNodes.Count);
 
-            List<MapNode> visited = new List<MapNode>();
+            //int o = 0;
             while (ocuped.Count > 0)
             {
+                //o++;
+                //Debug.Log(o);
                 MapNode node = ocuped.Dequeue();
-                visited.Add(node);
+
                 foreach (MapNode adj in node.adjacents.Keys)
-                    if (!visited.Contains(adj))
-                        if (position.DistanceToTriangle(adj.triangle) < radius)
+                    if (position.DistanceToTriangle(adj.triangle) < radius)
+                        if (!ocupedNodes.Contains(adj))
                         {
-                            adj.AddAgent(this);
-                            ocupedNodes.Add(adj);
                             ocuped.Enqueue(adj);
+                            Debug.Log("cantidad de agentes en nodo: " + adj.agentsIn.Count);
+                            ocupedNodes.Add(adj);
+                            adj.AddAgent(this);
                         }
             }
+            //Debug.Log(name + " tiene ocupados triangulos = " + ocupedNodes.Count);
         }
 
         Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
@@ -244,14 +261,21 @@ namespace Agent_Space
         int countMoves = 5;
         public void NextMove(int n = 1)
         {
+
             for (int i = 0; i < n; i++)
                 NextMoveBasic();
+
             countMoves--;
             if (countMoves <= 0)
             {
-                SetPointPath(destination);
-                //SetOcupedFromPosition();
-                countMoves = 5;
+                //if (PointNode.Static.Collision(position, pointPath.ToArray()[0].point, this, currentNode).Item1)
+                //SetPointPath(destination);
+                ///Se le puede decir tambien que cambie la direccion y mantenga el camino ya calculado, habria que disennar un algoritmo que 
+                ///funcione con ello, pero no habra nada que lo haga preciso
+
+                countMoves = 1;
+                SetOcupedFromPosition();
+                //SetPointPath(destination);
             }
         }
         void NextMoveBasic()
@@ -261,6 +285,12 @@ namespace Agent_Space
                 if (visualPath.Count == 0) NextPoint();
                 try { position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
+                if (countMoves <= 0)
+                {
+                    countMoves = 5;
+                SetPointPath(destination);
+                }
+                countMoves-=1;
             }
         }
         void NextPoint()

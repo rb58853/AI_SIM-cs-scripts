@@ -34,7 +34,7 @@ namespace Point_Map
         public override float Value()
         {
             float g = distance;
-            float h = Heuristic(end);
+            float h = Heuristic(end) * Agent_Space.Environment.heuristicPointWeigth;
 
             return g + h;
         }
@@ -61,8 +61,6 @@ namespace Point_Map
         {
             return EuclideanDistance(node as PointNode);// * adjacents[node as PointNode];
         }
-
-
 
         internal class Static
         {
@@ -112,10 +110,10 @@ namespace Point_Map
                 result.Add(endNode);
                 return result;
             }
-            static Tuple<bool, Agent> Collision(PointNode node1, PointNode node2, Agent agent, MapNode mapNode)
+            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode)
             {
-                Point l1 = node1.point;
-                Point l2 = node2.point;
+                Point l1 = node1;
+                Point l2 = node2;
 
                 foreach (Agent agentObstacle in mapNode.agentsIn)
                 {
@@ -162,7 +160,7 @@ namespace Point_Map
                     {
                         PointNode end = temp[i];
 
-                        Tuple<bool, Agent> collision = Collision(current, end, agent, mapNode);
+                        Tuple<bool, Agent> collision = Collision(current.point, end.point, agent, mapNode);
                         if (collision.Item1)
                         {
                             if (!visitedObstacles.Contains(collision.Item2))
@@ -171,7 +169,7 @@ namespace Point_Map
 
                                 PointNode another1 = new PointNode(GeneratedPoint(init.point, agent, collision.Item2), endNode);
                                 if (mapNode.triangle.PointIn(another1.point))
-                                    if (!Collision(current, another1, agent, mapNode).Item1)
+                                    if (!Collision(current.point, another1.point, agent, mapNode).Item1)
                                     {
                                         current.AddAdjacent(another1, cost);
                                         //DrawTwoPoints(current.point, another1.point);
@@ -183,7 +181,7 @@ namespace Point_Map
                                     }
                                 PointNode another2 = new PointNode(GeneratedPoint(init.point, agent, collision.Item2, true), endNode);
                                 if (mapNode.triangle.PointIn(another2.point))
-                                    if (!Collision(current, another2, agent, mapNode).Item1)
+                                    if (!Collision(current.point, another2.point, agent, mapNode).Item1)
                                     {
                                         current.AddAdjacent(another2, cost);
                                         //DrawTwoPoints(current.point, another2.point);

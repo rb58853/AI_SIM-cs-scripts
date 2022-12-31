@@ -18,9 +18,42 @@ namespace Agent_Space
         public readonly static int bfsArea = 50;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 2f;
+        /// <summary> heuristic weigth for path between points </summary>
+        public readonly static float heuristicPointWeigth = 1f;
     }
     class Obsolete
     {
+        //public void SetOcupedFromPosition()
+        //{
+        //    Queue<MapNode> ocuped = new Queue<MapNode>();
+
+        //    foreach (MapNode node in ocupedNodes)
+        //        if (node != currentNode)
+        //            node.RemoveAgent(this);
+
+        //    ocuped.Enqueue(currentNode);
+        //    currentNode.AddAgent(this);
+        //    ocupedNodes = new List<MapNode>();
+        //    ocupedNodes.Add(currentNode);
+
+        //    int o = 0;
+        //    while (ocuped.Count > 0)
+        //    {
+        //        o++;
+        //        Debug.Log("over = " + o);
+        //        MapNode node = ocuped.Dequeue();
+
+        //        foreach (MapNode adj in node.adjacents.Keys)
+        //            if (position.DistanceToTriangle(adj.triangle) < radius)
+        //                if (!ocupedNodes.Contains(adj))
+        //                {
+        //                    ocuped.Enqueue(adj);
+        //                    adj.AddAgent(this);
+        //                    ocupedNodes.Add(adj);
+        //                }
+        //    }
+        //    Debug.Log(name + " tiene ocupados triangulos = " + ocupedNodes.Count);
+        //}
         #region Mas preciso pero mucho mas costoso que el actual, metodo de la clase PointMap.Static
         //static void CreateSimplePath(PointNode init, List<PointNode> list,
         //      Agent agent, MapNode mapNode, float cost, PointNode endNode,

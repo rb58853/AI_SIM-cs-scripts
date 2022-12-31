@@ -142,9 +142,9 @@ namespace BaseNode
         }
         public float DistanceToTriangle(Triangle triangle)
         {
-            float d1 = DistanceToLine(triangle.vertex1, triangle.vertex2);
-            float d2 = DistanceToLine(triangle.vertex1, triangle.vertex3);
-            float d3 = DistanceToLine(triangle.vertex3, triangle.vertex2);
+            float d1 = DistanceToSegment(triangle.vertex1, triangle.vertex2);
+            float d2 = DistanceToSegment(triangle.vertex1, triangle.vertex3);
+            float d3 = DistanceToSegment(triangle.vertex3, triangle.vertex2);
             return Math.Min(Math.Min(d1, d2), d3);
         }
         public static Point OrtogonalProyection(Point l1, Point l2, Point point)

@@ -8,6 +8,7 @@ using System;
 
 public class NavAgent : MonoBehaviour
 {
+    public string Name = "agent";
     public float radius = 1;
     public Agent agent { get; private set; }
     public int speed = 15;
@@ -15,7 +16,7 @@ public class NavAgent : MonoBehaviour
     public float fire = 1;
     void Start()
     {
-        agent = new Agent(radius);
+        agent = new Agent(radius,Name);
         GetTriangles.Start();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         agent.searchCurrentNode();
@@ -41,8 +42,9 @@ public class NavAgent : MonoBehaviour
 
         if (framesForUpdatePath <= 0)
         {
-            framesForUpdatePath = 15;
+            //framesForUpdatePath = 20;
             //agent.SetPointPath(agent.destination);
+            //agent.SetOcupedFromPosition();
         }
         framesForUpdatePath--;
 
@@ -52,6 +54,11 @@ public class NavAgent : MonoBehaviour
     {
         agent.SetPointPath(new Point(destination.x, destination.y, destination.z));
     }
+    public void SetDestination(Point destination)
+    {
+        agent.SetPointPath(destination);
+    }
+
     public bool InMove()
     {
         return agent.inMove;

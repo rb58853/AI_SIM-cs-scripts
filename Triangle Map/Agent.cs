@@ -29,8 +29,9 @@ namespace Agent_Space
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
 
-        public Agent(float radius)
+        public Agent(float radius, string name = "agent")
         {
+            this.name = name;
             compatibility = new Dictionary<Material, float>();
             trianglePath = new Queue<MapNode>();
             pointPath = new Stack<PointNode>();
@@ -65,30 +66,34 @@ namespace Agent_Space
         }
         public void setPosition(Point point) { position = point; }
 
-        void SetOcupedFromPosition()
+        public void SetOcupedFromPosition()
         {
             Queue<MapNode> ocuped = new Queue<MapNode>();
-
+            return;
             foreach (MapNode node in ocupedNodes)
+            {
                 if (node != currentNode)
                     if (position.DistanceToTriangle(node.triangle) > radius)
                     {
                         node.RemoveAgent(this);
                         ocupedNodes.Remove(node);
-                        ocuped.Enqueue(node);
                     }
+                ocuped.Enqueue(node);
+            }
 
+            List<MapNode> visited = new List<MapNode>();
             while (ocuped.Count > 0)
             {
                 MapNode node = ocuped.Dequeue();
-
+                visited.Add(node);
                 foreach (MapNode adj in node.adjacents.Keys)
-                    if (position.DistanceToTriangle(adj.triangle) < radius)
-                    {
-                        adj.AddAgent(this);
-                        ocupedNodes.Add(adj);
-                        ocuped.Enqueue(adj);
-                    }
+                    if (!visited.Contains(adj))
+                        if (position.DistanceToTriangle(adj.triangle) < radius)
+                        {
+                            adj.AddAgent(this);
+                            ocupedNodes.Add(adj);
+                            ocuped.Enqueue(adj);
+                        }
             }
         }
 
@@ -180,7 +185,7 @@ namespace Agent_Space
             Node end = localMap.Item3;
 
             if (end == null)
-                return new MapNode[0];
+                return null;
 
             Dijkstra dijkstra = new Dijkstra(init, end, nodes);
 
@@ -201,7 +206,7 @@ namespace Agent_Space
             //    return null;
 
             MapNode[] path = GetTrianglePath(endPoint);
-
+            if (path == null) return null;
             return Arist.ToAristList(path);
         }
         public PointNode[] GetPointPath(Point endPoint)
@@ -236,12 +241,18 @@ namespace Agent_Space
             NextPoint();
         }
 
+        int countMoves = 5;
         public void NextMove(int n = 1)
         {
             for (int i = 0; i < n; i++)
                 NextMoveBasic();
-            SetOcupedFromPosition();
-            //SetPointPath(destination);
+            countMoves--;
+            if (countMoves <= 0)
+            {
+                SetPointPath(destination);
+                //SetOcupedFromPosition();
+                countMoves = 5;
+            }
         }
         void NextMoveBasic()
         {
@@ -299,6 +310,10 @@ namespace Agent_Space
                     result[i] = list[i] as PointNode;
                 return result;
             }
+        }
+        public override string ToString()
+        {
+            return name;
         }
     }
 }

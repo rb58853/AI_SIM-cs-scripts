@@ -126,20 +126,19 @@ namespace BaseNode
         }
         public float DistanceToLine(Point l1, Point l2)
         {
-            float a, b, c;
-            if (l1.x == l2.x)
-            {
-                a = 1;
-                b = 0;
-            }
-            else
-            {
-                a = (l2.z - l1.z) / (l1.x - l2.x);
-                b = 1;
-            }
-            c = -(a * l1.x + b * l1.z);
+            Point point = OrtogonalProyection(l1, l2, this);
+            return Distance(point);
+        }
+        public float DistanceToSegment(Point l1, Point l2)
+        {
+            float lenSegment = l1.Distance(l2);
+            Point intersected = OrtogonalProyection(l1, l2, this);
+            bool inSegment = intersected.Distance(l1) <= lenSegment && intersected.Distance(l2) <= lenSegment;
 
-            return (float)(Math.Abs(a * this.x + b * this.z + c) / Math.Sqrt(a * a + b * b));
+            if (inSegment)
+                return Distance(intersected);
+            else
+                return Math.Min(Distance(l1), Distance(l2));
         }
         public float DistanceToTriangle(Triangle triangle)
         {
@@ -148,8 +147,19 @@ namespace BaseNode
             float d3 = DistanceToLine(triangle.vertex3, triangle.vertex2);
             return Math.Min(Math.Min(d1, d2), d3);
         }
-        public void ResetX(float x) { this.x = x; }
-        public void ResetY(float Y) { this.y = y; }
-        public void ResetZ(float Z) { this.z = z; }
+        public static Point OrtogonalProyection(Point l1, Point l2, Point point)
+        {
+            Point vector1 = l2 - l1;
+            Point vectorInitToObstacle = point - l1;
+            Point vector2 = new Point(-vectorInitToObstacle.z, 0, vectorInitToObstacle.x);///Ortogonal
+
+            float
+                a = l1.x, b = l1.z, c = point.x, d = point.z,
+                x1 = vector1.x, x2 = vector2.x, y1 = vector1.z, y2 = vector2.z;
+
+            float alfa = (a - (b * x1) / y1 - c + d * x1 / y1) / (x2 - x1 * y2 / y1);
+
+            return point + vector2 * alfa;
+        }
     }
 }

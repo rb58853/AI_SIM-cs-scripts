@@ -54,7 +54,7 @@ namespace DijkstraSpace
 
             while (Q.size > 0)
             {
- 
+
                 Node node = Q.Pop();
                 node.SetVisited();
                 if (node == endNode)
@@ -172,16 +172,30 @@ namespace DijkstraSpace
             root.size--;
 
             Node result = root.value;
-            HeapNode leaf = root.LeafsByDelete.Pop();
-            if (leaf.father != null)
-                leaf.father.DeleteChild(leaf);
-            InsertValueInRoot(leaf.value);
 
-            return result;
+            if (root.size != 0)
+            {
+                HeapNode leaf = root.LeafsByDelete.Pop();
+                if (leaf.father != null)
+                    leaf.father.DeleteChild(leaf);
+
+                InsertValueInRoot(leaf.value);
+                return result;
+            }
+            else
+            {
+                root.value = null;
+                return result;
+            }
         }
         public virtual void Push(Node value)
         {
             root.size++;
+            if (root.value == null)
+            {
+                root.value = value;
+                return;
+            }
 
             root.currentLeafByInsert.InsertChild(value);
             root.currentLeafByInsert.childs[root.currentLeafByInsert.childs.Count - 1].Heapify(true);

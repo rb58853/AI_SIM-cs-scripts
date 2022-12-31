@@ -19,7 +19,7 @@ public class DebuguerMove : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         agent = GetComponent<move>().navAgent.agent;
-        
+
         //agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         //agent.searchCurrentNode();
         DFSDraw(agent.currentNode, Color.yellow);
@@ -48,8 +48,11 @@ public class DebuguerMove : MonoBehaviour
                 Point end = new Point(hit.point.x, hit.point.y, hit.point.z);
                 points = agent.GetPointPath(end);
                 tempT = agent.GetTrianglePath(end);
-                DrawPath(tempT, Color.red);
-                DrawPath(points, Color.blue);
+                if (tempT != null)
+                {
+                    DrawPath(tempT, Color.red);
+                    DrawPath(points, Color.blue);
+                }
             }
         }
     }

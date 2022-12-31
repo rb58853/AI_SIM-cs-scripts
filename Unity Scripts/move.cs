@@ -13,7 +13,7 @@ public class move : MonoBehaviour
     void Update()
     {
         if (noMove) return;
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButtonUp(1))
         {
             RaycastHit hit;
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))

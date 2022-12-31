@@ -21,6 +21,7 @@ namespace Agent_Space
 
         public Queue<MapNode> trianglePath { get; private set; }
         private Stack<PointNode> pointPath;
+        public Point destination { get; private set; }
 
         public Stack<Point> visualPath { get; private set; }
         public bool inMove { get; private set; }
@@ -223,6 +224,7 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
+            destination = point;
             pointPath.Clear();
             //GetTrianglePath(point);
             PointNode[] path = GetPointPath(point);
@@ -238,7 +240,8 @@ namespace Agent_Space
         {
             for (int i = 0; i < n; i++)
                 NextMoveBasic();
-            //SetOcupedFromPosition();
+            SetOcupedFromPosition();
+            //SetPointPath(destination);
         }
         void NextMoveBasic()
         {

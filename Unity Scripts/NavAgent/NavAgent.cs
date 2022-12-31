@@ -21,6 +21,7 @@ public class NavAgent : MonoBehaviour
         agent.searchCurrentNode();
     }
     int countFrames = 0;
+    int framesForUpdatePath = 0;
     Vector3 dir = new Vector3(0, 0, 0);
     void Update()
     {
@@ -37,6 +38,15 @@ public class NavAgent : MonoBehaviour
             dir = (agentPos - transform.position) / 5;
         }
         transform.Translate(dir);
+
+        if (framesForUpdatePath <= 0)
+        {
+            framesForUpdatePath = 15;
+            //agent.SetPointPath(agent.destination);
+        }
+        framesForUpdatePath--;
+
+
     }
     public void SetDestination(Vector3 destination)
     {

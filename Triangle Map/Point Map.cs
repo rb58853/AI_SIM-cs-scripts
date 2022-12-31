@@ -80,7 +80,8 @@ namespace Point_Map
                     //i.AddAdjacent(e, cost);
 
                     List<PointNode> temp = new List<PointNode>(); temp.Add(e);
-                    CreateSimplePath(i, temp, agent, agent.currentNode, agent.currentNode.MaterialCost(agent), e, result, new List<Agent>());
+                    CreateSimplePath(i, temp, agent, agent.currentNode, agent.currentNode.MaterialCost(agent), e, result);
+                    //CreateSimplePath(i, temp, agent, agent.currentNode, agent.currentNode.MaterialCost(agent), e, result, new List<Agent>());
 
                     result.Add(e);
                     return result;
@@ -95,19 +96,25 @@ namespace Point_Map
                 {
                     points.Add(new List<PointNode>());
                     foreach (Point point in arist.ToPoints(n))
-                        points[points.Count - 1].Add(new PointNode(point, endNode));
+                    {
+                        PointNode node = new PointNode(point, endNode);
+                        points[points.Count - 1].Add(node);
+                    }
                 }
 
-                CreateSimplePath(initNode, points[0], agent, agent.currentNode, cost, endNode, result, new List<Agent>());
+                CreateSimplePath(initNode, points[0], agent, agent.currentNode, cost, endNode, result);
+                //CreateSimplePath(initNode, points[0], agent, agent.currentNode, cost, endNode, result, new List<Agent>());
 
                 for (int i = 0; i < points.Count - 1; i++)
                     for (int j = 0; j < points[i].Count; j++)
-                        CreateSimplePath(points[i][j], points[i + 1], agent, mapNodes[i + 1].origin, arists[i].materialCost, endNode, result, new List<Agent>());
+                        //CreateSimplePath(points[i][j], points[i + 1], agent, mapNodes[i + 1].origin, arists[i].materialCost, endNode, result, new List<Agent>());
+                        CreateSimplePath(points[i][j], points[i + 1], agent, mapNodes[i + 1].origin, arists[i].materialCost, endNode, result);
 
                 foreach (PointNode node in points[points.Count - 1])
                 {
                     List<PointNode> temp = new List<PointNode>(); temp.Add(endNode);
-                    CreateSimplePath(node, temp, agent, mapNodes[points.Count].origin, arists[points.Count - 1].materialCost, endNode, result, new List<Agent>());
+                    //CreateSimplePath(node, temp, agent, mapNodes[points.Count].origin, arists[points.Count - 1].materialCost, endNode, result, new List<Agent>());
+                    CreateSimplePath(node, temp, agent, mapNodes[points.Count].origin, arists[points.Count - 1].materialCost, endNode, result);
                 }
 
                 result.Add(endNode);
@@ -136,9 +143,100 @@ namespace Point_Map
                 return new Tuple<bool, Agent>(false, null);
             }
 
+
+
+
+
             static void CreateSimplePath(PointNode init, List<PointNode> list,
                 Agent agent, MapNode mapNode, float cost, PointNode endNode,
-                List<PointNode> result, List<Agent> visitedObstacles)
+                List<PointNode> result)
+            {
+
+                if (!init.visitedInCreation) return;
+
+                List<PointNode> endList = new List<PointNode>();
+                endList.Add(init);
+
+                result.Add(init);
+                init.SetDistance(0);
+                HeapNode q = new HeapNode(init);
+
+
+                List<Agent> visitedObstacles = new List<Agent>();
+
+                //int overflow = 0;
+
+                List<PointNode> temp = new List<PointNode>();
+                foreach (PointNode node in list)
+                    temp.Add(node);
+
+                while (temp.Count > 0 && q.size > 0)
+                {
+                    //overflow++;
+                    //Debug.Log("Overflow: " + overflow);
+
+                    PointNode current = q.Pop() as PointNode;
+
+                    for (int i = 0; i < temp.Count; i++)
+                    {
+                        PointNode end = temp[i];
+
+                        Tuple<bool, Agent> collision = Collision(current, end, agent, mapNode);
+                        if (collision.Item1)
+                        {
+                            if (!visitedObstacles.Contains(collision.Item2))
+                            {
+                                visitedObstacles.Add(collision.Item2);
+
+                                PointNode another1 = new PointNode(GeneratedPoint(init.point, agent, collision.Item2), endNode);
+                                if (mapNode.triangle.PointIn(another1.point))
+                                    if (!Collision(current, another1, agent, mapNode).Item1)
+                                    {
+                                        current.AddAdjacent(another1, cost);
+                                        DrawTwoPoints(current.point, another1.point);
+                                        another1.visitedInCreation = true;
+                                        another1.SetDistance(current.distance + current.EuclideanDistance(another1));
+                                        q.Push(another1);
+                                        result.Add(another1);
+                                        endList.Add(another1);
+                                    }
+                                PointNode another2 = new PointNode(GeneratedPoint(init.point, agent, collision.Item2, true), endNode);
+                                if (mapNode.triangle.PointIn(another2.point))
+                                    if (!Collision(current, another2, agent, mapNode).Item1)
+                                    {
+                                        current.AddAdjacent(another2, cost);
+                                        DrawTwoPoints(current.point, another2.point);
+                                        another2.visitedInCreation = true;
+                                        another2.SetDistance(current.distance + current.EuclideanDistance(another2));
+                                        q.Push(another2);
+                                        result.Add(another2);
+                                        endList.Add(another2);
+                                    }
+                            }
+                            continue;
+                        }
+
+                        current.AddAdjacent(end, cost);
+                        DrawTwoPoints(current.point, end.point);
+                        end.visitedInCreation = true;
+                        temp.Remove(end); i--;
+                    }
+                    foreach (PointNode node in endList)
+                    {
+                        ///Resetear la distancia en todos los nodos que me interesan, solo me interesa los init y los nodos extras que se agregaron
+                        ///xq los end son init en otra entrada.
+                        node.SetDistance(float.MaxValue);
+                    }
+                    ///Unico end que no sera nunk un init, si funciona bien se pone arriba
+                    endNode.SetDistance(float.MaxValue);
+                }
+
+            }
+
+            #region Mas preciso pero mucho mas costoso que el actual, metodo de la clase PointMap.Static
+            static void CreateSimplePath(PointNode init, List<PointNode> list,
+                  Agent agent, MapNode mapNode, float cost, PointNode endNode,
+                  List<PointNode> result, List<Agent> visitedObstacles)
             {
 
                 if (!init.visitedInCreation) return;
@@ -170,7 +268,8 @@ namespace Point_Map
                                 result.Add(another1);
                                 another1.visitedInCreation = true;
                                 visitedObstacles.Add(collision.Item2);
-                                CreateSimplePath(another1, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
+                                //CreateSimplePath(another1, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
+                                CreateSimplePath(another1, list, agent, mapNode, cost, endNode, result, visitedObstacles);
                                 //visitedObstacles.Remove(collision.Item2); ///More path, but very much complex
                             }
 
@@ -181,7 +280,8 @@ namespace Point_Map
                                 result.Add(another2);
                                 another2.visitedInCreation = true;
                                 visitedObstacles.Add(collision.Item2);
-                                CreateSimplePath(another2, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
+                                CreateSimplePath(another2, list, agent, mapNode, cost, endNode, result, visitedObstacles);
+                                //CreateSimplePath(another2, list.GetRange(index, list.Count - index), agent, mapNode, cost, endNode, result, visitedObstacles);
                                 //visitedObstacles.Remove(collision.Item2); ///More path, but very much complex
                             }
 
@@ -200,7 +300,12 @@ namespace Point_Map
 
                 }
             }
-            static Point GeneratedPoint(Point init, Agent agent, Agent collision, bool negative = false)
+            #endregion
+
+
+
+
+            static Point GeneratedPoint(Point init, Agent agent, Agent collision, bool negative = false, float n = 2f)
             {
                 Point vector1 = collision.position - init;
                 Point vector2 = new Point(-vector1.z, 0, vector1.x);///Ortogonal
@@ -208,8 +313,8 @@ namespace Point_Map
                 Point unitVector2 = vector2 / den;
 
                 if (negative)
-                    return collision.position + unitVector2 * (agent.radius + collision.radius) * -1.6f;
-                return collision.position + unitVector2 * (agent.radius + collision.radius) * 1.6f;
+                    return collision.position + unitVector2 * (agent.radius + collision.radius) * -n;
+                return collision.position + unitVector2 * (agent.radius + collision.radius) * n;
             }
             static Point IntersectedOrtogonalVectors(Point init, Point end, Point obstacle)
             {
@@ -224,6 +329,13 @@ namespace Point_Map
                 float alfa = (a - (b * x1) / y1 - c + d * x1 / y1) / (x2 - x1 * y2 / y1);
 
                 return obstacle + vector2 * alfa;
+            }
+
+            static void DrawTwoPoints(Point p1, Point p2)
+            {
+                Vector3 a = new Vector3(p1.x, p1.y, p1.z);
+                Vector3 b = new Vector3(p2.x, p2.y, p2.z);
+                Debug.DrawLine(a, b, Color.black, 50f);
             }
         }
     }

@@ -285,12 +285,6 @@ namespace Agent_Space
                 if (visualPath.Count == 0) NextPoint();
                 try { position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
-                if (countMoves <= 0)
-                {
-                    countMoves = 5;
-                SetPointPath(destination);
-                }
-                countMoves-=1;
             }
         }
         void NextPoint()

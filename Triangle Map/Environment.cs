@@ -15,11 +15,13 @@ namespace Agent_Space
         /// <summary> more value => best path  |  less value => best code eficience </summary>
         public readonly static float densityPath = 0.5f;
         /// <summary> count of nodes to visit(with bfs) after found the destination node </summary>
-        public readonly static int bfsArea = 50;
+        public readonly static int bfsArea = 40;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 2f;
         /// <summary> heuristic weigth for path between points </summary>
         public readonly static float heuristicPointWeigth = 1f;
+        /// <summary> width for border collision</summary>
+        public readonly static float collisionBorder = 1.3f;
     }
     class Obsolete
     {

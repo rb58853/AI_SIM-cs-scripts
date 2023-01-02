@@ -92,13 +92,10 @@ namespace Agent_Space
                         ocuped.Enqueue(node);
                 }
             }
-            //Debug.Log("nodes despues de remover = " + ocupedNodes.Count);
 
             //int o = 0;
             while (ocuped.Count > 0)
             {
-                //o++;
-                //Debug.Log(o);
                 MapNode node = ocuped.Dequeue();
 
                 foreach (MapNode adj in node.adjacents.Keys)
@@ -106,12 +103,10 @@ namespace Agent_Space
                         if (!ocupedNodes.Contains(adj))
                         {
                             ocuped.Enqueue(adj);
-                            Debug.Log("cantidad de agentes en nodo: " + adj.agentsIn.Count);
                             ocupedNodes.Add(adj);
                             adj.AddAgent(this);
                         }
             }
-            //Debug.Log(name + " tiene ocupados triangulos = " + ocupedNodes.Count);
         }
 
         Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
@@ -309,9 +304,6 @@ namespace Agent_Space
             float cost = currentPosition.adjacents[nextPosition] * 25;
 
             List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
-
-            if (temp.Count <= 1)
-                Debug.Log(temp.Count);
 
             for (int i = temp.Count - 1; i >= 0; i--)
                 visualPath.Push(temp[i]);

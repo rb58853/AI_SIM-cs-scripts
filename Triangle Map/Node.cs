@@ -131,14 +131,18 @@ namespace BaseNode
         }
         public float DistanceToSegment(Point l1, Point l2)
         {
+            Point temp = new Point(x, 0, z);
+            l1 = new Point(l1.x, 0, l1.z);
+            l2 = new Point(l2.x, 0, l2.z);
+
             float lenSegment = l1.Distance(l2);
-            Point intersected = OrtogonalProyection(l1, l2, this);
+            Point intersected = OrtogonalProyection(l1, l2, temp);
             bool inSegment = intersected.Distance(l1) <= lenSegment && intersected.Distance(l2) <= lenSegment;
 
             if (inSegment)
-                return Distance(intersected);
+                return temp.Distance(intersected);
             else
-                return Math.Min(Distance(l1), Distance(l2));
+                return Math.Min(temp.Distance(l1), temp.Distance(l2));
         }
         public float DistanceToTriangle(Triangle triangle)
         {
@@ -161,5 +165,24 @@ namespace BaseNode
 
             return point + vector2 * alfa;
         }
+        public static Point OrtogonalVector(Point p1, Point p2)
+        {
+            Point vector = p2 - p1;
+            return new Point(-vector.z, 0, vector.x);///Ortogonal
+        }
+        public static Point OrtogonalVector(Point vector)
+        {
+            return new Point(-vector.z, 0, vector.x);///Ortogonal
+        }
+        public static Point VectorUnit(Point init, Point end)
+        {
+            Point temp = (end - init);
+            return temp / (float)Math.Sqrt((temp.x * temp.x + temp.z * temp.z));
+        }
+        public static Point VectorUnit(Point vector)
+        {
+            return vector / (float)Math.Sqrt((vector.x * vector.x + vector.z * vector.z));
+        }
+
     }
 }

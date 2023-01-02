@@ -65,7 +65,7 @@ namespace Agent_Space
         }
         public void setPosition(Point point) { position = point; }
 
-        public void SetOcupedFromPosition()
+        public void SetOcupedFromPosition(float extendArea = 1)
         {
             Queue<MapNode> ocuped = new Queue<MapNode>();
 
@@ -82,7 +82,7 @@ namespace Agent_Space
                 MapNode node = ocupedNodes[i];
                 if (node != currentNode)
                 {
-                    if (position.DistanceToTriangle(node.triangle) > radius)
+                    if (position.DistanceToTriangle(node.triangle) > radius * extendArea)
                     {
                         node.RemoveAgent(this);
                         ocupedNodes.Remove(node);
@@ -93,13 +93,12 @@ namespace Agent_Space
                 }
             }
 
-            //int o = 0;
             while (ocuped.Count > 0)
             {
                 MapNode node = ocuped.Dequeue();
 
                 foreach (MapNode adj in node.adjacents.Keys)
-                    if (position.DistanceToTriangle(adj.triangle) < radius)
+                    if (position.DistanceToTriangle(adj.triangle) < radius + extendArea)
                         if (!ocupedNodes.Contains(adj))
                         {
                             ocuped.Enqueue(adj);
@@ -249,11 +248,11 @@ namespace Agent_Space
                 pointPath.Push(path[i]);
 
             nextPosition = pointPath.Pop();
-            currentPosition = null;
+            //currentPosition = null;
             NextPoint();
         }
 
-        int countMoves = 5;
+        int countMoves = 1;
         public void NextMove(int n = 1)
         {
 
@@ -263,16 +262,49 @@ namespace Agent_Space
             countMoves--;
             if (countMoves <= 0)
             {
-                //if (PointNode.Static.Collision(position, pointPath.ToArray()[0].point, this, currentNode).Item1)
-                //SetPointPath(destination);
-                ///Se le puede decir tambien que cambie la direccion y mantenga el camino ya calculado, habria que disennar un algoritmo que 
-                ///funcione con ello, pero no habra nada que lo haga preciso
-
                 countMoves = 1;
-                SetOcupedFromPosition();
-                //SetPointPath(destination);
+                SetOcupedFromPosition(5);
+                DynamicSetPoint();
+
             }
         }
+        bool change = false;
+        void DynamicSetPoint()
+        {
+            change = true;
+            if (nextPosition.point.Distance(position) < 0.001f) return;
+
+            float dist = radius * 3;
+            Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
+
+            //Queue<MapNode> q = new Queue<MapNode>();
+            //q.Enqueue(currentNode);
+
+            //List<MapNode> nodes = new List<MapNode>();
+            //nodes.Add(currentNode);
+
+            //while (q.Count > 0)
+            //{
+            //    MapNode node = q.Dequeue();
+
+            //    foreach (MapNode adj in node.adjacents.Keys)
+            //        if (position.DistanceToTriangle(adj.triangle) <= dist)
+            //            if (!nodes.Contains(adj))
+            //            {
+            //                q.Enqueue(adj);
+            //                nodes.Add(adj);
+            //            }
+            //}
+
+            //if (PointNode.Static.Collision(position, pointDest, this, nodes.ToArray()).Item1)
+
+            if (PointNode.Static.Collision(position, pointDest, this, ocupedNodes.ToArray()).Item1)
+            {
+                SetPointPath(destination);
+            }
+
+        }
+        int frames = 5;
         void NextMoveBasic()
         {
             if (inMove)
@@ -280,6 +312,13 @@ namespace Agent_Space
                 if (visualPath.Count == 0) NextPoint();
                 try { position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
+
+                if (frames <= 0)
+                {
+                    frames = 10;
+                    //DynamicSetPoint();
+                }
+                frames--;
             }
         }
         void NextPoint()
@@ -303,8 +342,8 @@ namespace Agent_Space
 
             float cost = currentPosition.adjacents[nextPosition] * 25;
 
-            List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
 
+            List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
             for (int i = temp.Count - 1; i >= 0; i--)
                 visualPath.Push(temp[i]);
 

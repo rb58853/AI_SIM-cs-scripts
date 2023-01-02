@@ -21,7 +21,7 @@ namespace Agent_Space
         /// <summary> heuristic weigth for path between points </summary>
         public readonly static float heuristicPointWeigth = 1f;
         /// <summary> width for border collision</summary>
-        public readonly static float collisionBorder = 1.3f;
+        public readonly static float collisionBorder = 1.2f;
     }
     class Obsolete
     {

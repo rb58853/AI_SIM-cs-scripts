@@ -42,7 +42,7 @@ public class NavAgent : MonoBehaviour
 
         if (framesForUpdatePath <= 0)
         {
-            framesForUpdatePath = 1;
+            framesForUpdatePath = 5;
             //agent.SetPointPath(agent.destination);
         }
         framesForUpdatePath--;

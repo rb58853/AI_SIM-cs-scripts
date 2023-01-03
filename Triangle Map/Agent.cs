@@ -58,8 +58,7 @@ namespace Agent_Space
                     currentNode = node as MapNode;
                     ocupedNodes.Add(currentNode);
                     currentNode.AddAgent(this);
-
-                    SetOcupedFromPosition();
+                    SetOcupedFromPosition(2);
                     break;
                 }
         }
@@ -263,48 +262,21 @@ namespace Agent_Space
             if (countMoves <= 0)
             {
                 countMoves = 1;
-                SetOcupedFromPosition(5);
-                DynamicSetPoint();
-
+                SetOcupedFromPosition(2);
             }
         }
-        bool change = false;
         void DynamicSetPoint()
         {
-            change = true;
-            if (nextPosition.point.Distance(position) < 0.001f) return;
+            if (nextPosition.point.Distance(position) < 0.01f) return;
 
-            float dist = radius * 3;
+            float dist = radius * 2f;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
-            //Queue<MapNode> q = new Queue<MapNode>();
-            //q.Enqueue(currentNode);
-
-            //List<MapNode> nodes = new List<MapNode>();
-            //nodes.Add(currentNode);
-
-            //while (q.Count > 0)
-            //{
-            //    MapNode node = q.Dequeue();
-
-            //    foreach (MapNode adj in node.adjacents.Keys)
-            //        if (position.DistanceToTriangle(adj.triangle) <= dist)
-            //            if (!nodes.Contains(adj))
-            //            {
-            //                q.Enqueue(adj);
-            //                nodes.Add(adj);
-            //            }
-            //}
-
-            //if (PointNode.Static.Collision(position, pointDest, this, nodes.ToArray()).Item1)
-
-            if (PointNode.Static.Collision(position, pointDest, this, ocupedNodes.ToArray()).Item1)
-            {
+            Tuple<bool, Agent> collision = PointNode.Static.Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.05f);
+            if (collision.Item1)
                 SetPointPath(destination);
-            }
-
         }
-        int frames = 5;
+        int frames = 1;///25 = 1 u;
         void NextMoveBasic()
         {
             if (inMove)
@@ -313,10 +285,11 @@ namespace Agent_Space
                 try { position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
 
+
                 if (frames <= 0)
                 {
-                    frames = 10;
-                    //DynamicSetPoint();
+                    frames = 1;
+                    DynamicSetPoint();
                 }
                 frames--;
             }
@@ -338,7 +311,8 @@ namespace Agent_Space
             catch { Debug.Log("La cola tiene " + trianglePath.Count + " elementos y esta intentando hacer Dequeue()"); }
 
             currentPosition = nextPosition;
-            nextPosition = pointPath.Pop();
+            if (pointPath.Count != 0)
+                nextPosition = pointPath.Pop();
 
             float cost = currentPosition.adjacents[nextPosition] * 25;
 

@@ -110,7 +110,7 @@ namespace Point_Map
                 result.Add(endNode);
                 return result;
             }
-            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode)
+            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)
             {
                 Point l1 = node1;
                 Point l2 = node2;
@@ -118,17 +118,17 @@ namespace Point_Map
                 foreach (Agent agentObstacle in mapNode.agentsIn)
                 {
                     if (agentObstacle == agent) continue;
-                    if (agentObstacle.position.DistanceToSegment(l1, l2) <= agent.radius + agentObstacle.radius + epsilon)
+                    if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
                         /// Collision
                         return new Tuple<bool, Agent>(true, agentObstacle);
                 }
                 return new Tuple<bool, Agent>(false, null);
             }
-            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes)
+            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
             {
                 foreach (MapNode node in mapNodes)
                 {
-                    Tuple<bool, Agent> collision = Collision(node1, node2, agent, node);
+                    Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
                     if (collision.Item1)
                         return collision;
                 }
@@ -169,18 +169,19 @@ namespace Point_Map
                     {
                         PointNode end = temp[i];
 
-                        Tuple<bool, Agent> collision = Collision(current.point, end.point, agent, mapNode);
+                        Tuple<bool, Agent> collision = Collision(current.point, end.point, agent, mapNode, 1.1f);
 
                         if (collision.Item1)
-                        {
                             CreateObstacleBorder(current, end, agent, mapNode, cost, result, visitedObstacles, q, endList, endNode);
-                            continue;
-                        }
+                        else
+                        {
+                            current.AddAdjacent(end, cost);
 
-                        current.AddAdjacent(end, cost);
-                        //DrawTwoPoints(current.point, end.point);
-                        end.visitedInCreation = true;
-                        temp.Remove(end); i--;
+                            //DrawTwoPoints(current.point, end.point, Color.yellow);
+
+                            end.visitedInCreation = true;
+                            temp.Remove(end); i--;
+                        }
                     }
                     foreach (PointNode node in endList)
                     {
@@ -202,7 +203,7 @@ namespace Point_Map
                 ///De alguna manera hay que hacer que esto pueda volver a visitar otros agentes para detectar colisiones 
                 ///para poder hacer el bordeo mejor
 
-                Tuple<bool, Agent> collision = Collision(init.point, end.point, agent, mapNode);
+                Tuple<bool, Agent> collision = Collision(init.point, end.point, agent, mapNode, 1.1f);
                 if (collision.Item1)
                 {
                     //DrawTwoPoints(init.point, collision.Item2.position, Color.black);
@@ -277,11 +278,11 @@ namespace Point_Map
                             PointNode node2 = up.Dequeue();
 
                             if (mapNode.triangle.PointIn(node2.point))
-                                if (!Collision(node1.point, node2.point, agent, mapNode).Item1)
+                                if (!Collision(node1.point, node2.point, agent, mapNode, 1.1f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
 
-                                    //DrawTwoPoints(node1.point, node2.point, Color.green);
+                                    DrawTwoPoints(node1.point, node2.point, Color.green);
 
                                     node2.visitedInCreation = true;
                                     node2.SetDistance(node1.distance + node1.EuclideanDistance(node2));
@@ -291,7 +292,6 @@ namespace Point_Map
                                 }
                                 else
                                 {
-                                    Debug.Log("encontro colision desde " + node1 + " hasta " + node2);
                                     CreateObstacleBorder(node1, node2, agent, mapNode, cost, result, visitedObstacles, q, endList, endNode);
                                 }
 
@@ -305,11 +305,11 @@ namespace Point_Map
 
                             PointNode node2 = down.Dequeue();
                             if (mapNode.triangle.PointIn(node2.point))
-                                if (!Collision(node1.point, node2.point, agent, mapNode).Item1)
+                                if (!Collision(node1.point, node2.point, agent, mapNode, 1.1f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
 
-                                    //DrawTwoPoints(node1.point, node2.point, Color.green);
+                                    DrawTwoPoints(node1.point, node2.point, Color.green);
 
                                     node2.visitedInCreation = true;
                                     node2.SetDistance(node1.distance + node1.EuclideanDistance(node2));
@@ -319,7 +319,6 @@ namespace Point_Map
                                 }
                                 else
                                 {
-                                    Debug.Log("encontro colision desde " + node1 + " hasta " + node2);
                                     CreateObstacleBorder(node1, node2, agent, mapNode, cost, result, visitedObstacles, q, endList, endNode);
                                 }
 

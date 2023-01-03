@@ -40,8 +40,8 @@ namespace Triangle_Map
             this.agent = agent;
             this.end = end;
             this.origin = origin;
-            this.material = origin.material;
             DefaultValues();
+            this.material = origin.material;
         }
         public void AddAgent(Agent agent)
         {

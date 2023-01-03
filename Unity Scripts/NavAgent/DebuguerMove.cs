@@ -22,7 +22,7 @@ public class DebuguerMove : MonoBehaviour
 
         //agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         //agent.searchCurrentNode();
-        DFSDraw(agent.currentNode, Color.yellow);
+        //DFSDraw(agent.currentNode, Color.yellow);
 
         endPosition = new Vector3(1, 1, 1);
     }
@@ -35,10 +35,13 @@ public class DebuguerMove : MonoBehaviour
     void Update()
     {
         if (agent == null) return;
-
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log("El material del nodo actual es: " + agent.currentNode.material);
+        }
         if (Input.GetMouseButton(1))
         {
-            DrawPath(tempT, Color.yellow);
+            DrawPath(tempT, Color.clear);
             DrawPath(points, Color.white);
 
             RaycastHit hit;
@@ -50,7 +53,7 @@ public class DebuguerMove : MonoBehaviour
                 tempT = agent.GetTrianglePath(end);
                 if (tempT != null)
                 {
-                    DrawPath(tempT, Color.red);
+                    DrawPath(tempT, Color.black);
                     DrawPath(points, Color.blue);
                 }
             }

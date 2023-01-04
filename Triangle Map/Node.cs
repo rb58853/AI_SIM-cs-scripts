@@ -14,7 +14,7 @@ namespace BaseNode
         public float distance { get; protected set; }
 
         /// <summary> This HeapNode is used by Heapify in Relax .</summary>
-        public HeapNode heapNode { get; protected set; }
+        public Heap heapNode { get; protected set; }
 
         public abstract float Value();
         public abstract List<Node> GetAdyacents();
@@ -23,7 +23,7 @@ namespace BaseNode
         public virtual void SetDistance(float value) { distance = value; }
         public virtual void SetFather(Node node) { father = node; }
         public virtual void SetVisited(bool value = true) { visited = value; }
-        public virtual void SetHeapNode(HeapNode heapNode) { this.heapNode = heapNode; }
+        public virtual void SetHeapNode(Heap heapNode) { this.heapNode = heapNode; }
         public int CompareTo(Node other) { return this.value.CompareTo(other.value); }
     }
     class Map

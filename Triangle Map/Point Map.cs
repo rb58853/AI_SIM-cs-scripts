@@ -11,10 +11,12 @@ namespace Point_Map
     public class PointNode : Node
     {
 
-        PointNode end;
+        public PointNode end { get; protected set; }
+        public PointNode init { get; protected set; }
         public Point point { get; private set; }
         public Dictionary<PointNode, float> adjacents { get; private set; }
         public bool visitedInCreation = false;
+        //public bool borderPoint = false;
 
         public PointNode(Point point, PointNode end = null)
         {
@@ -22,21 +24,25 @@ namespace Point_Map
             adjacents = new Dictionary<PointNode, float>();
             distance = float.MaxValue;
             this.end = end;
+            init = null;
         }
         public float get_x() { return point.x; }
         public float get_y() { return point.y; }
         public float get_z() { return point.z; }
 
         public void SetEnd(PointNode node) { end = node; }
+        public void SetInit(PointNode node) { init = node; }
+        public void SetPoint(Point point) { this.point = point; }
         public void AddAdjacent(PointNode node, float value = 1) { adjacents.Add(node, value); }
+        public void RemoveAdjacent(PointNode node) { adjacents.Remove(node); }
         public float EuclideanDistance(PointNode node) { return point.Distance(node.point); }
-        float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
+        //float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
         public override float Value()
         {
-            float g = distance;
-            float h = Heuristic(end) * Agent_Space.Environment.heuristicPointWeigth;
+            if (init != null)
+                return distance + EuclideanDistance(end) * adjacents[init];
 
-            return g + h;
+            return distance;
         }
         public int CompareTo(PointNode other)
         {
@@ -123,7 +129,7 @@ namespace Point_Map
 
                 result.Add(init);
                 init.SetDistance(0);
-                HeapNode q = new HeapNode(init);
+                Heap q = new Heap(init);
 
 
                 List<Agent> visitedObstacles = new List<Agent>();
@@ -173,7 +179,7 @@ namespace Point_Map
 
             static void CreateObstacleBorder(PointNode init, PointNode end,
                 Agent agent, MapNode mapNode, float cost, List<PointNode> result,
-                List<Agent> visitedObstacles, HeapNode q, List<PointNode> endList,
+                List<Agent> visitedObstacles, Heap q, List<PointNode> endList,
                 PointNode endNode)
             {
                 ///De alguna manera hay que hacer que esto pueda volver a visitar otros agentes para detectar colisiones 
@@ -311,5 +317,193 @@ namespace Point_Map
             }
         }
     }
+    public class PointMap
+    {
+        private Agent agent;
+        public PointNode currentPoint { get; private set; }
+        public PointNode nextPoint { get; private set; }
+        public MapNode currentNode { get; private set; }
 
+        public PointMap(Agent agent)
+        {
+            this.agent = agent;
+        }
+        public PointNode Pop(bool onCollision = false)
+        {
+            if (!onCollision)
+                currentPoint = nextPoint;
+            else
+                currentPoint.SetPoint(agent.position);
+
+            Heap q = new Heap(null);
+            foreach (PointNode node in currentPoint.adjacents.Keys)
+            {
+                node.SetInit(currentPoint);
+                q.Push(node);
+            }
+
+            PointNode next = null;
+            while (q.size > 0)
+            {
+                next = q.Pop() as PointNode;
+                Tuple<bool, Agent> collision = Agent.Collision(agent.position, next.point, agent, currentNode);
+                if (collision.Item1)
+                {
+                    next.SetFather(null);
+                    CreateObstacleBorder(currentPoint, next, agent, currentNode,
+                        currentNode.MaterialCost(agent), new List<Agent>(), q, next);
+                }
+                else
+                {
+                    nextPoint = next;
+                    return next;
+                }
+            }
+
+            return currentPoint;
+        }
+        public void PushMap(PointNode[] nodes)
+        {
+            ///Invertir la direccion de las aristas
+            foreach (PointNode node in nodes)
+                foreach (PointNode adj in node.adjacents.Keys)
+                {
+                    adj.AddAdjacent(node, node.adjacents[adj]);
+                    node.RemoveAdjacent(adj);
+                }
+
+            nextPoint = nodes[nodes.Length - 1];
+        }
+        void CreateObstacleBorder(PointNode init, PointNode end,
+                Agent agent, MapNode mapNode, float cost,
+                List<Agent> visitedObstacles, Heap q, PointNode destination)
+        {
+            ///De alguna manera hay que hacer que esto pueda volver a visitar otros agentes para detectar colisiones 
+            ///para poder hacer el bordeo mejor
+
+            Tuple<bool, Agent> collision = Agent.Collision(init.point, end.point, agent, mapNode, 1.0f);
+            if (collision.Item1)
+            {
+                //DrawTwoPoints(init.point, collision.Item2.position, Color.black);
+
+                if (!visitedObstacles.Contains(collision.Item2))
+                {
+                    visitedObstacles.Add(collision.Item2);
+
+                    Point center = collision.Item2.position;
+
+                    PointNode W = new PointNode(center -
+                        Point.VectorUnit(init.point, center)
+                        * (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///West view from lefth to rigth
+
+                    PointNode e = new PointNode(center +
+                        Point.VectorUnit(init.point, center) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///Est view lefth to rigth
+
+                    PointNode sw = new PointNode(W.point +
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///SouthWest view lefth to rigth
+
+                    PointNode s = new PointNode(center +
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///South view lefth to rigth
+
+                    PointNode se = new PointNode(e.point +
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///South view lefth to rigth
+
+                    PointNode nw = new PointNode(W.point -
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///SouthWest view lefth to rigth
+
+                    PointNode n = new PointNode(center -
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///South view lefth to rigth
+
+                    PointNode ne = new PointNode(e.point -
+                        Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
+                        (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder);
+                    ///South view lefth to rigth
+
+                    Queue<PointNode> up = new Queue<PointNode>();
+                    up.Enqueue(nw); /*up.Enqueue(n);*/ up.Enqueue(ne); up.Enqueue(e);
+                    Queue<PointNode> down = new Queue<PointNode>();
+                    down.Enqueue(sw); /*down.Enqueue(s);*/ down.Enqueue(se); down.Enqueue(e);
+
+
+                    PointNode node1 = init;
+
+                    while (up.Count > 0)
+                    {
+                        if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(destination, cost);
+                            destination.SetFather(node1);
+                            destination.SetInit(node1);
+                            break;
+                        }
+
+                        PointNode node2 = up.Dequeue();
+
+                        //if (mapNode.triangle.PointIn(node2.point))
+                        if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(node2, cost);
+                            node2.SetInit(node1);
+                            q.Push(node2);
+                        }
+                        else
+                            CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, q, destination);
+                        node1 = node2;
+                    }
+
+                    node1 = W;
+                    while (down.Count > 0)
+                    {
+                        if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(destination, cost);
+                            destination.SetFather(node1);
+                            destination.SetInit(node1);
+                            break;
+                        }
+
+                        PointNode node2 = down.Dequeue();
+
+                        //if (mapNode.triangle.PointIn(node2.point))
+                        if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(node2, cost);
+                            node2.SetInit(node1);
+                            node2.SetFather(node1);
+                            q.Push(node2);
+                        }
+                        else
+                            CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, q, destination);
+
+                        node1 = node2;
+                    }
+
+
+                    if (destination.father != null)
+                    {
+                        PointNode temp = destination;
+
+                        while (temp.father.distance >= float.MaxValue - 1000)
+                        {
+                            temp.father.SetDistance(temp.distance + temp.EuclideanDistance(temp.father as PointNode) * cost);
+                            temp = temp.father as PointNode;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

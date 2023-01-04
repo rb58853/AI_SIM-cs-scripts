@@ -46,7 +46,7 @@ namespace DijkstraSpace
 
             List<Node> nodes = this.nodes.ToList<Node>();
 
-            HeapNode Q = new HeapNode(nodes[0]);
+            Heap Q = new Heap(nodes[0]);
             Stack<Node> A = new Stack<Node>();
 
             foreach (Node node in nodes.GetRange(1, nodes.Count - 1))
@@ -75,25 +75,25 @@ namespace DijkstraSpace
             }
         }
     }
-    public class HeapNode
+    public class Heap
     {
         internal Agent agent;
         public int size { get; private set; }
 
-        private HeapNode father;
+        private Heap father;
         private Node value;
-        private HeapNode root;
-        private List<HeapNode> childs;
-        private Queue<HeapNode> lastleafsByInsert;
-        private Stack<HeapNode> LeafsByDelete;
-        private HeapNode currentLeafByInsert;
+        private Heap root;
+        private List<Heap> childs;
+        private Queue<Heap> lastleafsByInsert;
+        private Stack<Heap> LeafsByDelete;
+        private Heap currentLeafByInsert;
 
 
-        public HeapNode(Node value, HeapNode father = null)
+        public Heap(Node value, Heap father = null)
         {
             this.father = father;
             this.value = value;
-            this.childs = new List<HeapNode>();
+            this.childs = new List<Heap>();
 
             value.SetHeapNode(this);
 
@@ -103,8 +103,8 @@ namespace DijkstraSpace
             {
                 this.root = this;
 
-                this.lastleafsByInsert = new Queue<HeapNode>();
-                this.LeafsByDelete = new Stack<HeapNode>();
+                this.lastleafsByInsert = new Queue<Heap>();
+                this.LeafsByDelete = new Stack<Heap>();
                 this.currentLeafByInsert = this;
                 this.LeafsByDelete.Push(this);
                 size = 1;
@@ -118,11 +118,11 @@ namespace DijkstraSpace
         }
         void InsertChild(Node value)
         {
-            this.childs.Add(new HeapNode(value, this));
+            this.childs.Add(new Heap(value, this));
             root.lastleafsByInsert.Enqueue(childs[childs.Count - 1]);
             root.LeafsByDelete.Push(childs[childs.Count - 1]);
         }
-        void DeleteChild(HeapNode node)
+        void DeleteChild(Heap node)
         {
             childs.Remove(node);
         }
@@ -132,7 +132,7 @@ namespace DijkstraSpace
             {
                 if (childs.Count == 0) return;
 
-                HeapNode minChild = childs[0];
+                Heap minChild = childs[0];
                 if (childs.Count == 2)
                     if (childs[1].value.CompareTo(minChild.value) == -1)
                         minChild = childs[1];
@@ -175,7 +175,7 @@ namespace DijkstraSpace
 
             if (root.size != 0)
             {
-                HeapNode leaf = root.LeafsByDelete.Pop();
+                Heap leaf = root.LeafsByDelete.Pop();
                 if (leaf.father != null)
                     leaf.father.DeleteChild(leaf);
 

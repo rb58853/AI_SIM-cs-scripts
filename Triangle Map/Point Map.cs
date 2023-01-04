@@ -258,7 +258,7 @@ namespace Point_Map
                                 {
                                     node1.AddAdjacent(node2, cost);
 
-                                    DrawTwoPoints(node1.point, node2.point, Color.green);
+                                    //DrawTwoPoints(node1.point, node2.point, Color.green);
 
                                     node2.visitedInCreation = true;
                                     node2.SetDistance(node1.distance + node1.EuclideanDistance(node2));
@@ -285,7 +285,7 @@ namespace Point_Map
                                 {
                                     node1.AddAdjacent(node2, cost);
 
-                                    DrawTwoPoints(node1.point, node2.point, Color.green);
+                                    //DrawTwoPoints(node1.point, node2.point, Color.green);
 
                                     node2.visitedInCreation = true;
                                     node2.SetDistance(node1.distance + node1.EuclideanDistance(node2));

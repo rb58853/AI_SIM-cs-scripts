@@ -19,7 +19,7 @@ namespace Agent_Space
         public PointNode currentPosition { get; private set; }
         private PointNode nextPosition;
 
-        public Queue<MapNode> trianglePath { get; private set; }
+        public Stack<MapNode> trianglePath { get; private set; }
         private Stack<PointNode> pointPath;
         public Point destination { get; private set; }
 
@@ -33,7 +33,7 @@ namespace Agent_Space
         {
             this.name = name;
             compatibility = new Dictionary<Material, float>();
-            trianglePath = new Queue<MapNode>();
+            trianglePath = new Stack<MapNode>();
             pointPath = new Stack<PointNode>();
             visualPath = new Stack<Point>();
             ocupedNodes = new List<MapNode>();
@@ -187,7 +187,6 @@ namespace Agent_Space
 
         public MapNode[] GetTrianglePath(Point endPoint)
         {
-            trianglePath.Clear();
 
             Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
             Node[] nodes = localMap.Item1;
@@ -201,8 +200,8 @@ namespace Agent_Space
 
             MapNode[] result = tools.ToArrayAsMapNode(dijkstra.GetPath());
 
-            foreach (MapNode node in result)
-                trianglePath.Enqueue(node);
+            for (int i = result.Length - 1; i >= 0; i--)
+                trianglePath.Push(result[i]);
 
             return result;
         }
@@ -239,6 +238,7 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
+            trianglePath.Clear();
             destination = point;
             pointPath.Clear();
             //GetTrianglePath(point);
@@ -272,11 +272,29 @@ namespace Agent_Space
             float dist = radius * 2f;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
-            Tuple<bool, Agent> collision = PointNode.Static.Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.05f);
+            Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.0f);
             if (collision.Item1)
+            {
+                Debug.Log("Collision");
+                //trianglePath.Pop();
+
+                //PointNode end = pointPath.Pop();
+                //PointNode[] subPath = GetPointPath(end.point);
+
+                //foreach (PointNode node in subPath)
+                //    pointPath.Push(node);
+
+                //PointNode[] path = pointPath.ToArray();
+                //subPath[subPath.Length - 1].AddAdjacent(path[0], end.adjacents[path[0]]);
+
+                //currentPosition = pointPath.Pop();
+                //nextPosition = pointPath.Pop();
+                //inMove = true;
                 SetPointPath(destination);
+            }
         }
-        int frames = 1;///25 = 1 u;
+        /// update freq = (frames/[speed / 5]) real frames .
+        int frames = 10;
         void NextMoveBasic()
         {
             if (inMove)
@@ -288,7 +306,7 @@ namespace Agent_Space
 
                 if (frames <= 0)
                 {
-                    frames = 1;
+                    frames = 10;
                     DynamicSetPoint();
                 }
                 frames--;
@@ -307,7 +325,7 @@ namespace Agent_Space
             visualPath.Clear();
 
 
-            try { currentNode = trianglePath.Dequeue().origin; }
+            try { currentNode = trianglePath.Pop().origin; }
             catch { Debug.Log("La cola tiene " + trianglePath.Count + " elementos y esta intentando hacer Dequeue()"); }
 
             currentPosition = nextPosition;
@@ -323,6 +341,45 @@ namespace Agent_Space
 
             NextMoveBasic();
         }
+
+        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)
+        {
+            Point l1 = node1;
+            Point l2 = node2;
+            float epsilon = 0.001f;
+            foreach (Agent agentObstacle in mapNode.agentsIn)
+            {
+                if (agentObstacle == agent) continue;
+                if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
+                    /// Collision
+                    return new Tuple<bool, Agent>(true, agentObstacle);
+            }
+            return new Tuple<bool, Agent>(false, null);
+        }
+        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
+        {
+            foreach (MapNode node in mapNodes)
+            {
+                Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
+                if (collision.Item1)
+                {
+                    float distance = collision.Item2.position.Distance(agent.position, false);
+                    float radius = collision.Item2.radius + agent.radius;
+                    float epsilon = 0.01f;
+                    if (distance <= radius + epsilon)
+                    {
+                        ///Choque
+                        Point vector = Point.VectorUnit(collision.Item2.position, agent.position) * (radius - distance + epsilon);
+                        agent.position = agent.position + vector;
+                        collision.Item2.position = collision.Item2.position - vector;
+                        //return new Tuple<bool, Agent>(false, null);
+                    }
+                    return collision;
+                }
+            }
+            return new Tuple<bool, Agent>(false, null);
+        }
+
         internal class tools
         {
             internal static MapNode[] ToArrayAsMapNode(List<Node> list)

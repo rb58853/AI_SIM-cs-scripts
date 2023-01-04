@@ -110,30 +110,6 @@ namespace Point_Map
                 result.Add(endNode);
                 return result;
             }
-            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)
-            {
-                Point l1 = node1;
-                Point l2 = node2;
-                float epsilon = 0.001f;
-                foreach (Agent agentObstacle in mapNode.agentsIn)
-                {
-                    if (agentObstacle == agent) continue;
-                    if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
-                        /// Collision
-                        return new Tuple<bool, Agent>(true, agentObstacle);
-                }
-                return new Tuple<bool, Agent>(false, null);
-            }
-            public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
-            {
-                foreach (MapNode node in mapNodes)
-                {
-                    Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
-                    if (collision.Item1)
-                        return collision;
-                }
-                return new Tuple<bool, Agent>(false, null);
-            }
 
             static void CreateSimplePath(PointNode init, List<PointNode> list,
                 Agent agent, MapNode mapNode, float cost, PointNode endNode,
@@ -169,7 +145,7 @@ namespace Point_Map
                     {
                         PointNode end = temp[i];
 
-                        Tuple<bool, Agent> collision = Collision(current.point, end.point, agent, mapNode, 1.1f);
+                        Tuple<bool, Agent> collision = Agent.Collision(current.point, end.point, agent, mapNode, 1.0f);
 
                         if (collision.Item1)
                             CreateObstacleBorder(current, end, agent, mapNode, cost, result, visitedObstacles, q, endList, endNode);
@@ -203,7 +179,7 @@ namespace Point_Map
                 ///De alguna manera hay que hacer que esto pueda volver a visitar otros agentes para detectar colisiones 
                 ///para poder hacer el bordeo mejor
 
-                Tuple<bool, Agent> collision = Collision(init.point, end.point, agent, mapNode, 1.1f);
+                Tuple<bool, Agent> collision = Agent.Collision(init.point, end.point, agent, mapNode, 1.0f);
                 if (collision.Item1)
                 {
                     //DrawTwoPoints(init.point, collision.Item2.position, Color.black);
@@ -278,7 +254,7 @@ namespace Point_Map
                             PointNode node2 = up.Dequeue();
 
                             if (mapNode.triangle.PointIn(node2.point))
-                                if (!Collision(node1.point, node2.point, agent, mapNode, 1.1f).Item1)
+                                if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
 
@@ -305,7 +281,7 @@ namespace Point_Map
 
                             PointNode node2 = down.Dequeue();
                             if (mapNode.triangle.PointIn(node2.point))
-                                if (!Collision(node1.point, node2.point, agent, mapNode, 1.1f).Item1)
+                                if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
 
@@ -326,18 +302,6 @@ namespace Point_Map
                         }
                     }
                 }
-            }
-            static Point GeneratedPoint(Point init, Agent agent, Agent collision, bool negative = false)
-            {
-                Point vector1 = collision.position - init;
-                Point vector2 = new Point(-vector1.z, 0, vector1.x);///Ortogonal
-                float den = (float)Math.Sqrt(vector2.x * vector2.x + vector2.z * vector2.z);
-                Point unitVector2 = vector2 / den;
-
-                float n = Agent_Space.Environment.collisionBorder;
-                if (negative)
-                    return collision.position + unitVector2 * (agent.radius + collision.radius) * -n;
-                return collision.position + unitVector2 * (agent.radius + collision.radius) * n;
             }
             static void DrawTwoPoints(Point p1, Point p2, Color color)
             {

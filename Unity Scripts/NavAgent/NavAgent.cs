@@ -8,7 +8,6 @@ using System;
 
 public class NavAgent : MonoBehaviour
 {
-    //public string Name = "agent";
     public float radius = 1;
     public Agent agent { get; private set; }
     public int speed = 15;

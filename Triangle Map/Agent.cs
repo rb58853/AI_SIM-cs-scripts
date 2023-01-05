@@ -214,6 +214,7 @@ namespace Agent_Space
             if (aritPath == null)
             {
                 this.pointPath.PushPointMap(new PointNode[1] { new PointNode(position) });
+                this.pointPath.PushTriangleMap(new MapNode[] { currentNode });
                 return new PointNode[1] { new PointNode(position) };///Debugguer
             }
 
@@ -295,7 +296,9 @@ namespace Agent_Space
                 currentPosition = pointPath.currentPoint;
                 currentNode = pointPath.currentNode;
 
-                float cost = currentPosition.adjacents[nextPosition] * 25;
+                //float cost = currentPosition.adjacents[nextPosition] * 25;
+                float cost = currentNode.MaterialCost(this) * 25;
+
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)
                     visualPath.Push(temp[i]);

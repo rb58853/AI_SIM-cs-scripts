@@ -89,7 +89,7 @@ namespace DijkstraSpace
         private Heap currentLeafByInsert;
 
 
-        public Heap(Node value, Heap father = null)
+        public Heap(Node value = null, Heap father = null)
         {
             this.father = father;
             this.value = value;
@@ -108,7 +108,10 @@ namespace DijkstraSpace
                 this.LeafsByDelete = new Stack<Heap>();
                 this.currentLeafByInsert = this;
                 this.LeafsByDelete.Push(this);
-                size = 1;
+                if (value != null)
+                    size = 1;
+                else
+                    size = 0;
             }
 
         }

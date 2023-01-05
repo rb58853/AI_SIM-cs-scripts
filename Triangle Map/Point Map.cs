@@ -93,8 +93,8 @@ namespace Point_Map
                 }
 
                 List<List<PointNode>> points = new List<List<PointNode>>();
-                PointNode endNode = new PointNode(end); endNode.SetEnd(endNode);
-                PointNode initNode = new PointNode(init, endNode);
+                PointNode endNode = new PointNode(end, inArist: false); endNode.SetEnd(endNode);
+                PointNode initNode = new PointNode(init, endNode, inArist: false);
                 initNode.visitedInCreation = true;
 
                 foreach (Arist arist in arists)
@@ -262,7 +262,7 @@ namespace Point_Map
 
                             PointNode node2 = up.Dequeue();
 
-                            if (mapNode.triangle.PointIn(node2.point))
+                            //if (mapNode.triangle.PointIn(node2.point))
                                 if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
@@ -289,7 +289,7 @@ namespace Point_Map
                             if (!node1.visitedInCreation) break;
 
                             PointNode node2 = down.Dequeue();
-                            if (mapNode.triangle.PointIn(node2.point))
+                            //if (mapNode.triangle.PointIn(node2.point))
                                 if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                                 {
                                     node1.AddAdjacent(node2, cost);
@@ -350,7 +350,7 @@ namespace Point_Map
                 currentPoint = nextPoint;
             }
 
-            Heap q = new Heap(null);
+            Heap q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
             {
                 node.SetInit(currentPoint);
@@ -358,6 +358,7 @@ namespace Point_Map
             }
 
             PointNode next = null;
+            Debug.Log(q.size);
             while (q.size > 0)
             {
                 next = q.Pop() as PointNode;

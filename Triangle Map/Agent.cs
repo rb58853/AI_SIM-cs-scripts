@@ -19,8 +19,8 @@ namespace Agent_Space
         public PointNode currentPosition { get; private set; }
         private PointNode nextPosition;
 
-        public Stack<MapNode> trianglePath { get; private set; }
-        private Stack<PointNode> pointPath;
+        public Stack<MapNode> trianglePath { get => pointPath.triangleMap; }
+        private PointPath pointPath;
         public Point destination { get; private set; }
 
         public Stack<Point> visualPath { get; private set; }
@@ -31,10 +31,9 @@ namespace Agent_Space
 
         public Agent(float radius, string name = "agent")
         {
+            pointPath = new PointPath(this);
             this.name = name;
             compatibility = new Dictionary<Material, float>();
-            trianglePath = new Stack<MapNode>();
-            pointPath = new Stack<PointNode>();
             visualPath = new Stack<Point>();
             ocupedNodes = new List<MapNode>();
             this.radius = radius;
@@ -187,7 +186,6 @@ namespace Agent_Space
 
         public MapNode[] GetTrianglePath(Point endPoint, bool push = true)
         {
-
             Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
             Node[] nodes = localMap.Item1;
             Node init = localMap.Item2;
@@ -196,27 +194,15 @@ namespace Agent_Space
             if (end == null)
                 return null;
 
-            Dijkstra dijkstra = new Dijkstra(init, end, nodes);
+            Dijkstra dijkstra = new Dijkstra(end, init, nodes);
 
             MapNode[] result = tools.ToArrayAsMapNode(dijkstra.GetPath());
-
-            if (push)
-            {
-                for (int i = result.Length - 1; i >= 0; i--)
-                    trianglePath.Push(result[i]);
-            }
+            pointPath.PushTriangleMap(result);
 
             return result;
         }
         List<Arist> GetAritsPath(Point endPoint)
         {
-            //Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
-            //Node[] nodes = localMap.Item1; Node init = localMap.Item2; Node end = localMap.Item3;
-            //Dijkstra dijkstra = new Dijkstra(init, end, nodes);
-
-            //if (nodes.Length == 0)
-            //    return null;
-
             MapNode[] path = GetTrianglePath(endPoint);
             if (path == null) return null;
             return Arist.ToAristList(path);
@@ -226,43 +212,30 @@ namespace Agent_Space
             List<Arist> aritPath = GetAritsPath(endPoint);
 
             if (aritPath == null)
-                return new PointNode[1] { new PointNode(position) };
+            {
+                this.pointPath.PushPointMap(new PointNode[1] { new PointNode(position) });
+                return new PointNode[1] { new PointNode(position) };///Debugguer
+            }
 
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, position, endPoint, this, density, mCost);
+
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, endPoint, position, this, density, mCost);
 
             ///MapPoints[0] = initNode
             ///MapPoints[MapPoints.Count-1] = endNode
             Dijkstra dijkstra = new Dijkstra(mapPoints[0], mapPoints[mapPoints.Count - 1], mapPoints.ToArray());
-            List<Node> pointPath = dijkstra.GetPath();
+            List<Node> pointPath = dijkstra.GetPath(false);
+            this.pointPath.PushPointMap(mapPoints);
 
-            return tools.ToArrayAsPointNode(pointPath);
+            return tools.ToArrayAsPointNode(pointPath);///Debugguer
         }
         public void SetPointPath(Point point)
         {
-            trianglePath.Clear();
             destination = point;
-            pointPath.Clear();
-            //GetTrianglePath(point);
-            PointNode[] path = GetPointPath(point);
-            for (int i = path.Length - 1; i >= 0; i--)
-                pointPath.Push(path[i]);
-
-            if (pointPath.Count > 1)
-            {
-                currentPosition = pointPath.Pop();
-                nextPosition = pointPath.Pop();
-                NextPoint();
-            }
-            else
-            {
-                currentPosition = new PointNode(position);
-                nextPosition = new PointNode(position);
-                inMove = false;
-            }
+            GetPointPath(point);
+            NextPoint();
         }
-
         void DynamicSetPoint()
         {
             if (nextPosition.point.Distance(position) < 0.01f) return;
@@ -273,37 +246,7 @@ namespace Agent_Space
             Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.0f);
             if (collision.Item1)
             {
-                if (pointPath.Count > 3)
-                {
-                    trianglePath.Pop();
-                    trianglePath.Pop();
-
-                    PointNode end = pointPath.Pop();
-
-                    PointNode[] subPath = GetPointPath(end.point);
-
-                    if (subPath.Length <= 1)
-                    {
-                        ///Not found Path
-                        SetPointPath(destination);
-                        return;
-                    }
-
-                    PointNode[] path = pointPath.ToArray();
-                    subPath[subPath.Length - 1].AddAdjacent(path[0], end.adjacents[path[0]]);
-
-                    for (int i = subPath.Length - 1; i >= 0; i--)
-                        pointPath.Push(subPath[i]);
-
-                    currentPosition = pointPath.Pop();
-                    nextPosition = pointPath.Pop();
-                    NextPoint();
-
-                }
-                else
-                {
-                    SetPointPath(destination);
-                }
+                NextPoint(true);
             }
         }
 
@@ -340,28 +283,26 @@ namespace Agent_Space
                 frames--;
             }
         }
-        void NextPoint()
+        void NextPoint(bool onCollision = false)
         {
             visualPath.Clear();
 
-            float cost = currentPosition.adjacents[nextPosition] * 25;
-            List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
-            for (int i = temp.Count - 1; i >= 0; i--)
-                visualPath.Push(temp[i]);
-
-            if (pointPath.Count == 0)
-                inMove = false;
-            else
+            if (!pointPath.empty)
             {
-                currentPosition = nextPosition;
-                nextPosition = pointPath.Pop();
-
-                try { currentNode = trianglePath.Pop().origin; }
-                catch { Debug.Log("La pila tiene " + trianglePath.Count + " elementos y esta intentando hacer push()"); }
-
                 inMove = true;
+
+                nextPosition = pointPath.Pop(onCollision);
+                currentPosition = pointPath.currentPoint;
+                currentNode = pointPath.currentNode;
+
+                float cost = currentPosition.adjacents[nextPosition] * 25;
+                List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
+                for (int i = temp.Count - 1; i >= 0; i--)
+                    visualPath.Push(temp[i]);
+                NextMoveBasic();
             }
-            NextMoveBasic();
+            else
+                inMove = false;
         }
 
         public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)

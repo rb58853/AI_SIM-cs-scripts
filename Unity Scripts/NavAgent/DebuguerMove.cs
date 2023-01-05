@@ -49,11 +49,11 @@ public class DebuguerMove : MonoBehaviour
             {
 
                 Point end = new Point(hit.point.x, hit.point.y, hit.point.z);
-                points = agent.GetPointPath(end);
                 tempT = agent.GetTrianglePath(end);
                 if (tempT != null)
                 {
                     DrawPath(tempT, Color.black);
+                    points = agent.GetPointPath(end);
                     DrawPath(points, Color.blue);
                 }
             }

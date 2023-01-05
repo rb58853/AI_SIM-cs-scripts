@@ -26,9 +26,9 @@ namespace DijkstraSpace
             endPath = new List<Node>();
         }
 
-        public List<Node> GetPath()
+        public List<Node> GetPath(bool para = true)
         {
-            Start();
+            Start(para);
             GetPath(endNode);
             endPath.Reverse();
             return endPath;
@@ -40,7 +40,7 @@ namespace DijkstraSpace
                 GetPath(node.father);
         }
 
-        void Start()
+        void Start(bool para = true)
         {
             initNode.SetDistance(0);
 
@@ -57,7 +57,7 @@ namespace DijkstraSpace
 
                 Node node = Q.Pop();
                 node.SetVisited();
-                if (node == endNode)
+                if (para && node == endNode)
                     break;
 
                 foreach (Node adj in node.GetAdyacents())
@@ -95,7 +95,8 @@ namespace DijkstraSpace
             this.value = value;
             this.childs = new List<Heap>();
 
-            value.SetHeapNode(this);
+            if (value != null)
+                value.SetHeapNode(this);
 
             if (father != null)
                 this.root = father.root;
@@ -194,6 +195,7 @@ namespace DijkstraSpace
             if (root.value == null)
             {
                 root.value = value;
+                root.value.SetHeapNode(root);
                 return;
             }
 

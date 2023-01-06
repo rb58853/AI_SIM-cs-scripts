@@ -20,6 +20,7 @@ namespace Agent_Space
         private PointNode nextPosition;
 
         public Stack<MapNode> trianglePath { get => pointPath.triangleMap; }
+        public MapNode[] triangleArray { get; private set; }
         private PointPath pointPath;
         public Point destination { get; private set; }
 
@@ -57,7 +58,7 @@ namespace Agent_Space
                     currentNode = node as MapNode;
                     ocupedNodes.Add(currentNode);
                     currentNode.AddAgent(this);
-                    SetOcupedFromPosition(2);
+                    SetOcupedFromPosition(3);
                     break;
                 }
         }
@@ -196,10 +197,11 @@ namespace Agent_Space
 
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
 
-            MapNode[] result = tools.ToArrayAsMapNode(dijkstra.GetPath());
-            pointPath.PushTriangleMap(result);
+            triangleArray = tools.ToArrayAsMapNode(dijkstra.GetPath());
 
-            return result;
+            pointPath.PushTriangleMap(triangleArray);
+
+            return triangleArray;
         }
         List<Arist> GetAritsPath(Point endPoint)
         {
@@ -262,7 +264,7 @@ namespace Agent_Space
             if (countMoves <= 0)
             {
                 countMoves = 1;
-                SetOcupedFromPosition(2);
+                SetOcupedFromPosition(3);
             }
         }
         /// update freq = (frames/[speed / 5]) real frames .
@@ -313,14 +315,20 @@ namespace Agent_Space
             Point l1 = node1;
             Point l2 = node2;
             float epsilon = 0.001f;
+            Tuple<bool, Agent> result = new Tuple<bool, Agent>(false, null);
+
             foreach (Agent agentObstacle in mapNode.agentsIn)
             {
                 if (agentObstacle == agent) continue;
                 if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
                     /// Collision
-                    return new Tuple<bool, Agent>(true, agentObstacle);
+                    if (result.Item2 == null ||
+                        agentObstacle.position.Distance(agent.position, false) <
+                        result.Item2.position.Distance(agent.position, false))///mas cercano
+
+                        result = new Tuple<bool, Agent>(true, agentObstacle);
             }
-            return new Tuple<bool, Agent>(false, null);
+            return result;
         }
         public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
         {

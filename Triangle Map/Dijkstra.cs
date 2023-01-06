@@ -26,9 +26,9 @@ namespace DijkstraSpace
             endPath = new List<Node>();
         }
 
-        public List<Node> GetPath(bool para = true)
+        public List<Node> GetPath(bool stop = true)
         {
-            Start(para);
+            Start(stop);
             GetPath(endNode);
             endPath.Reverse();
             return endPath;
@@ -40,8 +40,9 @@ namespace DijkstraSpace
                 GetPath(node.father);
         }
 
-        void Start(bool para = true)
+        void Start(bool stop = true)
         {
+            DateTime t0 = DateTime.Now;
             initNode.SetDistance(0);
 
             List<Node> nodes = this.nodes.ToList<Node>();
@@ -57,13 +58,14 @@ namespace DijkstraSpace
 
                 Node node = Q.Pop();
                 node.SetVisited();
-                if (para && node == endNode)
+                if (stop && node == endNode)
                     break;
 
                 foreach (Node adj in node.GetAdyacents())
                     if (!adj.visited)
                         Relax(adj, node);
             }
+            Debug.Log("el Dijkstra tardo: " + (DateTime.Now - t0));
         }
         void Relax(Node v, Node u)
         {

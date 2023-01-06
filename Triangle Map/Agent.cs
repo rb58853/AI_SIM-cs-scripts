@@ -20,8 +20,9 @@ namespace Agent_Space
         private PointNode nextPosition;
 
         public Stack<MapNode> trianglePath { get => pointPath.triangleMap; }
-        public MapNode[] triangleArray { get; private set; }
+        public List<MapNode> triangleList { get; private set; }
         private PointPath pointPath;
+        public List<PointNode> pointsMap { get; private set; }
         public Point destination { get; private set; }
 
         public Stack<Point> visualPath { get; private set; }
@@ -148,6 +149,8 @@ namespace Agent_Space
                 MapNode n = q.Dequeue();
                 foreach (MapNode adj in n.adjacents.Keys)
                 {
+                    Arist aristClone = n.adjacents[adj].Clone();
+
                     if (!visited.Contains(adj))
                     {
                         visited.Add(adj);
@@ -160,8 +163,8 @@ namespace Agent_Space
                         }
 
                         r.Add(adj, temp);
-                        r[n].AddAdjacent(temp, n.adjacents[adj]);
-                        temp.AddAdjacent(r[n], n.adjacents[adj]);
+                        r[n].AddAdjacent(temp, aristClone);
+                        temp.AddAdjacent(r[n], aristClone);
                         //temp.SetDistance(Math.Min(temp.distance, r[n].distance + temp.Distance(n)));
                         q.Enqueue(adj);
 
@@ -171,8 +174,8 @@ namespace Agent_Space
                     {
                         if (!r[n].adjacents.ContainsKey(r[adj]))
                         {
-                            r[n].AddAdjacent(r[adj], n.adjacents[adj]);
-                            r[adj].AddAdjacent(r[n], n.adjacents[adj]);
+                            r[n].AddAdjacent(r[adj], aristClone);
+                            r[adj].AddAdjacent(r[n], aristClone);
                             //r[adj].SetDistance(Math.Min(r[adj].distance, r[n].distance + r[adj].Distance(n)));
                         }
                     }
@@ -196,12 +199,15 @@ namespace Agent_Space
                 return null;
 
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
+            List<Node> path = dijkstra.GetPath();
 
-            triangleArray = tools.ToArrayAsMapNode(dijkstra.GetPath());
+            MapNode[] result = tools.ToArrayAsMapNode(path);
 
-            pointPath.PushTriangleMap(triangleArray);
+            triangleList = tools.ToListAsMapNode(path);
 
-            return triangleArray;
+            pointPath.PushTriangleMap(triangleList);
+
+            return result;
         }
         List<Arist> GetAritsPath(Point endPoint)
         {
@@ -223,7 +229,10 @@ namespace Agent_Space
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
 
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(aritPath, endPoint, position, this, density, mCost);
+            PointNode endNode = new PointNode(endPoint, inArist: false);
+            pointsMap.Add(endNode);
+
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
 
             ///MapPoints[0] = initNode
             ///MapPoints[MapPoints.Count-1] = endNode
@@ -235,6 +244,8 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
+
+            pointsMap = new List<PointNode>();
             destination = point;
             GetPointPath(point);
             NextPoint();
@@ -361,6 +372,13 @@ namespace Agent_Space
                 MapNode[] result = new MapNode[list.Count];
                 for (int i = 0; i < list.Count; i++)
                     result[i] = list[i] as MapNode;
+                return result;
+            }
+            internal static List<MapNode> ToListAsMapNode(List<Node> list)
+            {
+                List<MapNode> result = new List<MapNode>();
+                for (int i = 0; i < list.Count; i++)
+                    result.Add(list[i] as MapNode);
                 return result;
             }
             internal static PointNode[] ToArrayAsPointNode(List<Node> list)

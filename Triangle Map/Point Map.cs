@@ -37,7 +37,7 @@ namespace Point_Map
         public void SetPoint(Point point) { this.point = point; }
         public void AddAdjacent(PointNode node, float value = 1) { adjacents.Add(node, value); }
         public void RemoveAdjacent(PointNode node) { adjacents.Remove(node); }
-        public void RemoveAllAdjacents(PointNode node) { adjacents = new Dictionary<PointNode, float>(); }
+        public void RemoveAllAdjacents() { adjacents = new Dictionary<PointNode, float>(); }
         public float EuclideanDistance(PointNode node) { return point.Distance(node.point); }
         //float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
         public override float Value()
@@ -69,17 +69,18 @@ namespace Point_Map
         {
             return EuclideanDistance(node as PointNode) * adjacents[node as PointNode];
         }
-
         internal class Static
         {
-            public static List<PointNode> CreatePointMap(List<Arist> arists, Point init, Point end, Agent agent = null, float n = 1, float cost = 1)
+            public static List<PointNode> CreatePointMap(PointNode initNode, Point end, Agent agent = null, float n = 1f, float cost = 1)
             {
+                DateTime t0 = DateTime.Now;
                 List<PointNode> result = new List<PointNode>();
-                MapNode[] mapNodes = agent.triangleArray;
+                List<MapNode> mapNodes = agent.triangleList;
 
-                if (arists.Count == 0)
+                if (mapNodes.Count == 1)
                 {
-                    PointNode e = new PointNode(end, inArist: false); PointNode i = new PointNode(init, e, inArist: false);
+                    PointNode e = new PointNode(end, inArist: false);
+                    PointNode i = initNode;
                     e.SetEnd(e);
                     result.Add(i);
                     i.visitedInCreation = true;
@@ -91,32 +92,75 @@ namespace Point_Map
                     return result;
                 }
 
-                List<List<PointNode>> points = new List<List<PointNode>>();
                 PointNode endNode = new PointNode(end, inArist: false); endNode.SetEnd(endNode);
-                PointNode initNode = new PointNode(init, endNode, inArist: false);
                 initNode.visitedInCreation = true;
 
-                foreach (Arist arist in arists)
+                //result.Add(initNode);
+
+                foreach (MapNode triangle in mapNodes)
                 {
-                    points.Add(new List<PointNode>());
-                    foreach (Point point in arist.ToPoints(n))
-                        points[points.Count - 1].Add(new PointNode(point, endNode));
-                }
+                    ///Lo proximo se va creando dinamicamente cuando se va creando el camino de triangulos.
+                    ///Tambien se agrega a un mapa de puntos del agente estos dinamicamente mientras se crean los 
+                    ///triangulos
 
-                CreateSimplePath(initNode, points[0], agent, agent.currentNode, cost, endNode, result);
+                    //foreach (MapNode adj in triangle.adjacents.Keys)
+                    //    if (mapNodes.Contains(adj))
+                    //        if (triangle.adjacents[adj].points.Count == 0)
+                    //            triangle.adjacents[adj].ToPoints(n);
 
-                for (int i = 0; i < points.Count - 1; i++)
-                    for (int j = 0; j < points[i].Count; j++)
-                        CreateSimplePath(points[i][j], points[i + 1], agent, mapNodes[i + 1].origin, arists[i].materialCost, endNode, result);
+                    if (triangle == mapNodes[0])
+                    {
+                        foreach (MapNode adj in triangle.adjacents.Keys)
+                        {
+                            Arist arist = triangle.adjacents[adj];
 
-                foreach (PointNode node in points[points.Count - 1])
-                {
-                    List<PointNode> temp = new List<PointNode>(); temp.Add(endNode);
-                    CreateSimplePath(node, temp, agent, mapNodes[points.Count].origin, arists[points.Count - 1].materialCost, endNode, result);
+                            if (mapNodes.Contains(adj))
+                            {
+                                CreateSimplePath(initNode, arist.points, agent, triangle.origin,
+                                          triangle.MaterialCost(agent), endNode, result);
+                                Debug.Log("La arista tiene cantidad de puntos = " + arist.points.Count);
+                            }
+                        }
+                        continue;
+                    }
+
+                    if (triangle == mapNodes[mapNodes.Count - 1])
+                    {
+                        List<PointNode> temp = new List<PointNode>(); temp.Add(endNode);
+
+                        foreach (MapNode adj in triangle.adjacents.Keys)
+                        {
+                            Arist arist = triangle.adjacents[adj];
+                            if (mapNodes.Contains(adj))
+                                foreach (PointNode point in arist.points)
+                                    CreateSimplePath(point, temp, agent, triangle.origin,
+                                        triangle.MaterialCost(agent), endNode, result);
+                        }
+                        continue;
+                    }
+
+                    foreach (MapNode adj1 in triangle.adjacents.Keys)
+                        foreach (MapNode adj2 in triangle.adjacents.Keys)
+                        {
+                            Arist arist1 = triangle.adjacents[adj1];
+                            Arist arist2 = triangle.adjacents[adj2];
+
+                            if (arist1 != arist2 &&
+                                mapNodes.Contains(adj1) &&
+                                mapNodes.Contains(adj2))
+                                foreach (PointNode p1 in arist1.points)
+                                    CreateSimplePath(p1, arist2.points, agent, triangle.origin,
+                                        triangle.MaterialCost(agent), endNode, result);
+                        }
                 }
 
                 result.Add(endNode);
+                Debug.Log("Crear el mapa de puntos demoro: " + (DateTime.Now - t0)); 
                 return result;
+
+                //Debug.Log("Count del resultado del mapa de puntos " + agent.pointsMap.Count);
+                //agent.pointsMap.Add(endNode);
+                //return agent.pointsMap;
             }
 
             static void CreateSimplePath(PointNode init, List<PointNode> list,
@@ -124,12 +168,14 @@ namespace Point_Map
                 List<PointNode> result)
             {
 
-                if (!init.visitedInCreation) return;
+                //if (!init.visitedInCreation) return;
 
                 List<PointNode> endList = new List<PointNode>();
                 endList.Add(init);
 
-                result.Add(init);
+                if (!result.Contains(init)) /// Esto no me gusta en cuanto a eficiencia FFF
+                    result.Add(init);
+
                 init.SetDistance(0);
                 Heap q = new Heap(init);
 
@@ -156,16 +202,18 @@ namespace Point_Map
                             {
                                 CreateObstacleBorder(current, end, agent, mapNode, cost, result,
                                     visitedObstacles, q, endList, endNode, end);
-                                //current.AddAdjacent(end, float.MaxValue - 10000 + cost);
+                                current.AddAdjacent(end, float.MaxValue - 10000 + cost);
                                 continue;
                             }
                         }
 
                         current.AddAdjacent(end, cost);
 
-                        //DrawTwoPoints(current.point, end.point, Color.yellow);
+                        DrawTwoPoints(current.point, end.point, Color.yellow);
 
                         end.visitedInCreation = true;
+                        //if (!result.Contains(end)) /// Esto no me gusta en cuanto a eficiencia FFF
+                        //    result.Add(end);
                         temp.Remove(end); i--;
                     }
                     foreach (PointNode node in endList)
@@ -383,6 +431,7 @@ namespace Point_Map
                 node.SetInit(currentPoint);
                 q.Push(node);
             }
+            Debug.Log("Cantidad de elementos en el heap pa caminar: " + q.size);
 
             PointNode next = null;
 
@@ -406,6 +455,7 @@ namespace Point_Map
                 }
             }
 
+            empty = true;
             return currentPoint;
         }
         public void PushPointMap(PointNode[] nodes)
@@ -424,24 +474,24 @@ namespace Point_Map
         public void PushPointMap(List<PointNode> nodes)
         {
             empty = false;
-            ///Invertir la direccion de las aristas
-            for (int i = 0; i < nodes.Count; i++)
+            ///Invertir la direccion de las aristas ultimo y primero
+            PointNode node = nodes[0];
+
+            List<PointNode> temp = new List<PointNode>();
+            foreach (PointNode adj in node.adjacents.Keys) temp.Add(adj);
+
+            foreach (PointNode adj in temp)
             {
-                PointNode node = nodes[i];
-                List<PointNode> temp = new List<PointNode>();
-
-                foreach (PointNode adj in node.adjacents.Keys)
-                    temp.Add(adj);
-
-                foreach (PointNode adj in temp)
-                    if (!adj.visitedAsAdjacent)
-                    {
-                        adj.AddAdjacent(node, node.adjacents[adj]);
-                        node.RemoveAdjacent(adj);
-                    }
-
-                node.visitedAsAdjacent = true;
+                adj.AddAdjacent(node, node.adjacents[adj]);
+                node.RemoveAdjacent(adj);
             }
+
+            foreach (PointNode point in nodes)
+                if (point.adjacents.ContainsKey(nodes[nodes.Count - 1]))
+                {
+                    nodes[nodes.Count - 1].AddAdjacent(point, point.adjacents[nodes[nodes.Count - 1]]);
+                    point.RemoveAdjacent(nodes[nodes.Count - 1]);
+                }
 
             currentPoint = null;
             nextPoint = nodes[nodes.Count - 1];
@@ -575,13 +625,12 @@ namespace Point_Map
                                 node2.SetInit(node1);
                                 node2.visitedInCreation = true;
 
-                                //PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
+                                PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
                             }
                             else
                                 CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
 
                         node1 = node2;
-                        Debug.Log("Tamano de la cola up: " + up.Count);
                     }
 
                     node1 = init;
@@ -607,13 +656,12 @@ namespace Point_Map
                                 node2.SetFather(node1);
                                 node2.visitedInCreation = true;
 
-                                //PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
+                                PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
                             }
                             else
                                 CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
 
                         node1 = node2;
-                        Debug.Log("Tamano de la cola Down: " + up.Count);
                     }
                 }
             }

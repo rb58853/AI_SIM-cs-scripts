@@ -14,7 +14,7 @@ namespace Agent_Space
         public readonly static Map map = new Map();
 
         /// <summary> more value => best path  |  less value => best code eficience </summary>
-        public readonly static float densityPath = 0.5f;
+        public readonly static float densityPath = 0.2f;
         /// <summary> count of nodes to visit(with bfs) after found the destination node </summary>
         public readonly static int bfsArea = 40;
         /// <summary> heuristic weigth for path between triangles </summary>

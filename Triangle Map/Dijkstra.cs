@@ -55,7 +55,6 @@ namespace DijkstraSpace
 
             while (Q.size > 0)
             {
-
                 Node node = Q.Pop();
                 node.SetVisited();
                 if (stop && node == endNode)
@@ -81,7 +80,7 @@ namespace DijkstraSpace
     {
         internal Agent agent;
         public int size { get; private set; }
-
+        public Node next { get => value; }
         private Heap father;
         private Node value;
         private Heap root;

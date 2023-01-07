@@ -204,26 +204,57 @@ namespace Agent_Space
 
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
             List<Node> path = dijkstra.GetPath();
-
-            MapNode[] result = tools.ToArrayAsMapNode(path);
-
-            triangleList = tools.ToListAsMapNode(path);
-
             pointPath.PushCurrenTriangle((path[path.Count - 1] as MapNode).origin);
 
+            DilatePath();
+            triangleList = tools.ToListAsMapNode(path);
+
+            MapNode[] result = tools.ToArrayAsMapNode(path);
             return result;
+
+            void DilatePath()
+            {
+                int dilate = Environment.trianglePathDilatation;
+
+                while (dilate > 0)
+                {
+                    dilate--;
+                    MapNode temp = path[path.Count - 1] as MapNode;
+                    Node[] array = path.ToArray();
+
+                    path.Remove(temp);
+
+                    foreach (MapNode node in array)
+                        foreach (MapNode adj in node.adjacents.Keys)
+                            if (!path.Contains(adj) && adj != temp)
+                                path.Add(adj);
+
+                    path.Add(temp);
+                }
+
+                foreach (MapNode node in path.ToArray())
+                    if (node != path[0] && node != path[path.Count - 1])
+                        if (OnlyOneAdj(node))
+                            path.Remove(node);
+
+                bool OnlyOneAdj(MapNode triangle)
+                {
+                    int countAdj = 0;
+                    foreach (MapNode adj in triangle.adjacents.Keys)
+                        if (path.Contains(adj))
+                            countAdj++;
+
+                    return countAdj <= 1;
+                }
+            }
+
         }
-        List<Arist> GetAritsPath(Point endPoint)
-        {
-            MapNode[] path = GetTrianglePath(endPoint);
-            if (path == null) return null;
-            return Arist.ToAristList(path);
-        }
+
         public PointNode[] GetPointPath(Point endPoint)
         {
-            List<Arist> aritPath = GetAritsPath(endPoint);
+            MapNode[] tPath = GetTrianglePath(endPoint);
 
-            if (aritPath == null)
+            if (tPath == null)
             {
                 this.pointPath.PushPointMap(new PointNode[1] { new PointNode(position) });
                 return new PointNode[1] { new PointNode(position) };///Debugguer
@@ -256,7 +287,7 @@ namespace Agent_Space
         {
             if (nextPosition.point.Distance(position) < 0.01f) return;
 
-            float dist = radius * 3f;
+            float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
             Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.0f);
@@ -280,8 +311,9 @@ namespace Agent_Space
                 SetOcupedFromPosition(3);
             }
         }
-        /// update freq = (frames/[speed / 5]) real frames .
-        int frames = 10;
+        /// update frequence = (freq/[speed / 5]) frames.
+
+        int freq = Environment.freqReview;
         void NextMoveBasic()
         {
             if (inMove)
@@ -291,12 +323,12 @@ namespace Agent_Space
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
 
 
-                if (frames <= 0)
+                if (freq <= 0)
                 {
-                    frames = 10;
+                    freq = Environment.freqReview;
                     DynamicSetPoint();
                 }
-                frames--;
+                freq--;
             }
         }
         void NextPoint(bool onCollision = false)
@@ -309,7 +341,7 @@ namespace Agent_Space
 
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
-                currentNode = pointPath.currentNode;
+                currentNode = pointPath.currentTriangle;
 
                 //float cost = currentPosition.adjacents[nextPosition] * 25;
                 float cost = currentNode.MaterialCost(this) * 25;
@@ -327,7 +359,7 @@ namespace Agent_Space
         {
             Point l1 = node1;
             Point l2 = node2;
-            float epsilon = 0.001f;
+            float epsilon = 0.05f;
             Tuple<bool, Agent> result = new Tuple<bool, Agent>(false, null);
 
             foreach (Agent agentObstacle in mapNode.agentsIn)
@@ -341,6 +373,20 @@ namespace Agent_Space
 
                         result = new Tuple<bool, Agent>(true, agentObstacle);
             }
+            if (result.Item1)
+            {
+                float distance = result.Item2.position.Distance(agent.position, false);
+                float radius = result.Item2.radius + agent.radius;
+                if (distance <= radius + epsilon)
+                {
+                    ///Choque
+                    Point vector = Point.VectorUnit(result.Item2.position, agent.position) * (radius - distance + epsilon);
+                    agent.position = agent.position + vector * 2f;
+                    //collision.Item2.position = collision.Item2.position - vector;
+                    //return new Tuple<bool, Agent>(false, null);
+                }
+            }
+
             return result;
         }
         public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
@@ -349,20 +395,7 @@ namespace Agent_Space
             {
                 Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
                 if (collision.Item1)
-                {
-                    float distance = collision.Item2.position.Distance(agent.position, false);
-                    float radius = collision.Item2.radius + agent.radius;
-                    float epsilon = 0.01f;
-                    if (distance <= radius + epsilon)
-                    {
-                        ///Choque
-                        Point vector = Point.VectorUnit(collision.Item2.position, agent.position) * (radius - distance + epsilon);
-                        agent.position = agent.position + vector;
-                        collision.Item2.position = collision.Item2.position - vector;
-                        //return new Tuple<bool, Agent>(false, null);
-                    }
                     return collision;
-                }
             }
             return new Tuple<bool, Agent>(false, null);
         }

@@ -31,16 +31,24 @@ public class DebuguerMove : MonoBehaviour
     Node[] tempT = new Node[] { };
     PointNode[] points = new PointNode[] { };
 
+    IEnumerator updt()
+    {
+        yield return new WaitForSeconds(100f);
+      
+    }
 
     void Update()
     {
         if (agent == null) return;
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("El material del nodo actual es: " + agent.currentNode.material);
+            foreach (MapNode node in agent.currentNode.adjacents.Keys)
+                DrawFromTriangle(node.triangle, Color.blue);
+            DrawFromTriangle(agent.currentNode.triangle, Color.red);
         }
         if (Input.GetMouseButton(1))
         {
+            //StartCoroutine(updt());
             DrawPath(tempT, Color.clear);
             DrawPath(points, Color.white);
 

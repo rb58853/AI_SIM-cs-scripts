@@ -19,12 +19,21 @@ namespace Agent_Space
         public readonly static int bfsArea = 40;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
-        /// <summary> heuristic weigth for path between points </summary>
-        public readonly static float heuristicPointWeigth = 1f;
         /// <summary> width for border collision</summary>
-        public readonly static float collisionBorder = 1.1f;
+        public readonly static float collisionBorder = 1.2f;
         /// <summary> create path analizando the agents in this moment</summary>
         public readonly static bool pathWithAgents = false;
+        /// <summary> Dilate the path of triangles</summary>
+        public readonly static int trianglePathDilatation = 1;
+        /// <summary> Length of view agent detected collisions </summary>
+        public readonly static float viewLenAgent = 3f;
+        /// <summary> Freq of review collisions for agents, update frequence = (freq/[speed / 5]) frames </summary>
+        public readonly static int freqReview = 10;
+
+      
+        /// <summary> Draw path of agents </summary>
+        public readonly static bool drawPaths = false;
+        public readonly static bool drawAllPossiblePaths = false;
     }
     class Obsolete
     {

@@ -19,7 +19,6 @@ namespace Agent_Space
         public PointNode currentPosition { get; private set; }
         private PointNode nextPosition;
 
-        public Stack<MapNode> trianglePath { get => pointPath.triangleMap; }
         public List<MapNode> triangleList { get; private set; }
         private PointPath pointPath;
         public List<PointNode> pointsMap { get; private set; }
@@ -165,6 +164,8 @@ namespace Agent_Space
                         r.Add(adj, temp);
                         r[n].AddAdjacent(temp, aristClone);
                         temp.AddAdjacent(r[n], aristClone);
+                        aristClone.AddTriangle(r[n]);
+                        aristClone.AddTriangle(temp);
                         //temp.SetDistance(Math.Min(temp.distance, r[n].distance + temp.Distance(n)));
                         q.Enqueue(adj);
 
@@ -176,6 +177,9 @@ namespace Agent_Space
                         {
                             r[n].AddAdjacent(r[adj], aristClone);
                             r[adj].AddAdjacent(r[n], aristClone);
+                            aristClone.AddTriangle(r[n]);
+                            aristClone.AddTriangle(r[adj]);
+
                             //r[adj].SetDistance(Math.Min(r[adj].distance, r[n].distance + r[adj].Distance(n)));
                         }
                     }
@@ -205,7 +209,7 @@ namespace Agent_Space
 
             triangleList = tools.ToListAsMapNode(path);
 
-            pointPath.PushTriangleMap(triangleList);
+            pointPath.PushCurrenTriangle((path[path.Count - 1] as MapNode).origin);
 
             return result;
         }
@@ -222,7 +226,6 @@ namespace Agent_Space
             if (aritPath == null)
             {
                 this.pointPath.PushPointMap(new PointNode[1] { new PointNode(position) });
-                this.pointPath.PushTriangleMap(new MapNode[] { currentNode });
                 return new PointNode[1] { new PointNode(position) };///Debugguer
             }
 
@@ -230,7 +233,6 @@ namespace Agent_Space
             float mCost = currentNode.MaterialCost(this);
 
             PointNode endNode = new PointNode(endPoint, inArist: false);
-            pointsMap.Add(endNode);
 
             List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
 

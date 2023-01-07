@@ -14,9 +14,13 @@ namespace Point_Map
         public PointNode init { get; protected set; }
         public Point point { get; private set; }
         public Dictionary<PointNode, float> adjacents { get; private set; }
+
+        /// a point has maximum 2 triangles
+        public List<MapNode> triangles { get; private set; }
         public bool visitedInCreation = false;
         public bool visitedAsAdjacent = false;
         public bool inArist { get; private set; }
+
         //public bool borderPoint = false;
 
         public PointNode(Point point, PointNode end = null, bool inArist = true)
@@ -27,11 +31,13 @@ namespace Point_Map
             distance = float.MaxValue;
             this.end = end;
             init = null;
+            triangles = new List<MapNode>();
         }
         public float get_x() { return point.x; }
         public float get_y() { return point.y; }
         public float get_z() { return point.z; }
 
+        public void AddTriangle(MapNode triangle) { triangles.Add(triangle); }
         public void SetEnd(PointNode node) { end = node; }
         public void SetInit(PointNode node) { init = node; }
         public void SetPoint(Point point) { this.point = point; }
@@ -155,7 +161,7 @@ namespace Point_Map
                 }
 
                 result.Add(endNode);
-                Debug.Log("Crear el mapa de puntos demoro: " + (DateTime.Now - t0)); 
+                Debug.Log("Crear el mapa de puntos demoro: " + (DateTime.Now - t0));
                 return result;
 
                 //Debug.Log("Count del resultado del mapa de puntos " + agent.pointsMap.Count);
@@ -401,13 +407,12 @@ namespace Point_Map
         public PointNode currentPoint { get; private set; }
         public PointNode nextPoint { get; private set; }
         public MapNode currentNode { get; private set; }
-        public Stack<MapNode> triangleMap { get; private set; }
         public bool empty { get; private set; }
+
 
         public PointPath(Agent agent)
         {
             this.agent = agent;
-            triangleMap = new Stack<MapNode>();
             currentNode = null;
             empty = true;
         }
@@ -419,9 +424,13 @@ namespace Point_Map
                 currentPoint.SetPoint(agent.position);
             else
             {
-                if (nextPoint.inArist || currentPoint == null)
-                    currentNode = triangleMap.Pop().origin;
-
+                if (nextPoint.inArist)
+                    foreach (MapNode triangle in nextPoint.triangles)
+                        if (triangle != currentNode)
+                        {
+                            currentNode = triangle.origin;
+                            break;
+                        }
                 currentPoint = nextPoint;
             }
 
@@ -497,17 +506,9 @@ namespace Point_Map
             nextPoint = nodes[nodes.Count - 1];
         }
 
-        public void PushTriangleMap(MapNode[] nodes)
+        public void PushCurrenTriangle(MapNode triangle)
         {
-            triangleMap.Clear();
-            foreach (MapNode node in nodes)
-                triangleMap.Push(node);
-        }
-        public void PushTriangleMap(List<MapNode> nodes)
-        {
-            triangleMap.Clear();
-            foreach (MapNode node in nodes)
-                triangleMap.Push(node);
+            currentNode = triangle;
         }
 
         public void clear()
@@ -617,18 +618,18 @@ namespace Point_Map
 
                         PointNode node2 = up.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point))
-                            if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
-                            {
-                                node1.AddAdjacent(node2, cost);
-                                node2.SetFather(node1);
-                                node2.SetInit(node1);
-                                node2.visitedInCreation = true;
+                        //if (mapNode.triangle.PointIn(node2.point))
+                        if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(node2, cost);
+                            node2.SetFather(node1);
+                            node2.SetInit(node1);
+                            node2.visitedInCreation = true;
 
-                                PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
-                            }
-                            else
-                                CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
+                            PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
+                        }
+                        else
+                            CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
 
                         node1 = node2;
                     }
@@ -648,18 +649,18 @@ namespace Point_Map
 
                         PointNode node2 = down.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point))
-                            if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
-                            {
-                                node1.AddAdjacent(node2, cost);
-                                node2.SetInit(node1);
-                                node2.SetFather(node1);
-                                node2.visitedInCreation = true;
+                        //if (mapNode.triangle.PointIn(node2.point))
+                        if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        {
+                            node1.AddAdjacent(node2, cost);
+                            node2.SetInit(node1);
+                            node2.SetFather(node1);
+                            node2.visitedInCreation = true;
 
-                                PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
-                            }
-                            else
-                                CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
+                            PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.green);
+                        }
+                        else
+                            CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
 
                         node1 = node2;
                     }

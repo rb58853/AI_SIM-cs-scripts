@@ -95,7 +95,7 @@ namespace Triangle_Map
         public override float Distance(Node node)
         {
             float density = Agent_Space.Environment.densityPath;
-            List<Point> points = adjacents[node as MapNode].ToPoints(density,agent.pointsMap);
+            List<Point> points = adjacents[node as MapNode].ToPoints(density, agent.pointsMap);
             Point mid = MinMid(points, triangle.barycenter, (node as MapNode).triangle.barycenter);
 
             //drawToNode(node, mid);
@@ -195,17 +195,22 @@ namespace Triangle_Map
         public Point p1 { get; private set; }
         public Point p2 { get; private set; }
         public List<PointNode> points { get; private set; }
+
+        /// a arist has maximum 2 triangles
+        public List<MapNode> triangles { get; private set; }
         public Arist(Point p1, Point p2)
         {
             this.p1 = p1;
             this.p2 = p2;
             points = new List<PointNode>();
+            triangles = new List<MapNode>();
         }
         public Arist(Arist a)
         {
             p1 = a.p1;
             p2 = a.p2;
             points = new List<PointNode>();
+            triangles = new List<MapNode>();
         }
         public List<Point> ToPoints(float n = 1f, List<PointNode> map = null, bool set = false)
         {
@@ -218,7 +223,7 @@ namespace Triangle_Map
 
             result.Add(p1);
 
-            PointNode node = new PointNode(p1);
+            PointNode node = new PointNode(p1); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
             points.Add(node);
 
             if (map != null)
@@ -228,7 +233,7 @@ namespace Triangle_Map
             {
                 float alfa = (float)i / (float)k;
                 result.Add(p1 + vector * alfa);
-                node = new PointNode(p1 + vector * alfa);
+                node = new PointNode(p1 + vector * alfa); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
                 points.Add(node);
 
                 if (map != null)
@@ -239,7 +244,7 @@ namespace Triangle_Map
             points.Add(node);
 
             if (map != null)
-                map.Add(node);
+                map.Add(node); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
 
             return result;
         }
@@ -266,6 +271,10 @@ namespace Triangle_Map
 
 
             return result;
+        }
+        public void AddTriangle(MapNode triangle)
+        {
+            triangles.Add(triangle);
         }
         public Arist Clone()
         {

@@ -45,6 +45,10 @@ public class DebuguerMove : MonoBehaviour
             foreach (MapNode node in agent.currentNode.adjacents.Keys)
                 DrawFromTriangle(node.triangle, Color.blue);
             DrawFromTriangle(agent.currentNode.triangle, Color.red);
+            // foreach (MapNode node in agent.currentPosition.triangles)
+            //     DrawFromTriangle(node.triangle, Color.blue);
+
+
         }
         if (Input.GetMouseButton(1))
         {

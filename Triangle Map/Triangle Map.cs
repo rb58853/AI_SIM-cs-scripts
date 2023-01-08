@@ -28,7 +28,7 @@ namespace Triangle_Map
             agentsIn = new List<Agent>();
             this.agent = null;
             this.end = null;
-            this.origin = null;
+            this.origin = this;
 
             DefaultValues();
         }

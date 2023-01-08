@@ -17,8 +17,8 @@ public class randomMove : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("Press e");
-            navAgent.agent.inMove = false;
+            // Debug.Log("Press e");
+            // navAgent.agent.inMove = false;
         }
         if (!navAgent.InMove())
         {

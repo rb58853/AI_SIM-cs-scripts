@@ -53,7 +53,9 @@ public class GetTriangles : MonoBehaviour
             Vector3 v2 = vertices[polygons[i + 1]];
             Vector3 v3 = vertices[polygons[i + 2]];
             Vector3[] triangle = new Vector3[] { v1, v2, v3 };
-            DrawTriangle(triangle);
+            
+            // DrawTriangle(triangle);
+            
             Triangles.Add(triangle);
             AddArist(v1, v2, triangle);
             AddArist(v2, v3, triangle);

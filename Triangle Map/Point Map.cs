@@ -90,6 +90,7 @@ namespace Point_Map
                 if (mapNodes.Count == 1)
                 {
                     PointNode e = new PointNode(end, inArist: false);
+                    e.AddTriangle(mapNodes[mapNodes.Count - 1]);
                     PointNode i = initNode;
 
                     result.Add(i);
@@ -102,9 +103,9 @@ namespace Point_Map
                 }
 
                 PointNode endNode = new PointNode(end, inArist: false);
-                initNode.visitedInCreation = true;
+                endNode.AddTriangle(mapNodes[mapNodes.Count - 1]);
 
-                //result.Add(initNode);
+                initNode.visitedInCreation = true;
 
                 foreach (MapNode triangle in mapNodes)
                 {
@@ -152,6 +153,8 @@ namespace Point_Map
                             {
                                 if (arist1 == arist2)
                                 {
+                                    if (!Agent_Space.Environment.moveInArist)
+                                        continue;
                                     if (arist1.visited) continue;
                                     else arist1.visited = true;
                                 }
@@ -171,7 +174,6 @@ namespace Point_Map
                 //agent.pointsMap.Add(endNode);
                 //return agent.pointsMap;
             }
-
             static void CreateSimplePath(PointNode init, List<PointNode> list,
                 Agent agent, MapNode mapNode, float cost, PointNode endNode,
                 List<PointNode> result)
@@ -259,41 +261,49 @@ namespace Point_Map
                             Point.VectorUnit(init.point, center)
                             * (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder,
                             endNode, inArist: false);///West view from lefth to rigth
+                        W.AddTriangle(mapNode);
 
                         PointNode e = new PointNode(center +
                             Point.VectorUnit(init.point, center) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///Est view lefth to rigth
+                        e.AddTriangle(mapNode);
 
                         PointNode sw = new PointNode(W.point +
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///SouthWest view lefth to rigth
+                        sw.AddTriangle(mapNode);
 
                         PointNode s = new PointNode(center +
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///South view lefth to rigth
+                        s.AddTriangle(mapNode);
 
                         PointNode se = new PointNode(e.point +
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///South view lefth to rigth
+                        se.AddTriangle(mapNode);
 
                         PointNode nw = new PointNode(W.point -
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///SouthWest view lefth to rigth
+                        nw.AddTriangle(mapNode);
 
                         PointNode n = new PointNode(center -
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///South view lefth to rigth
+                        n.AddTriangle(mapNode);
 
                         PointNode ne = new PointNode(e.point -
                             Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                             (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
                             , endNode, inArist: false);///South view lefth to rigth
+                        ne.AddTriangle(mapNode);
 
 
                         Queue<PointNode> up = new Queue<PointNode>();
@@ -395,35 +405,26 @@ namespace Point_Map
                 if (currentPoint != null)
                     currentPoint.SetPoint(agent.position);
                 else
+                {
                     currentPoint = new PointNode(agent.position);
-                    
+                    currentPoint.AddTriangle(currentTriangle);
+                }
                 currentPoint.inArist = false;
             }
             else
             {
-                if (nextPoint.inArist && nextPoint.arist != currentPoint.arist)
-                    foreach (MapNode triangle in nextPoint.triangles)
-                        if (triangle.origin != currentTriangle)
-                        {
-                            currentTriangle = triangle.origin;
-                            break;
-                        }
                 currentPoint = nextPoint;
                 currentPoint.inArist = false;
-                PushToRecently(currentPoint);
                 currentPoint.visitedInPath = true;
             }
 
             Heap q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
-            {
-                //if (!recentlyVisited.Contains(node))
                 if (!node.visitedInPath)
                 {
                     node.SetInit(currentPoint);
                     q.Push(node);
                 }
-            }
 
             PointNode next = null;
 
@@ -431,18 +432,19 @@ namespace Point_Map
             {
                 next = q.Pop() as PointNode;
 
-                //Tuple<bool, Agent> collision = Agent.Collision(agent.position, next.point, agent, currentTriangle);
-                Tuple<bool, Agent> collision = Agent.Collision(currentPoint.point, next.point, agent, currentTriangle);
+                PointNode.Static.DrawTwoPoints(currentPoint.point, next.point, Color.yellow);
 
+                MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
+
+                Tuple<bool, Agent> collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
                 if (collision.Item1)
                 {
                     next.SetFather(null);
-                    Border(currentPoint, next, agent, currentTriangle,
-                        currentTriangle.MaterialCost(agent), new List<Agent>(), q, next);
+                    Border(currentPoint, next, agent, triangleTemp,
+                        triangleTemp.MaterialCost(agent), new List<Agent>(), q, next);
 
-                    currentPoint.RemoveAdjacent(next);
-                    next.RemoveAdjacent(currentPoint);
-
+                    // currentPoint.RemoveAdjacent(next);
+                    // next.RemoveAdjacent(currentPoint);
                 }
                 else
                 {
@@ -453,13 +455,45 @@ namespace Point_Map
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
                     if (next.adjacents.Count == 0) empty = true;
+
+                    GetCurrentTriangle();
                     return next;
                 }
             }
 
             empty = true;
+            GetCurrentTriangle();
             return currentPoint;
         }
+        MapNode GetCurrentTriangle()
+        {
+            foreach (MapNode node1 in currentPoint.triangles)
+                foreach (MapNode node2 in nextPoint.triangles)
+                    if (node1.triangle == node2.triangle)
+                    { currentTriangle = node1.origin; break; }
+            return currentTriangle;
+        }
+        MapNode TriangleBetweenPoints(PointNode point1, PointNode point2)
+        {
+            // Debug.Log(point1 +"(p1) tiene cantidad de triangulos = " + point1.triangles.Count + "     "+point2 +"(p2) tiene cantidad de triangulos = " + point2.triangles.Count);
+
+            foreach (MapNode node1 in point1.triangles)
+                foreach (MapNode node2 in point2.triangles)
+                    if (node1.origin == node2.origin)
+                        return node1.origin;
+
+            Debug.Log("Los puntos " + point1 + " y " + point2 + "No tienen triangulo comun");
+            foreach (MapNode t in point1.triangles)
+            {
+                Debug.Log("P1 triangulos = " + t);
+            }
+            foreach (MapNode t in point2.triangles)
+            {
+                Debug.Log("P2 triangulos = " + t);
+            }
+            return null;
+        }
+
         public void PushPointMap(PointNode[] nodes)
         {
             recentlyVisited = new Queue<PointNode>();
@@ -522,18 +556,18 @@ namespace Point_Map
                 List<Agent> visitedObstacles, Heap q, PointNode destination)
         {
             PointNode init = new PointNode(initIn.point, inArist: false);
+            init.AddTriangle(mapNode);
+
             initIn.AddAdjacent(init);
             CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
 
-            if (destination.father != null)/// Si se llego al destino por aqui, push
-                q.Push(init);
+            // if (destination.father != null)/// Si se llego al destino por aqui, push
+            q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,
                 Agent agent, MapNode mapNode, float cost,
                 List<Agent> visitedObstacles, PointNode destination)
         {
-            ///De alguna manera hay que hacer que esto pueda volver a visitar otros agentes para detectar colisiones 
-            ///para poder hacer el bordeo mejor
 
             Tuple<bool, Agent> collision = Agent.Collision(init.point, end.point, agent, mapNode, 1.0f);
             if (collision.Item1)
@@ -551,49 +585,49 @@ namespace Point_Map
                     PointNode W = new PointNode(center -
                         Point.VectorUnit(init.point, center)
                         * (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); W.AddTriangle(mapNode);
                     ///West view from lefth to rigth
 
                     PointNode e = new PointNode(center +
                         Point.VectorUnit(init.point, center) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); e.AddTriangle(mapNode);
                     ///Est view lefth to rigth
 
                     PointNode sw = new PointNode(W.point +
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); sw.AddTriangle(mapNode);
                     ///SouthWest view lefth to rigth
 
                     PointNode s = new PointNode(center +
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); s.AddTriangle(mapNode);
                     ///South view lefth to rigth
 
                     PointNode se = new PointNode(e.point +
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); se.AddTriangle(mapNode);
                     ///South view lefth to rigth
 
                     PointNode nw = new PointNode(W.point -
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); nw.AddTriangle(mapNode);
                     ///SouthWest view lefth to rigth
 
                     PointNode n = new PointNode(center -
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); n.AddTriangle(mapNode);
                     ///South view lefth to rigth
 
                     PointNode ne = new PointNode(e.point -
                         Point.VectorUnit(Point.OrtogonalVector(init.point, W.point)) *
                         (agent.radius + collision.Item2.radius) * Agent_Space.Environment.collisionBorder
-                        , inArist: false);
+                        , inArist: false); ne.AddTriangle(mapNode);
                     ///South view lefth to rigth
 
                     Queue<PointNode> down = new Queue<PointNode>();
@@ -615,6 +649,9 @@ namespace Point_Map
                             destination.SetFather(node1);
                             destination.SetInit(node1);
                             setDistances(destination, cost);
+                            if (Agent_Space.Environment.drawBorder)
+                                PointNode.Static.DrawTwoPoints(node1.point, destination.point, Color.red);
+
                             break;
                         }
 
@@ -658,6 +695,10 @@ namespace Point_Map
                             destination.SetFather(node1);
                             destination.SetInit(node1);
                             setDistances(destination, cost);
+
+                            if (Agent_Space.Environment.drawBorder)
+                                PointNode.Static.DrawTwoPoints(node1.point, destination.point, Color.red);
+
                             break;
                         }
 

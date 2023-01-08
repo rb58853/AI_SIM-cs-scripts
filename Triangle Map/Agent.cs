@@ -265,6 +265,7 @@ namespace Agent_Space
             float mCost = currentNode.MaterialCost(this);
 
             PointNode endNode = new PointNode(endPoint, inArist: false);
+            endNode.AddTriangle(triangleList[0]);
 
             List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
 
@@ -342,9 +343,9 @@ namespace Agent_Space
 
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
-                currentNode = pointPath.currentTriangle;
+                SetCurrentTriangle();
 
-                //float cost = currentPosition.adjacents[nextPosition] * 25;
+                // float cost = currentPosition.adjacents[nextPosition] * 25;
                 float cost = currentNode.MaterialCost(this) * 25;
 
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
@@ -355,7 +356,10 @@ namespace Agent_Space
             else
                 inMove = false;
         }
-
+        void SetCurrentTriangle()
+        {
+            currentNode = pointPath.currentTriangle;
+        }
         public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)
         {
             Point l1 = node1;
@@ -364,7 +368,7 @@ namespace Agent_Space
 
             Tuple<bool, Agent> result = new Tuple<bool, Agent>(false, null);
 
-            foreach (Agent agentObstacle in mapNode.agentsIn)
+            foreach (Agent agentObstacle in mapNode.origin.agentsIn)
             {
                 if (agentObstacle == agent) continue;
                 if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
@@ -401,7 +405,16 @@ namespace Agent_Space
             }
             return new Tuple<bool, Agent>(false, null);
         }
-
+        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, List<MapNode> mapNodes, float multArea = 1)
+        {
+            foreach (MapNode node in mapNodes)
+            {
+                Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
+                if (collision.Item1)
+                    return collision;
+            }
+            return new Tuple<bool, Agent>(false, null);
+        }
         internal class tools
         {
             internal static MapNode[] ToArrayAsMapNode(List<Node> list)

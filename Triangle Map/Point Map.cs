@@ -392,7 +392,11 @@ namespace Point_Map
 
             if (onCollision)
             {
-                currentPoint.SetPoint(agent.position);
+                if (currentPoint != null)
+                    currentPoint.SetPoint(agent.position);
+                else
+                    currentPoint = new PointNode(agent.position);
+                    
                 currentPoint.inArist = false;
             }
             else
@@ -497,12 +501,10 @@ namespace Point_Map
             currentPoint = null;
             nextPoint = nodes[nodes.Count - 1];
         }
-
         public void PushCurrenTriangle(MapNode triangle)
         {
             currentTriangle = triangle;
         }
-
         void PushToRecently(PointNode node)
         {
             if (recentlyVisited.Count >= 10)
@@ -536,8 +538,12 @@ namespace Point_Map
             Tuple<bool, Agent> collision = Agent.Collision(init.point, end.point, agent, mapNode, 1.0f);
             if (collision.Item1)
             {
-                if (!visitedObstacles.Contains(collision.Item2) /*&& destination.father == null*/)
+                if (!visitedObstacles.Contains(collision.Item2))
                 {
+                    if ((int)Agent_Space.Environment.qualityBorder < 2)
+                        if (destination.father != null)
+                            return;
+
                     visitedObstacles.Add(collision.Item2);
 
                     Point center = collision.Item2.position;
@@ -614,7 +620,7 @@ namespace Point_Map
 
                         PointNode node2 = down.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point))
+                        if (mapNode.triangle.PointIn(node2.point) || node2 == destination)
                             if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                             {
                                 node1.AddAdjacent(node2, cost);
@@ -622,10 +628,19 @@ namespace Point_Map
                                 node2.SetInit(node1);
                                 node2.visitedInCreation = true;
 
+                                // if (node2 == destination)
+                                // {
+                                //     setDistances(destination, cost);
+                                //     if ((int)Agent_Space.Environment.qualityBorder <= 1)
+                                //         return;
+                                //     break;
+                                // }
+
                                 if (Agent_Space.Environment.drawBorder)
                                     PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.red);
 
-                                CreateObstacleBorder(node2, destination, agent, mapNode, cost, visitedObstacles, destination);
+                                if ((int)Agent_Space.Environment.qualityBorder >= 1)
+                                    CreateObstacleBorder(node2, destination, agent, mapNode, cost, visitedObstacles, destination);
                             }
                             else
                                 CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);
@@ -648,7 +663,7 @@ namespace Point_Map
 
                         PointNode node2 = up.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point))
+                        if (mapNode.triangle.PointIn(node2.point) || node2 == destination)
                             if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
                             {
                                 node1.AddAdjacent(node2, cost);
@@ -656,9 +671,19 @@ namespace Point_Map
                                 node2.SetFather(node1);
                                 node2.visitedInCreation = true;
 
+                                // if (node2 == destination)
+                                // {
+                                //     setDistances(destination, cost);
+                                //     if ((int)Agent_Space.Environment.qualityBorder <= 1)
+                                //         return;
+                                //     break;
+                                // }
+
                                 if (Agent_Space.Environment.drawBorder)
                                     PointNode.Static.DrawTwoPoints(node1.point, node2.point, Color.red);
-                                CreateObstacleBorder(node2, destination, agent, mapNode, cost, visitedObstacles, destination);
+
+                                if ((int)Agent_Space.Environment.qualityBorder >= 1)
+                                    CreateObstacleBorder(node2, destination, agent, mapNode, cost, visitedObstacles, destination);
                             }
                             else
                                 CreateObstacleBorder(node1, node2, agent, mapNode, cost, visitedObstacles, destination);

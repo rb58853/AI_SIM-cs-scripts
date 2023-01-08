@@ -2,6 +2,13 @@
 
 namespace Agent_Space
 {
+    public enum Quality
+    {
+        low = 0,
+        normal = 1,
+        higth = 2,
+    }
+
     public enum Material
     {
         basic = 10,
@@ -24,13 +31,15 @@ namespace Agent_Space
         /// <summary> create path analizando the agents in this moment</summary>
         public readonly static bool pathWithAgents = false;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 2;
+        public readonly static int trianglePathDilatation = 1;
         /// <summary> Length of view agent detected collisions </summary>
         public readonly static float viewLenAgent = 3f;
         /// <summary> Freq of review collisions for agents, update frequence = (freq/[speed / 5]) frames </summary>
         public readonly static int freqReview = 10;
         ///<summary> radius* ocupedArea are the ocuped triangles </summary>
         public readonly static int ocupedArea = 50;
+        ///<summary> higth quality => better path, low => better eficience </summary>
+        public readonly static Quality qualityBorder = Quality.higth;
 
         /// <summary> Draw path of agents </summary>
         public readonly static bool drawPaths = true;

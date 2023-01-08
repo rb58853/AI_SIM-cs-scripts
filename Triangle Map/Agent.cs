@@ -58,7 +58,7 @@ namespace Agent_Space
                     currentNode = node as MapNode;
                     ocupedNodes.Add(currentNode);
                     currentNode.AddAgent(this);
-                    SetOcupedFromPosition(3);
+                    SetOcupedFromPosition(Environment.ocupedArea);
                     break;
                 }
         }
@@ -125,6 +125,7 @@ namespace Agent_Space
 
             MapNode end = null;
 
+            Debug.Log(currentNode);
             r.Add(currentNode, new MapNode(currentNode, this, endPoint));
             visited.Add(currentNode);
 
@@ -308,7 +309,7 @@ namespace Agent_Space
             if (countMoves <= 0)
             {
                 countMoves = 1;
-                SetOcupedFromPosition(3);
+                SetOcupedFromPosition(Environment.ocupedArea);
             }
         }
         /// update frequence = (freq/[speed / 5]) frames.
@@ -360,6 +361,7 @@ namespace Agent_Space
             Point l1 = node1;
             Point l2 = node2;
             float epsilon = 0.05f;
+
             Tuple<bool, Agent> result = new Tuple<bool, Agent>(false, null);
 
             foreach (Agent agentObstacle in mapNode.agentsIn)
@@ -368,8 +370,8 @@ namespace Agent_Space
                 if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
                     /// Collision
                     if (result.Item2 == null ||
-                        agentObstacle.position.Distance(agent.position, false) <
-                        result.Item2.position.Distance(agent.position, false))///mas cercano
+                        agentObstacle.position.Distance(node1, false) <
+                        result.Item2.position.Distance(node1, false))///mas cercano
 
                         result = new Tuple<bool, Agent>(true, agentObstacle);
             }

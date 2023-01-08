@@ -72,7 +72,8 @@ namespace DijkstraSpace
             {
                 v.SetDistance(u.distance + u.Distance(v));
                 v.SetFather(u);
-                v.heapNode.Heapify(true);
+                try { v.heapNode.Heapify(true); }
+                catch { Debug.Log("No encontro el heap Node"); }
             }
         }
     }

@@ -25,6 +25,12 @@ public class GetTriangles : MonoBehaviour
         }
         start = true;
     }
+    static void DrawTriangle(Vector3[] triangle)
+    {
+        Debug.DrawLine(triangle[0], triangle[1], Color.red, 50f);
+        Debug.DrawLine(triangle[0], triangle[2], Color.red, 50f);
+        Debug.DrawLine(triangle[2], triangle[1], Color.red, 50f);
+    }
 
     Triangle temp = null;
     static void GetTrianglesFromNavMesh()
@@ -47,6 +53,7 @@ public class GetTriangles : MonoBehaviour
             Vector3 v2 = vertices[polygons[i + 1]];
             Vector3 v3 = vertices[polygons[i + 2]];
             Vector3[] triangle = new Vector3[] { v1, v2, v3 };
+            DrawTriangle(triangle);
             Triangles.Add(triangle);
             AddArist(v1, v2, triangle);
             AddArist(v2, v3, triangle);
@@ -54,6 +61,7 @@ public class GetTriangles : MonoBehaviour
         }
 
     }
+    
     static void AddArist(Vector3 v1, Vector3 v2, Vector3[] triangle)
     {
         ///if v1 dont' exist then v2 does not exist either, because the refelxive relation in arists

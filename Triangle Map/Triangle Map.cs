@@ -195,6 +195,9 @@ namespace Triangle_Map
         public Point p1 { get; private set; }
         public Point p2 { get; private set; }
         public List<PointNode> points { get; private set; }
+        /// <summary> Una arista es visitada si se crearon ayacencias sobre si misma, 
+        /// si ya fue visitada no se vuelve a crear </summary>
+        public bool visited = false;
 
         /// a arist has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
@@ -223,7 +226,7 @@ namespace Triangle_Map
 
             result.Add(p1);
 
-            PointNode node = new PointNode(p1); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
+            PointNode node = new PointNode(p1,arist: this); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
             points.Add(node);
 
             if (map != null)
@@ -233,14 +236,14 @@ namespace Triangle_Map
             {
                 float alfa = (float)i / (float)k;
                 result.Add(p1 + vector * alfa);
-                node = new PointNode(p1 + vector * alfa); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
+                node = new PointNode(p1 + vector * alfa, arist: this); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
                 points.Add(node);
 
                 if (map != null)
                     map.Add(node);
             }
             result.Add(p2);
-            node = new PointNode(p2);
+            node = new PointNode(p2, arist: this);
             points.Add(node);
 
             if (map != null)

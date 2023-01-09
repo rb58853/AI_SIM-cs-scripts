@@ -58,6 +58,7 @@ namespace Agent_Space
                     currentNode = node as MapNode;
                     ocupedNodes.Add(currentNode);
                     currentNode.AddAgent(this);
+                    pointPath.SetCurrentTriangle(currentNode);
                     SetOcupedFromPosition(Environment.ocupedArea);
                     break;
                 }

@@ -470,6 +470,10 @@ namespace Point_Map
                     { currentTriangle = node1.origin; break; }
             return currentTriangle;
         }
+        public void SetCurrentTriangle(MapNode triangle)
+        {
+            currentTriangle = triangle;
+        }
         MapNode TriangleBetweenPoints(PointNode point1, PointNode point2)
         {
             // Debug.Log(point1 +"(p1) tiene cantidad de triangulos = " + point1.triangles.Count + "     "+point2 +"(p2) tiene cantidad de triangulos = " + point2.triangles.Count);

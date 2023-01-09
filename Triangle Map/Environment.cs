@@ -35,15 +35,15 @@ namespace Agent_Space
         /// <summary> Length of view agent detected collisions </summary>
         public readonly static float viewLenAgent = 3f;
         /// <summary> Freq of review collisions for agents, update frequence = (freq/[speed / 5]) frames </summary>
-        public readonly static int freqReview = 10;
+        public readonly static int freqReview = 20;
         ///<summary> radius* ocupedArea are the ocuped triangles </summary>
         public readonly static int ocupedArea = 2;
         ///<summary> higth quality => better path, low => better eficience </summary>
         public readonly static Quality qualityBorder = Quality.higth;
         ///<summary> Move from vertices to vertices in the same arist </summary>
-        public readonly static bool moveInArist = false;
-        ///<summary> Stop if not found a path from the current position </summary>
-        public readonly static bool notFoundStop = true;
+        public readonly static bool moveInArist = true;
+        // ///<summary> Stop if not found a path from the current position </summary>
+        // public readonly static bool notFoundStop = true;
 
 
         /// <summary> Draw path of agents </summary>

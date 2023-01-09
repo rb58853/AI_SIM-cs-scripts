@@ -409,14 +409,11 @@ namespace Point_Map
                     currentPoint = new PointNode(agent.position);
                     currentPoint.AddTriangle(currentTriangle);
                 }
-                currentPoint.inArist = false;
             }
             else
-            {
                 currentPoint = nextPoint;
-                currentPoint.inArist = false;
-                currentPoint.visitedInPath = true;
-            }
+
+            currentPoint.visitedInPath = true;
 
             Heap q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
@@ -431,8 +428,6 @@ namespace Point_Map
             while (q.size > 0)
             {
                 next = q.Pop() as PointNode;
-
-                PointNode.Static.DrawTwoPoints(currentPoint.point, next.point, Color.yellow);
 
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
 
@@ -455,6 +450,7 @@ namespace Point_Map
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
                     if (next.adjacents.Count == 0) empty = true;
+                    // if (agent.position.Distance(agent.destination, false) <= 0.001f) empty = true;
 
                     GetCurrentTriangle();
                     return next;
@@ -462,6 +458,7 @@ namespace Point_Map
             }
 
             empty = true;
+            // if (agent.position.Distance(agent.destination, false) <= 0.001f) empty = true;
             GetCurrentTriangle();
             return currentPoint;
         }
@@ -561,8 +558,8 @@ namespace Point_Map
             initIn.AddAdjacent(init);
             CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
 
-            // if (destination.father != null)/// Si se llego al destino por aqui, push
-            q.Push(init);
+            if (destination.father != null)/// Si se llego al destino por aqui, push
+                q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,
                 Agent agent, MapNode mapNode, float cost,
@@ -645,7 +642,9 @@ namespace Point_Map
                         if (!node1.visitedInCreation) break;
                         if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
                         {
-                            node1.AddAdjacent(destination, cost);
+                            try { node1.AddAdjacent(destination, cost); }
+                            catch { Debug.Log("Se esta intentando agregar un nodo ya existente como adyacente"); }
+
                             destination.SetFather(node1);
                             destination.SetInit(node1);
                             setDistances(destination, cost);
@@ -691,7 +690,9 @@ namespace Point_Map
                         if (!node1.visitedInCreation) break;
                         if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
                         {
-                            node1.AddAdjacent(destination, cost);
+                            try { node1.AddAdjacent(destination, cost); }
+                            catch { Debug.Log("Se esta intentando agregar un nodo ya existente como adyacente"); }
+
                             destination.SetFather(node1);
                             destination.SetInit(node1);
                             setDistances(destination, cost);

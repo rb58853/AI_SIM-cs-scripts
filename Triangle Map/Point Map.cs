@@ -48,7 +48,6 @@ namespace Point_Map
         public void RemoveAdjacent(PointNode node) { adjacents.Remove(node); }
         public void RemoveAllAdjacents() { adjacents = new Dictionary<PointNode, float>(); }
         public float EuclideanDistance(PointNode node) { return point.Distance(node.point); }
-        //float Heuristic(PointNode endNode) { return EuclideanDistance(endNode); }
         public override float Value()
         {
             if (init != null)
@@ -64,7 +63,6 @@ namespace Point_Map
         {
             return point.ToString();
         }
-
         public override List<Node> GetAdyacents()
         {
             /// Esto en cuanto a eficiencia es malo, se esta sacrificando en eficiencia para ganar en genaricidad
@@ -78,7 +76,6 @@ namespace Point_Map
         {
             return EuclideanDistance(node as PointNode) * adjacents[node as PointNode];
         }
-
         internal class Static
         {
             public static List<PointNode> CreatePointMap(PointNode initNode, Point end, Agent agent = null, float n = 1f, float cost = 1)
@@ -184,7 +181,7 @@ namespace Point_Map
                 List<PointNode> endList = new List<PointNode>();
                 endList.Add(init);
 
-                if (!result.Contains(init)) /// Esto no me gusta en cuanto a eficiencia FFF
+                if (!result.Contains(init)) /// Esto no me gusta en cuanto a eficiencia FFF, usar un diccionario
                     result.Add(init);
 
                 init.SetDistance(0);
@@ -388,6 +385,8 @@ namespace Point_Map
         public PointNode nextPoint { get; private set; }
         public MapNode currentTriangle { get; private set; }
         public bool empty { get; private set; }
+        int stopCount = 0;
+        public bool stop { get => stopCount > 0; }
         Queue<PointNode> recentlyVisited;
 
         public PointPath(Agent agent)
@@ -412,6 +411,12 @@ namespace Point_Map
             }
             else
                 currentPoint = nextPoint;
+
+            if (currentPoint.adjacents.Count == 0)
+            {
+                empty = true;
+                return currentPoint;
+            }
 
             currentPoint.visitedInPath = true;
 
@@ -449,19 +454,27 @@ namespace Point_Map
                     if (Agent_Space.Environment.drawPaths)
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
-                    if (next.adjacents.Count == 0) empty = true;
-                    // if (agent.position.Distance(agent.destination, false) <= 0.001f) empty = true;
-
                     GetCurrentTriangle();
                     return next;
                 }
             }
 
             empty = true;
-            // if (agent.position.Distance(agent.destination, false) <= 0.001f) empty = true;
+            // Stop();
             GetCurrentTriangle();
             return currentPoint;
         }
+
+        void Stop()
+        {
+            if (stopCount <= 0)
+                stopCount = 50;
+        }
+        public void EmptyMove()
+        {
+            stopCount--;
+        }
+
         MapNode GetCurrentTriangle()
         {
             foreach (MapNode node1 in currentPoint.triangles)
@@ -558,11 +571,32 @@ namespace Point_Map
         {
             PointNode init = new PointNode(initIn.point, inArist: false);
             init.AddTriangle(mapNode);
-
             initIn.AddAdjacent(init);
-            CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
 
-            if (destination.father != null)/// Si se llego al destino por aqui, push
+            CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
+            
+            if (init.adjacents.Count == 0)//no se encontro nada que no sea lo mismo 
+            {
+                initIn.RemoveAdjacent(init);
+                return;
+            }
+
+            if (destination.father == null)/// No se llega al destino, forzamos el camino
+            {
+                Queue<PointNode> temp = new Queue<PointNode>();
+                temp.Enqueue(init);
+                PointNode deep = null;
+                while (temp.Count > 0)
+                {
+                    deep = temp.Dequeue();
+                    foreach (PointNode node in deep.adjacents.Keys)
+                        temp.Enqueue(node);
+                }
+                deep.AddAdjacent(destination); //se crea un camino desde el nodo mas profundo que se bordeo hasta el destino
+            }
+
+            // if (init.adjacents.Count > 0)/// Si avanza un poco pues pa lante
+            // if (destination.father != null)/// Si se llego al destino por aqui, push
                 q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,

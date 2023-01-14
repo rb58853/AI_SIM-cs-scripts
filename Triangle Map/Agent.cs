@@ -62,6 +62,7 @@ namespace Agent_Space
                     SetOcupedFromPosition(Environment.ocupedArea);
                     break;
                 }
+            Agent.Collision(position, position, this, currentNode);
         }
         public void setPosition(Point point) { position = point; }
 
@@ -106,6 +107,8 @@ namespace Agent_Space
                             adj.AddAgent(this);
                         }
             }
+            ///Tambien cada esta frecuencia separar a los agentes    
+            Agent.Collision(position, position, this, currentNode);
         }
 
         Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
@@ -126,7 +129,6 @@ namespace Agent_Space
 
             MapNode end = null;
 
-            Debug.Log(currentNode);
             r.Add(currentNode, new MapNode(currentNode, this, endPoint));
             visited.Add(currentNode);
 
@@ -288,16 +290,14 @@ namespace Agent_Space
         }
         void DynamicSetPoint()
         {
-            if (nextPosition.point.Distance(position) < 0.01f) return;
+            // if (nextPosition.point.Distance(position) < 0.01f) return;
 
             float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
             Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.0f);
             if (collision.Item1)
-            {
                 NextPoint(true);
-            }
         }
 
         int countMoves = 1;
@@ -319,6 +319,11 @@ namespace Agent_Space
         int freq = Environment.freqReview;
         void NextMoveBasic()
         {
+            if (pointPath.stop)
+            {
+                pointPath.EmptyMove();
+                return;
+            }
             if (inMove)
             {
                 if (visualPath.Count == 0) NextPoint();
@@ -341,13 +346,18 @@ namespace Agent_Space
             if (!pointPath.empty)
             {
                 inMove = true;
-
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
                 SetCurrentTriangle();
 
-                // float cost = currentPosition.adjacents[nextPosition] * 25;
-                float cost = currentNode.MaterialCost(this) * 25;
+                if (nextPosition == currentPosition)
+                {
+                    visualPath.Push(currentPosition.point);
+                    NextMoveBasic();
+                    return;
+                }
+                float cost = currentPosition.adjacents[nextPosition] * 25;
+                // float cost = currentNode.MaterialCost(this) * 25;
 
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)
@@ -384,13 +394,12 @@ namespace Agent_Space
             {
                 float distance = result.Item2.position.Distance(agent.position, false);
                 float radius = result.Item2.radius + agent.radius;
-                if (distance <= radius + epsilon)
+                if (distance <= radius * multArea + epsilon)
                 {
                     ///Choque
                     Point vector = Point.VectorUnit(result.Item2.position, agent.position) * (radius - distance + epsilon);
-                    agent.position = agent.position + vector * 2f;
-                    //collision.Item2.position = collision.Item2.position - vector;
-                    //return new Tuple<bool, Agent>(false, null);
+                    agent.position = agent.position + vector * 1.1f;
+                    Collision(node1, node2, agent, mapNode);/// Es lo que debe, pero se puede poner muy lento
                 }
             }
 

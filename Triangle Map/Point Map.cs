@@ -433,6 +433,13 @@ namespace Point_Map
             while (q.size > 0)
             {
                 next = q.Pop() as PointNode;
+                if (next.distance >= float.MaxValue - 100)
+                {
+                    ///Esto es para que no llegue a un camino sin fin
+                    currentPoint.RemoveAdjacent(next);
+                    continue;
+                }
+
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
 
                 Tuple<bool, Agent> collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
@@ -458,8 +465,8 @@ namespace Point_Map
                 }
             }
 
-            empty = true;
-            // Stop();
+            // empty = true;
+            Stop();
             GetCurrentTriangle();
             return currentPoint;
         }

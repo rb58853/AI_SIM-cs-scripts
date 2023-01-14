@@ -16,9 +16,9 @@ namespace Agent_Space
         List<Triangle> UcupedTriangles()
         {
             List<Triangle> result = new List<Triangle>();
-            foreach(MapNode node in ocupedNodes)
+            foreach (MapNode node in ocupedNodes)
                 result.Add(node.triangle);
-            return result;    
+            return result;
         }
         public float radius { get; private set; }
 
@@ -34,6 +34,7 @@ namespace Agent_Space
 
         public Stack<Point> visualPath { get; private set; }
         public bool inMove { get; /*private*/ set; }
+
 
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
@@ -325,13 +326,24 @@ namespace Agent_Space
         /// update frequence = (freq/[speed / 5]) frames.
 
         int freq = Environment.freqReview;
+        private int stopCount = Environment.stopCountForEmpty;
         void NextMoveBasic()
         {
             if (pointPath.stop)
             {
                 pointPath.EmptyMove();
                 if (!pointPath.stop)
+                {
                     NextPoint();
+                    if (pointPath.stop)
+                    {
+                        stopCount--;
+                        if (stopCount <= 0)
+                            inMove = false;
+                    }
+                    else
+                        stopCount = Environment.stopCountForEmpty;
+                }
             }
 
             if (inMove && !pointPath.stop)

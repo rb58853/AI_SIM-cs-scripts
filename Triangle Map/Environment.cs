@@ -21,7 +21,7 @@ namespace Agent_Space
         public readonly static Map map = new Map();
 
         /// <summary> more value => best path  |  less value => best code eficience </summary>
-        public readonly static float densityPath = 0.4f;
+        public readonly static float densityPath = 0.2f;
         /// <summary> count of nodes to visit(with bfs) after found the destination node </summary>
         public readonly static int bfsArea = 20;
         /// <summary> heuristic weigth for path between triangles </summary>
@@ -35,19 +35,22 @@ namespace Agent_Space
         /// <summary> Dilate the path of triangles</summary>
         public readonly static int trianglePathDilatation = 1;
         /// <summary> Length of view agent detected collisions </summary>
-        public readonly static float viewLenAgent = 2f;
+        public readonly static float viewLenAgent = 1f;
         /// <summary> Freq of review collisions for agents, update frequence = (freqReview/[speed / 5]) frames </summary>
         public readonly static int freqReview = 50;
         ///<summary> radius* ocupedArea are the ocuped triangles </summary>
-        public readonly static int ocupedArea = 2;
+        public readonly static float ocupedArea = 2.3f;
         ///<summary> higth quality => better path, low => better eficience </summary>
         public readonly static Quality qualityBorder = Quality.higth;
         ///<summary> Move from vertices to vertices in the same arist </summary>
         public readonly static bool moveInArist = true;
         ///<summary> Stop if not found a path from the current position </summary>
-        public readonly static int stopInCollision = 100;
+        public readonly static int stopInCollision = 30;
+        ///<summary> Stop if not found a path from the current position </summary>
+        public readonly static int stopCountForEmpty = 5;
+       
         ///<summary> Create points of path for border only in current triangle</summary>
-        public readonly static bool onlyTriangleBorder = false;
+        public readonly static bool onlyTriangleBorder = true;
 
         // ///<summary> Stop if not found a path from the current position </summary>
         // public readonly static bool notFoundStop = true;

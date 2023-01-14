@@ -19,7 +19,7 @@ namespace Point_Map
         /// a point has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
         public bool visitedInCreation = false;
-        public bool visitedInPath = false;
+        public Dictionary<Agent, bool> visitedInPath = new Dictionary<Agent, bool>();
         public bool visitedAsAdjacent = false;
         public bool inArist;
 
@@ -164,7 +164,7 @@ namespace Point_Map
                 }
 
                 result.Add(endNode);
-                Debug.Log("Crear el mapa de puntos tardó: " + (DateTime.Now - t0));
+                // Debug.Log("Crear el mapa de puntos tardó: " + (DateTime.Now - t0));
                 return result;
 
                 //Debug.Log("Count del resultado del mapa de puntos " + agent.pointsMap.Count);
@@ -418,11 +418,11 @@ namespace Point_Map
                 return currentPoint;
             }
 
-            currentPoint.visitedInPath = true;
+            PushToRecently(currentPoint);
 
             Heap q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
-                if (!node.visitedInPath)
+                if (!node.visitedInPath.ContainsKey(agent) || !node.visitedInPath[agent])
                 {
                     node.SetInit(currentPoint);
                     q.Push(node);
@@ -433,7 +433,6 @@ namespace Point_Map
             while (q.size > 0)
             {
                 next = q.Pop() as PointNode;
-
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
 
                 Tuple<bool, Agent> collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
@@ -468,7 +467,7 @@ namespace Point_Map
         void Stop()
         {
             if (stopCount <= 0)
-                stopCount = 50;
+                stopCount = Agent_Space.Environment.stopInCollision;
         }
         public void EmptyMove()
         {
@@ -510,6 +509,7 @@ namespace Point_Map
 
         public void PushPointMap(PointNode[] nodes)
         {
+            stopCount = 0;
             recentlyVisited = new Queue<PointNode>();
             empty = false;
             ///Invertir la direccion de las aristas
@@ -524,6 +524,8 @@ namespace Point_Map
         }
         public void PushPointMap(List<PointNode> nodes)
         {
+            stopCount = 0;
+
             recentlyVisited = new Queue<PointNode>();
 
             empty = false;
@@ -556,7 +558,9 @@ namespace Point_Map
         void PushToRecently(PointNode node)
         {
             if (recentlyVisited.Count >= 10)
-                recentlyVisited.Dequeue();
+                recentlyVisited.Dequeue().visitedInPath.Remove(agent);
+            if (!currentPoint.visitedInPath.ContainsKey(agent))
+                node.visitedInPath.Add(agent, true);
             recentlyVisited.Enqueue(node);
         }
         public void clear()
@@ -569,41 +573,53 @@ namespace Point_Map
                 Agent agent, MapNode mapNode, float cost,
                 List<Agent> visitedObstacles, Heap q, PointNode destination)
         {
+            if (!Agent_Space.Environment.createBorder) return;
+
             PointNode init = new PointNode(initIn.point, inArist: false);
             init.AddTriangle(mapNode);
             initIn.AddAdjacent(init);
 
             CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
-            
+
             if (init.adjacents.Count == 0)//no se encontro nada que no sea lo mismo 
             {
                 initIn.RemoveAdjacent(init);
                 return;
             }
 
-            if (destination.father == null)/// No se llega al destino, forzamos el camino
-            {
-                Queue<PointNode> temp = new Queue<PointNode>();
-                temp.Enqueue(init);
-                PointNode deep = null;
-                while (temp.Count > 0)
-                {
-                    deep = temp.Dequeue();
-                    foreach (PointNode node in deep.adjacents.Keys)
-                        temp.Enqueue(node);
-                }
-                deep.AddAdjacent(destination); //se crea un camino desde el nodo mas profundo que se bordeo hasta el destino
-            }
+            // if (destination.father == null)/// No se llega al destino, forzamos el camino
+            // {
+            //     Queue<PointNode> temp = new Queue<PointNode>();
+            //     List<PointNode> deeps = new List<PointNode>();
+            //     temp.Enqueue(init);
+            //     PointNode deep = null;
+            //     while (temp.Count > 0)
+            //     {
+            //         deep = temp.Dequeue();
+            //         foreach (PointNode node in deep.adjacents.Keys)
+            //             temp.Enqueue(node);
+
+            //         if (deep.adjacents.Count == 0)
+            //             deeps.Add(deep);
+            //     }
+
+            //     // foreach (PointNode deepNode in deeps)
+            //     // {
+            //     //     deepNode.AddAdjacent(destination, cost);
+            //     //     deepNode.SetDistance(destination.distance + deepNode.Distance(destination) * cost);
+
+            //     //     setDistances(deepNode, cost);
+            //     // }
+            // }
 
             // if (init.adjacents.Count > 0)/// Si avanza un poco pues pa lante
             // if (destination.father != null)/// Si se llego al destino por aqui, push
-                q.Push(init);
+            q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,
                 Agent agent, MapNode mapNode, float cost,
                 List<Agent> visitedObstacles, PointNode destination)
         {
-
             Tuple<bool, Agent> collision = Agent.Collision(init.point, end.point, agent, mapNode, 1.0f);
             if (collision.Item1)
             {
@@ -694,8 +710,21 @@ namespace Point_Map
 
                         PointNode node2 = down.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point) || node2 == destination)
-                            if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        bool c1 = false;
+                        bool c2 = false;
+                        if (Agent_Space.Environment.onlyTriangleBorder)
+                        {
+                            c1 = mapNode.triangle.PointIn(node2.point);
+                            c2 = !Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1;
+                        }
+                        else
+                        {
+                            c1 = node2.point.InTriangles(collision.Item2.ocupedTriangles);
+                            c2 = !Agent.Collision(node1.point, node2.point, agent, collision.Item2.ocupedNodes, 1.0f).Item1;
+                        }
+
+                        if (c1)
+                            if (c2)
                             {
                                 node1.AddAdjacent(node2, cost);
                                 node2.SetFather(node1);
@@ -743,8 +772,21 @@ namespace Point_Map
 
                         PointNode node2 = up.Dequeue();
 
-                        if (mapNode.triangle.PointIn(node2.point) || node2 == destination)
-                            if (!Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1)
+                        bool c1 = false;
+                        bool c2 = false;
+                        if (Agent_Space.Environment.onlyTriangleBorder)
+                        {
+                            c1 = mapNode.triangle.PointIn(node2.point);
+                            c2 = !Agent.Collision(node1.point, node2.point, agent, mapNode, 1.0f).Item1;
+                        }
+                        else
+                        {
+                            c1 = node2.point.InTriangles(collision.Item2.ocupedTriangles);
+                            c2 = !Agent.Collision(node1.point, node2.point, agent, collision.Item2.ocupedNodes, 1.0f).Item1;
+                        }
+
+                        if (c1)
+                            if (c2)
                             {
                                 node1.AddAdjacent(node2, cost);
                                 node2.SetInit(node1);

@@ -12,6 +12,14 @@ namespace Agent_Space
     {
         public string name { get; private set; }
         public List<MapNode> ocupedNodes { get; private set; }
+        public List<Triangle> ocupedTriangles { get => UcupedTriangles(); }
+        List<Triangle> UcupedTriangles()
+        {
+            List<Triangle> result = new List<Triangle>();
+            foreach(MapNode node in ocupedNodes)
+                result.Add(node.triangle);
+            return result;    
+        }
         public float radius { get; private set; }
 
         public MapNode currentNode { get; private set; }
@@ -322,12 +330,14 @@ namespace Agent_Space
             if (pointPath.stop)
             {
                 pointPath.EmptyMove();
-                return;
+                if (!pointPath.stop)
+                    NextPoint();
             }
-            if (inMove)
+
+            if (inMove && !pointPath.stop)
             {
                 if (visualPath.Count == 0) NextPoint();
-                try { position = visualPath.Pop(); }
+                try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
 
 
@@ -351,13 +361,14 @@ namespace Agent_Space
                 SetCurrentTriangle();
 
                 if (nextPosition == currentPosition)
+                // if (nextPosition.point.Distance(currentPosition.point, false) <= 0.001f)
                 {
                     visualPath.Push(currentPosition.point);
-                    NextMoveBasic();
+                    // NextMoveBasic();
                     return;
                 }
-                float cost = currentPosition.adjacents[nextPosition] * 25;
-                // float cost = currentNode.MaterialCost(this) * 25;
+                // float cost = currentPosition.adjacents[nextPosition] * 25;
+                float cost = currentNode.MaterialCost(this) * 25;
 
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)

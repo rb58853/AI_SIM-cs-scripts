@@ -64,7 +64,7 @@ namespace DijkstraSpace
                     if (!adj.visited)
                         Relax(adj, node);
             }
-            Debug.Log("el Dijkstra tardo: " + (DateTime.Now - t0));
+            // Debug.Log("el Dijkstra tardo: " + (DateTime.Now - t0));
         }
         void Relax(Node v, Node u)
         {

@@ -21,11 +21,13 @@ namespace Agent_Space
         public readonly static Map map = new Map();
 
         /// <summary> more value => best path  |  less value => best code eficience </summary>
-        public readonly static float densityPath = 0.3f;
+        public readonly static float densityPath = 0.4f;
         /// <summary> count of nodes to visit(with bfs) after found the destination node </summary>
-        public readonly static int bfsArea = 40;
+        public readonly static int bfsArea = 20;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
+        /// <summary> Create border in runtime when collision</summary>
+        public readonly static bool createBorder = true;
         /// <summary> width for border collision</summary>
         public readonly static float collisionBorder = 1.1f;
         /// <summary> create path analizando the agents in this moment</summary>
@@ -44,6 +46,9 @@ namespace Agent_Space
         public readonly static bool moveInArist = true;
         ///<summary> Stop if not found a path from the current position </summary>
         public readonly static int stopInCollision = 100;
+        ///<summary> Create points of path for border only in current triangle</summary>
+        public readonly static bool onlyTriangleBorder = false;
+
         // ///<summary> Stop if not found a path from the current position </summary>
         // public readonly static bool notFoundStop = true;
 

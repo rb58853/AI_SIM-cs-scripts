@@ -25,7 +25,7 @@ public class NavAgent : MonoBehaviour
     Vector3 dir = new Vector3(0, 0, 0);
     void Update()
     {
-        
+
         if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
             return;
 
@@ -39,15 +39,12 @@ public class NavAgent : MonoBehaviour
             dir = (agentPos - transform.position) / 5;
         }
         transform.Translate(dir);
+        // catch { Debug.Log("El vector de direccion para moverse es " + dir); }
 
         if (framesForUpdatePath <= 0)
-        {
             framesForUpdatePath = 5;
-            //agent.SetPointPath(agent.destination);
-        }
+
         framesForUpdatePath--;
-
-
     }
     public void SetDestination(Vector3 destination)
     {

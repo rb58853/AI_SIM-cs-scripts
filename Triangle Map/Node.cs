@@ -191,6 +191,11 @@ namespace BaseNode
         {
             return vector / (float)Math.Sqrt((vector.x * vector.x + vector.z * vector.z));
         }
-
+        public bool InTriangles(ICollection<Triangle> triangles)
+        {
+            foreach (Triangle triangle in triangles)
+                if (triangle.PointIn(this)) return true;
+            return false;
+        }
     }
 }

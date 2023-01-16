@@ -397,8 +397,6 @@ namespace Point_Map
         }
         public PointNode Pop(bool onCollision = false)
         {
-            if (empty) return nextPoint;
-
             if (onCollision)
             {
                 if (currentPoint != null)
@@ -412,9 +410,12 @@ namespace Point_Map
             else
                 currentPoint = nextPoint;
 
+            if (empty) return currentPoint;
+
             if (currentPoint.adjacents.Count == 0)
             {
                 empty = true;
+                nextPoint = currentPoint;
                 return currentPoint;
             }
 
@@ -434,6 +435,7 @@ namespace Point_Map
             {
                 next = q.Pop() as PointNode;
                 if (next.distance >= float.MaxValue - 100)
+                // if (next.distance > currentPoint.distance)
                 {
                     ///Esto es para que no llegue a un camino sin fin
                     currentPoint.RemoveAdjacent(next);
@@ -441,33 +443,36 @@ namespace Point_Map
                 }
 
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
+                Tuple<bool, Agent> collision = null;
 
-                Tuple<bool, Agent> collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
+                if (!onCollision)
+                    collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
+                else
+                    collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
+                    maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
+
                 if (collision.Item1)
                 {
                     next.SetFather(null);
                     Border(currentPoint, next, agent, triangleTemp,
                         triangleTemp.MaterialCost(agent), new List<Agent>(), q, next);
-
-                    // currentPoint.RemoveAdjacent(next);
-                    // next.RemoveAdjacent(currentPoint);
                 }
                 else
                 {
                     nextPoint = next;
-                    currentPoint.SetDistance(nextPoint.distance + currentPoint.Distance(nextPoint));
+                    // currentPoint.SetDistance(nextPoint.distance + currentPoint.Distance(nextPoint));
 
                     if (Agent_Space.Environment.drawPaths)
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
-                    GetCurrentTriangle();
+                    // GetCurrentTriangle();
+                    currentTriangle = triangleTemp;
                     return next;
                 }
             }
 
-            // empty = true;
             Stop();
-            GetCurrentTriangle();
+            nextPoint = currentPoint;
             return currentPoint;
         }
 
@@ -486,7 +491,7 @@ namespace Point_Map
             foreach (MapNode node1 in currentPoint.triangles)
                 foreach (MapNode node2 in nextPoint.triangles)
                     if (node1.triangle == node2.triangle)
-                    { currentTriangle = node1.origin; break; }
+                    { currentTriangle = node1.origin; return currentTriangle; }
             return currentTriangle;
         }
         public void SetCurrentTriangle(MapNode triangle)
@@ -699,12 +704,11 @@ namespace Point_Map
 
                     while (down.Count > 0)
                     {
-
                         if (!node1.visitedInCreation) break;
                         if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
                         {
-                            try { node1.AddAdjacent(destination, cost); }
-                            catch { Debug.Log("Se esta intentando agregar un nodo ya existente como adyacente"); }
+                            if (!node1.adjacents.ContainsKey(destination))
+                                node1.AddAdjacent(destination, cost);
 
                             destination.SetFather(node1);
                             destination.SetInit(node1);
@@ -716,6 +720,9 @@ namespace Point_Map
                         }
 
                         PointNode node2 = down.Dequeue();
+                        
+                        if (Agent_Space.Environment.dinamycPointToAllArists)
+                            setAdjacentsFromAristTriangle(node2, mapNode, agent);
 
                         bool c1 = false;
                         bool c2 = false;
@@ -764,8 +771,8 @@ namespace Point_Map
                         if (!node1.visitedInCreation) break;
                         if (!Agent.Collision(node1.point, destination.point, agent, mapNode, 1.0f).Item1)
                         {
-                            try { node1.AddAdjacent(destination, cost); }
-                            catch { Debug.Log("Se esta intentando agregar un nodo ya existente como adyacente"); }
+                            if (!node1.adjacents.ContainsKey(destination))
+                                node1.AddAdjacent(destination, cost);
 
                             destination.SetFather(node1);
                             destination.SetInit(node1);
@@ -778,6 +785,9 @@ namespace Point_Map
                         }
 
                         PointNode node2 = up.Dequeue();
+
+                        if (Agent_Space.Environment.dinamycPointToAllArists)
+                            setAdjacentsFromAristTriangle(node2, mapNode, agent);
 
                         bool c1 = false;
                         bool c2 = false;
@@ -836,6 +846,17 @@ namespace Point_Map
                 }
             }
         }
-
+        void setAdjacentsFromAristTriangle(PointNode node, MapNode mapNode, Agent agent)
+        {
+            foreach (Arist arist in mapNode.adjacents.Values)
+            {
+                List<PointNode> points = arist.points;
+                if (points.Count == 0 || points[0].distance >= float.MaxValue - 100)
+                    continue;
+                else
+                    foreach (PointNode point in points)
+                        node.AddAdjacent(point, mapNode.MaterialCost(agent));
+            }
+        }
     }
 }

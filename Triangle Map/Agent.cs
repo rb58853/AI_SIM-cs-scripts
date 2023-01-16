@@ -262,7 +262,6 @@ namespace Agent_Space
             }
 
         }
-
         public PointNode[] GetPointPath(Point endPoint)
         {
             MapNode[] tPath = GetTrianglePath(endPoint);
@@ -304,7 +303,7 @@ namespace Agent_Space
             float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
-            Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes.ToArray(), 1.0f);
+            Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes, maxDistance: Environment.distanceAnalizeCollision);
             if (collision.Item1)
                 NextPoint(true);
         }
@@ -329,7 +328,7 @@ namespace Agent_Space
         private int stopCount = Environment.stopCountForEmpty;
         void NextMoveBasic()
         {
-            if (pointPath.stop)
+            if (pointPath.stop && inMove)
             {
                 pointPath.EmptyMove();
                 if (!pointPath.stop)
@@ -339,7 +338,10 @@ namespace Agent_Space
                     {
                         stopCount--;
                         if (stopCount <= 0)
-                            inMove = false;
+                        {
+                            SetPointPath(destination);
+                            // inMove = false;
+                        }
                     }
                     else
                         stopCount = Environment.stopCountForEmpty;
@@ -349,11 +351,14 @@ namespace Agent_Space
             if (inMove && !pointPath.stop)
             {
                 if (visualPath.Count == 0) NextPoint();
+                Point temp = position;
                 try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
 
+                if (temp.Distance(position, false) >= 3)
+                    Debug.Log("La distancia del pop era muy alta, por eso brinca");
 
-                if (freq <= 0)
+                if (freq <= 0 && !pointPath.stop && inMove)
                 {
                     freq = Environment.freqReview;
                     DynamicSetPoint();
@@ -373,7 +378,6 @@ namespace Agent_Space
                 SetCurrentTriangle();
 
                 if (nextPosition == currentPosition)
-                // if (nextPosition.point.Distance(currentPosition.point, false) <= 0.001f)
                 {
                     visualPath.Push(currentPosition.point);
                     // NextMoveBasic();
@@ -394,7 +398,8 @@ namespace Agent_Space
         {
             currentNode = pointPath.currentTriangle;
         }
-        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1)
+        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode mapNode, float multArea = 1,
+        float maxDistance = 500f)
         {
             Point l1 = node1;
             Point l2 = node2;
@@ -405,6 +410,8 @@ namespace Agent_Space
             foreach (Agent agentObstacle in mapNode.origin.agentsIn)
             {
                 if (agentObstacle == agent) continue;
+                if (agentObstacle.position.Distance(agent.position) > (agent.radius + agentObstacle.radius) * maxDistance) continue;
+
                 if (agentObstacle.position.DistanceToSegment(l1, l2) <= (agent.radius + agentObstacle.radius) * multArea + epsilon)
                     /// Collision
                     if (result.Item2 == null ||
@@ -428,21 +435,12 @@ namespace Agent_Space
 
             return result;
         }
-        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, MapNode[] mapNodes, float multArea = 1)
+        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, ICollection<MapNode> mapNodes, float multArea = 1,
+        float maxDistance = 500f)
         {
             foreach (MapNode node in mapNodes)
             {
-                Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
-                if (collision.Item1)
-                    return collision;
-            }
-            return new Tuple<bool, Agent>(false, null);
-        }
-        public static Tuple<bool, Agent> Collision(Point node1, Point node2, Agent agent, List<MapNode> mapNodes, float multArea = 1)
-        {
-            foreach (MapNode node in mapNodes)
-            {
-                Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea);
+                Tuple<bool, Agent> collision = Collision(node1, node2, agent, node, multArea, maxDistance);
                 if (collision.Item1)
                     return collision;
             }

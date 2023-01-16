@@ -33,9 +33,11 @@ namespace Agent_Space
         /// <summary> create path analizando the agents in this moment</summary>
         public readonly static bool pathWithAgents = false;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 1;
+        public readonly static int trianglePathDilatation = 2;
         /// <summary> Length of view agent detected collisions </summary>
         public readonly static float viewLenAgent = 1f;
+        /// <summary> If sum of radius of two agents * this var is low than distance analize, else no analize </summary>
+        public readonly static float distanceAnalizeCollision = 1.5f;
         /// <summary> Freq of review collisions for agents, update frequence = (freqReview/[speed / 5]) frames </summary>
         public readonly static int freqReview = 50;
         ///<summary> radius* ocupedArea are the ocuped triangles </summary>
@@ -48,9 +50,10 @@ namespace Agent_Space
         public readonly static int stopInCollision = 30;
         ///<summary> Stop if not found a path from the current position </summary>
         public readonly static int stopCountForEmpty = 5;
-       
         ///<summary> Create points of path for border only in current triangle</summary>
         public readonly static bool onlyTriangleBorder = true;
+        ///<summary> Create paths from dinamyc point to all arist of triangle that contains this point</summary>
+        public readonly static bool dinamycPointToAllArists = false;
 
         // ///<summary> Stop if not found a path from the current position </summary>
         // public readonly static bool notFoundStop = true;

@@ -163,6 +163,7 @@ namespace Point_Map
                         }
                 }
 
+                // result.Add(endNode);
                 result.Add(endNode);
                 // Debug.Log("Crear el mapa de puntos tardó: " + (DateTime.Now - t0));
                 return result;
@@ -181,9 +182,11 @@ namespace Point_Map
                 List<PointNode> endList = new List<PointNode>();
                 endList.Add(init);
 
-                if (!result.Contains(init)) /// Esto no me gusta en cuanto a eficiencia FFF, usar un diccionario
+                if (init.visitedInCreation) /// Esto no me gusta en cuanto a eficiencia FFF, usar un diccionario
+                {
+                    init.visitedInCreation = true;
                     result.Add(init);
-
+                }
                 init.SetDistance(0);
                 Heap q = new Heap(init);
 
@@ -406,6 +409,7 @@ namespace Point_Map
                     currentPoint = new PointNode(agent.position);
                     currentPoint.AddTriangle(currentTriangle);
                 }
+                nextPoint = currentPoint;
             }
             else
                 currentPoint = nextPoint;
@@ -465,8 +469,8 @@ namespace Point_Map
                     if (Agent_Space.Environment.drawPaths)
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
-                    // GetCurrentTriangle();
-                    currentTriangle = triangleTemp;
+                    GetCurrentTriangle();
+                    // currentTriangle = triangleTemp;
                     return next;
                 }
             }
@@ -522,15 +526,29 @@ namespace Point_Map
         public void PushPointMap(PointNode[] nodes)
         {
             stopCount = 0;
+
             recentlyVisited = new Queue<PointNode>();
+
             empty = false;
-            ///Invertir la direccion de las aristas
-            foreach (PointNode node in nodes)
-                foreach (PointNode adj in node.adjacents.Keys)
+            ///Invertir la direccion de las aristas ultimo y primero
+            PointNode node = nodes[0];
+
+            List<PointNode> temp = new List<PointNode>();
+            foreach (PointNode adj in node.adjacents.Keys) temp.Add(adj);
+
+            foreach (PointNode adj in temp)
+            {
+                adj.AddAdjacent(node, node.adjacents[adj]);
+                node.RemoveAdjacent(adj);
+            }
+
+            foreach (PointNode point in nodes)
+                if (point.adjacents.ContainsKey(nodes[nodes.Length - 1]))
                 {
-                    adj.AddAdjacent(node, node.adjacents[adj]);
-                    node.RemoveAdjacent(adj);
+                    nodes[nodes.Length - 1].AddAdjacent(point, point.adjacents[nodes[nodes.Length - 1]]);
+                    point.RemoveAdjacent(nodes[nodes.Length - 1]);
                 }
+
             currentPoint = null;
             nextPoint = nodes[nodes.Length - 1];
         }
@@ -699,7 +717,7 @@ namespace Point_Map
                     up.Enqueue(sw); /*up.Enqueue(s);*/ up.Enqueue(se); up.Enqueue(e); up.Enqueue(destination);
 
 
-                    init.visitedInCreation = true;
+                    // init.visitedInCreation = true;
                     PointNode node1 = init;
 
                     while (down.Count > 0)
@@ -720,7 +738,7 @@ namespace Point_Map
                         }
 
                         PointNode node2 = down.Dequeue();
-                        
+
                         if (Agent_Space.Environment.dinamycPointToAllArists)
                             setAdjacentsFromAristTriangle(node2, mapNode, agent);
 

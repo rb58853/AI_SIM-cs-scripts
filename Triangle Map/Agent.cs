@@ -25,7 +25,7 @@ namespace Agent_Space
         public MapNode currentNode { get; private set; }
         public Point position { get; private set; }
         public PointNode currentPosition { get; private set; }
-        private PointNode nextPosition;
+        public PointNode nextPosition { get; private set; }
 
         public List<MapNode> triangleList { get; private set; }
         private PointPath pointPath;
@@ -295,6 +295,7 @@ namespace Agent_Space
             destination = point;
             GetPointPath(point);
             NextPoint();
+            // inMove=true;
         }
         void DynamicSetPoint()
         {
@@ -303,7 +304,9 @@ namespace Agent_Space
             float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
-            Tuple<bool, Agent> collision = Collision(position, pointDest, this, ocupedNodes, maxDistance: Environment.distanceAnalizeCollision);
+            Tuple<bool, Agent> collision =
+            Collision(position, pointDest, this, ocupedNodes, multArea: 1,
+             maxDistance: Environment.distanceAnalizeCollision);
             if (collision.Item1)
                 NextPoint(true);
         }
@@ -322,7 +325,6 @@ namespace Agent_Space
                 SetOcupedFromPosition(Environment.ocupedArea);
             }
         }
-        /// update frequence = (freq/[speed / 5]) frames.
 
         int freq = Environment.freqReview;
         private int stopCount = Environment.stopCountForEmpty;
@@ -339,7 +341,7 @@ namespace Agent_Space
                         stopCount--;
                         if (stopCount <= 0)
                         {
-                            SetPointPath(destination);
+                            SetPointPath(destination);/// Quitarse esto en algun momento
                             // inMove = false;
                         }
                     }
@@ -350,20 +352,25 @@ namespace Agent_Space
 
             if (inMove && !pointPath.stop)
             {
-                if (visualPath.Count == 0) NextPoint();
-                Point temp = position;
-                try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
-                catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
-
-                if (temp.Distance(position, false) >= 3)
-                    Debug.Log("La distancia del pop era muy alta, por eso brinca");
-
                 if (freq <= 0 && !pointPath.stop && inMove)
                 {
                     freq = Environment.freqReview;
                     DynamicSetPoint();
                 }
                 freq--;
+
+                if (visualPath.Count == 0) NextPoint();
+                Point temp = position;
+                try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
+                catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
+
+                if (temp.Distance(position, false) >= 0.1f)
+                {
+                    PointNode.Static.DrawTwoPoints(temp, position, Color.red);
+                    Debug.Log("La distancia del pop era muy alta, por eso brinca");
+                }
+
+
             }
         }
         void NextPoint(bool onCollision = false)
@@ -376,7 +383,6 @@ namespace Agent_Space
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
                 SetCurrentTriangle();
-
                 if (nextPosition == currentPosition)
                 {
                     visualPath.Push(currentPosition.point);
@@ -389,6 +395,9 @@ namespace Agent_Space
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)
                     visualPath.Push(temp[i]);
+
+                // Debug.Log("currentPosition = " + currentPosition + "   nextPosition = " + nextPosition +
+                // "Count de path visual " + visualPath.Count);
                 NextMoveBasic();
             }
             else
@@ -403,7 +412,7 @@ namespace Agent_Space
         {
             Point l1 = node1;
             Point l2 = node2;
-            float epsilon = 0.05f;
+            float epsilon = 0.005f;
 
             Tuple<bool, Agent> result = new Tuple<bool, Agent>(false, null);
 
@@ -427,9 +436,11 @@ namespace Agent_Space
                 if (distance <= radius * multArea + epsilon)
                 {
                     ///Choque
-                    Point vector = Point.VectorUnit(result.Item2.position, agent.position) * (radius - distance + epsilon);
-                    agent.position = agent.position + vector * 1.1f;
+                    Point vector = Point.VectorUnit(result.Item2.position, agent.position) * ((radius - distance) / 2 + epsilon);
+
+                    agent.position = agent.position + vector * 1f;
                     Collision(node1, node2, agent, mapNode);/// Es lo que debe, pero se puede poner muy lento
+
                 }
             }
 

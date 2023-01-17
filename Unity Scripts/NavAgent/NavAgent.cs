@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using Agent_Space;
 using BaseNode;
+using Point_Map;
 using System;
 
 public class NavAgent : MonoBehaviour
@@ -25,25 +26,38 @@ public class NavAgent : MonoBehaviour
     Vector3 dir = new Vector3(0, 0, 0);
     void Update()
     {
-
         if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
+        {
+            countFrames = 0;
             return;
-
+        }
         countFrames--;
+        // agent.NextMove(3);
+
         if (countFrames <= 0)
         {
             agent.NextMove(speed);
 
             countFrames = 5;
-            Vector3 agentPos = new Vector3(agent.position.x, agent.position.y, agent.position.z);
-            dir = (agentPos - transform.position) / 5;
+            // Vector3 agentPos = new Vector3(agent.position.x, agent.position.y, agent.position.z);
+            // dir = (agentPos - transform.position) / 10;
+
+
+            Point agentPosition = agent.position;
+            if (Vector3.Distance(agentPosition.ToVector3(), transform.position) > 1)
+            {
+                PointNode.Static.DrawTwoPoints(agentPosition,
+                new Point(transform.position.x, transform.position.y, transform.position.z), Color.red);
+            }
+            transform.position = new Vector3(x: agentPosition.x, y: transform.position.y, z: agentPosition.z);
+
+            Point nextPosition = agent.nextPosition.point;
+            Point position = agent.currentPosition.point;
+
+            dir = ((((nextPosition - agentPosition) * speed) / (agentPosition.Distance(nextPosition) * 25f)) / 5f).ToVector3();
         }
         transform.Translate(dir);
 
-        if (framesForUpdatePath <= 0)
-            framesForUpdatePath = 5;
-
-        framesForUpdatePath--;
     }
     public void SetDestination(Vector3 destination)
     {

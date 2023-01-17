@@ -26,34 +26,35 @@ namespace Agent_Space
         public readonly static int bfsArea = 20;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
-        /// <summary> Create border in runtime when collision</summary>
-        public readonly static bool createBorder = true;
-        /// <summary> width for border collision</summary>
-        public readonly static float collisionBorder = 1.1f;
         /// <summary> create path analizando the agents in this moment</summary>
         public readonly static bool pathWithAgents = false;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 2;
+        public readonly static int trianglePathDilatation = 1;
         /// <summary> Length of view agent detected collisions </summary>
         public readonly static float viewLenAgent = 1f;
         /// <summary> If sum of radius of two agents * this var is low than distance analize, else no analize </summary>
         public readonly static float distanceAnalizeCollision = 1.5f;
         /// <summary> Freq of review collisions for agents, update frequence = (freqReview/[speed / 5]) frames </summary>
-        public readonly static int freqReview = 50;
+        public readonly static int freqReview = 1;
         ///<summary> radius* ocupedArea are the ocuped triangles </summary>
-        public readonly static float ocupedArea = 2.3f;
+        public readonly static float ocupedArea = 3f;
         ///<summary> higth quality => better path, low => better eficience </summary>
         public readonly static Quality qualityBorder = Quality.higth;
         ///<summary> Move from vertices to vertices in the same arist </summary>
-        public readonly static bool moveInArist = true;
+        public readonly static bool moveInArist = false;
         ///<summary> Stop if not found a path from the current position </summary>
         public readonly static int stopInCollision = 30;
         ///<summary> Stop if not found a path from the current position </summary>
         public readonly static int stopCountForEmpty = 5;
         ///<summary> Create points of path for border only in current triangle</summary>
+        
+        public readonly static bool createBorder = false;
+        /// <summary> width for border collision</summary>
         public readonly static bool onlyTriangleBorder = true;
         ///<summary> Create paths from dinamyc point to all arist of triangle that contains this point</summary>
         public readonly static bool dinamycPointToAllArists = false;
+        /// <summary> Create border in runtime when collision</summary>
+        public readonly static float collisionBorder = 1.1f;
 
         // ///<summary> Stop if not found a path from the current position </summary>
         // public readonly static bool notFoundStop = true;

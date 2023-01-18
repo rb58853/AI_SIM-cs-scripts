@@ -141,6 +141,7 @@ namespace Agent_Space
 
             MapNode end = null;
 
+            currentNode = currentNode.origin;
             r.Add(currentNode, new MapNode(currentNode, this, endPoint));
             visited.Add(currentNode);
 

@@ -34,7 +34,7 @@ public class DebuguerMove : MonoBehaviour
     IEnumerator updt()
     {
         yield return new WaitForSeconds(100f);
-      
+
     }
 
     void Update()
@@ -42,8 +42,11 @@ public class DebuguerMove : MonoBehaviour
         if (agent == null) return;
         if (Input.GetKeyDown(KeyCode.E))
         {
-            foreach (MapNode node in agent.currentNode.adjacents.Keys)
-                DrawFromTriangle(node.triangle, Color.blue);
+            // foreach (MapNode node in agent.currentNode.adjacents.Keys)
+            //     DrawFromTriangle(node.triangle, Color.blue);
+            foreach (MapNode node in agent.currentNode.origin.adjacents.Keys)
+                DrawFromTriangle(node.triangle, Color.green);
+
             DrawFromTriangle(agent.currentNode.triangle, Color.red);
             // foreach (MapNode node in agent.currentPosition.triangles)
             //     DrawFromTriangle(node.triangle, Color.blue);
@@ -53,7 +56,7 @@ public class DebuguerMove : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             //StartCoroutine(updt());
-            DrawPath(tempT, Color.clear);
+            DrawPath(tempT, Color.white);
             DrawPath(points, Color.white);
 
             RaycastHit hit;

@@ -27,11 +27,7 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            // transform.position = agent.position.ToVector3();
-            SetDestination(agent.destination);
-        }
+        
 
         if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
         {

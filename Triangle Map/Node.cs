@@ -19,7 +19,6 @@ namespace BaseNode
         public abstract float Value();
         public abstract List<Node> GetAdyacents();
         public abstract float Distance(Node node);
-
         public virtual void SetDistance(float value) { distance = value; }
         public virtual void SetFather(Node node) { father = node; }
         public virtual void SetVisited(bool value = true) { visited = value; }

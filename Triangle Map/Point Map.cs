@@ -14,7 +14,6 @@ namespace Point_Map
         public PointNode init { get; protected set; }
         public Point point { get; private set; }
         public Dictionary<PointNode, float> adjacents { get; private set; }
-
         public Arist arist { get; private set; }
         /// a point has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
@@ -204,6 +203,7 @@ namespace Point_Map
         int stopCount = 0;
         public bool stop { get => stopCount > 0; }
         Queue<PointNode> recentlyVisited;
+        List<PointNode> extras = new List<PointNode>();
 
         public PointPath(Agent agent)
         {
@@ -222,7 +222,6 @@ namespace Point_Map
                     currentPoint = new PointNode(agent.position);
                     currentPoint.AddTriangle(currentTriangle);
                 }
-                // nextPoint = currentPoint;
             }
             else
                 currentPoint = nextPoint;
@@ -252,7 +251,6 @@ namespace Point_Map
             {
                 next = q.Pop() as PointNode;
                 if (next.distance >= float.MaxValue - 100)
-                // if (next.distance > currentPoint.distance)
                 {
                     ///Esto es para que no llegue a un camino sin fin
                     currentPoint.RemoveAdjacent(next);
@@ -284,6 +282,7 @@ namespace Point_Map
 
                     GetCurrentTriangle();
                     // currentTriangle = triangleTemp;
+                    CleanExtras();
                     return next;
                 }
             }
@@ -292,7 +291,12 @@ namespace Point_Map
             nextPoint = currentPoint;
             return currentPoint;
         }
-
+        void CleanExtras()
+        {
+            foreach (PointNode extra in extras)
+                (extra.father as PointNode).adjacents.Remove(extra);
+            extras = new List<PointNode>();
+        }
         void Stop()
         {
             if (stopCount <= 0)
@@ -313,6 +317,7 @@ namespace Point_Map
                 foreach (MapNode node2 in nextPoint.triangles)
                     if (node1.triangle == node2.triangle)
                     { currentTriangle = node1.origin; return currentTriangle; }
+            Debug.Log("No encontro triangulo comun");
             return currentTriangle;
         }
         public void SetCurrentTriangle(MapNode triangle)
@@ -425,7 +430,8 @@ namespace Point_Map
             PointNode init = new PointNode(initIn.point, inArist: false);
             init.AddTriangle(mapNode);
             initIn.AddAdjacent(init);
-
+            init.SetFather(initIn);
+            extras.Add(init);
             CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
 
             if (init.adjacents.Count == 0)//no se encontro nada que no sea lo mismo 
@@ -434,33 +440,6 @@ namespace Point_Map
                 return;
             }
 
-            // if (destination.father == null)/// No se llega al destino, forzamos el camino
-            // {
-            //     Queue<PointNode> temp = new Queue<PointNode>();
-            //     List<PointNode> deeps = new List<PointNode>();
-            //     temp.Enqueue(init);
-            //     PointNode deep = null;
-            //     while (temp.Count > 0)
-            //     {
-            //         deep = temp.Dequeue();
-            //         foreach (PointNode node in deep.adjacents.Keys)
-            //             temp.Enqueue(node);
-
-            //         if (deep.adjacents.Count == 0)
-            //             deeps.Add(deep);
-            //     }
-
-            //     // foreach (PointNode deepNode in deeps)
-            //     // {
-            //     //     deepNode.AddAdjacent(destination, cost);
-            //     //     deepNode.SetDistance(destination.distance + deepNode.Distance(destination) * cost);
-
-            //     //     setDistances(deepNode, cost);
-            //     // }
-            // }
-
-            // if (init.adjacents.Count > 0)/// Si avanza un poco pues pa lante
-            // if (destination.father != null)/// Si se llego al destino por aqui, push
             q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,

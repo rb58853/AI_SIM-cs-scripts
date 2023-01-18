@@ -41,9 +41,10 @@ public class GetTriangles : MonoBehaviour
         Vector3[] vertices = navMesh.vertices;
         int[] polygons = navMesh.indices;
 
+        float epsilon = 0.0001f;
         for (int i = 0; i < polygons.Length; i++)
             for (int j = i + 1; j < polygons.Length; j++)
-                if (vertices[polygons[i]] == vertices[polygons[j]])
+                if (Vector3.Distance(vertices[polygons[i]], vertices[polygons[j]]) < epsilon)
                     ///Change the reference, fixed Mesh Default
                     polygons[j] = polygons[i];
 
@@ -53,9 +54,9 @@ public class GetTriangles : MonoBehaviour
             Vector3 v2 = vertices[polygons[i + 1]];
             Vector3 v3 = vertices[polygons[i + 2]];
             Vector3[] triangle = new Vector3[] { v1, v2, v3 };
-            
+
             // DrawTriangle(triangle);
-            
+
             Triangles.Add(triangle);
             AddArist(v1, v2, triangle);
             AddArist(v2, v3, triangle);
@@ -63,7 +64,7 @@ public class GetTriangles : MonoBehaviour
         }
 
     }
-    
+
     static void AddArist(Vector3 v1, Vector3 v2, Vector3[] triangle)
     {
         ///if v1 dont' exist then v2 does not exist either, because the refelxive relation in arists

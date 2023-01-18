@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Point_Map;
+using Agent_Space;
 
 public class move : MonoBehaviour
 {
@@ -12,6 +14,11 @@ public class move : MonoBehaviour
     }
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            // transform.position = agent.position.ToVector3();
+        }
+
         if (noMove) return;
         if (Input.GetMouseButtonUp(1))
         {

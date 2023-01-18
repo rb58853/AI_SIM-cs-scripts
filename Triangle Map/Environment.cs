@@ -26,8 +26,6 @@ namespace Agent_Space
         public readonly static int bfsArea = 20;
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
-        /// <summary> create path analizando the agents in this moment</summary>
-        public readonly static bool pathWithAgents = false;
         /// <summary> Dilate the path of triangles</summary>
         public readonly static int trianglePathDilatation = 1;
         /// <summary> Length of view agent detected collisions </summary>

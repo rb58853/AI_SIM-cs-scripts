@@ -485,6 +485,10 @@ namespace Point_Map
             if (stopCount <= 0)
                 stopCount = Agent_Space.Environment.stopInCollision;
         }
+        public void Move()
+        {
+            stopCount = 0;
+        }
         public void EmptyMove()
         {
             stopCount--;

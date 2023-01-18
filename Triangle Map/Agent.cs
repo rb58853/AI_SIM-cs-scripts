@@ -35,6 +35,9 @@ namespace Agent_Space
         public Stack<Point> visualPath { get; private set; }
         public bool inMove { get; /*private*/ set; }
 
+        ///<summary> La maxima cantidad de pasos proximos </summary>
+        public int nextStepMax { get; private set; }
+
 
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
@@ -290,7 +293,7 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
-
+            pointPath.Move();
             pointsMap = new List<PointNode>();
             destination = point;
             GetPointPath(point);
@@ -314,7 +317,6 @@ namespace Agent_Space
         int countMoves = 1;
         public void NextMove(int n = 1)
         {
-
             for (int i = 0; i < n; i++)
                 NextMoveBasic();
 
@@ -341,7 +343,7 @@ namespace Agent_Space
                         stopCount--;
                         if (stopCount <= 0)
                         {
-                            SetPointPath(destination);/// Quitarse esto en algun momento
+                            // SetPointPath(destination);/// Quitarse esto en algun momento
                             // inMove = false;
                         }
                     }
@@ -360,17 +362,8 @@ namespace Agent_Space
                 freq--;
 
                 if (visualPath.Count == 0) NextPoint();
-                Point temp = position;
                 try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
-
-                if (temp.Distance(position, false) >= 0.1f)
-                {
-                    PointNode.Static.DrawTwoPoints(temp, position, Color.red);
-                    Debug.Log("La distancia del pop era muy alta, por eso brinca");
-                }
-
-
             }
         }
         void NextPoint(bool onCollision = false)
@@ -390,7 +383,7 @@ namespace Agent_Space
                     return;
                 }
                 // float cost = currentPosition.adjacents[nextPosition] * 25;
-                float cost = currentNode.MaterialCost(this) * 25;
+                float cost = currentNode.MaterialCost(this) * Environment.densityVisualPath;
 
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)
@@ -438,9 +431,8 @@ namespace Agent_Space
                     ///Choque
                     Point vector = Point.VectorUnit(result.Item2.position, agent.position) * ((radius - distance) / 2 + epsilon);
 
-                    agent.position = agent.position + vector * 1f;
+                    agent.position = agent.position + vector * 1.1f;
                     Collision(node1, node2, agent, mapNode);/// Es lo que debe, pero se puede poner muy lento
-
                 }
             }
 

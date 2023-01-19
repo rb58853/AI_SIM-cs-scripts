@@ -52,8 +52,6 @@ namespace Agent_Space
             this.radius = radius;
             inMove = false;
         }
-
-
         public void SetCompatibility(Material material, float value)
         {
             if (compatibility.ContainsKey(material))
@@ -61,7 +59,6 @@ namespace Agent_Space
             else
                 compatibility.Add(material, value);
         }
-
         public void searchCurrentNode()
         {
             foreach (Node node in Environment.map.nodes)
@@ -77,7 +74,6 @@ namespace Agent_Space
             Agent.Collision(position, position, this, currentNode);
         }
         public void setPosition(Point point) { position = point; }
-
         public void SetOcupedFromPosition(float extendArea = 1)
         {
             Queue<MapNode> ocuped = new Queue<MapNode>();
@@ -122,7 +118,6 @@ namespace Agent_Space
             ///Tambien cada esta frecuencia separar a los agentes    
             Agent.Collision(position, position, this, currentNode);
         }
-
         Tuple<MapNode[], MapNode, MapNode> LocalMap(Point endPoint)
         {
             return BFS(endPoint);
@@ -208,7 +203,6 @@ namespace Agent_Space
 
             return new Tuple<MapNode[], MapNode, MapNode>(localMap.ToArray(), r[currentNode], end);
         }
-
         public MapNode[] GetTrianglePath(Point endPoint, bool push = true)
         {
             Tuple<MapNode[], MapNode, MapNode> localMap = LocalMap(endPoint);
@@ -450,6 +444,7 @@ namespace Agent_Space
             }
             return new Tuple<bool, Agent>(false, null);
         }
+        public override string ToString() { return name; }
         internal class tools
         {
             internal static MapNode[] ToArrayAsMapNode(List<Node> list)
@@ -474,9 +469,98 @@ namespace Agent_Space
                 return result;
             }
         }
-        public override string ToString()
+        internal static class Metaheuristic
         {
-            return name;
+            // public static Dictionary<Triangle, List<PointNode>> pointPathToTriangle;
+            public static Dictionary<Triangle, List<MapNode>> trianglePathToTriangle;
+            public static Dictionary<Triangle, List<MapNode>> origins;
+
+            static void Merge(Triangle triangle, ICollection<MapNode> inNodes)
+            {
+                if (trianglePathToTriangle.ContainsKey(triangle))
+                {
+                    List<MapNode> originsNodes = origins[triangle];
+                    List<MapNode> realNodes = trianglePathToTriangle[triangle];
+
+                    List<MapNode> temp = new List<MapNode>();
+                    foreach (MapNode node in inNodes)
+                        temp.Add(node);
+
+                    foreach (MapNode node in temp)
+                        if (originsNodes.Contains(node.origin))
+                            inNodes.Remove(node);
+
+                    foreach (MapNode inNode in inNodes)
+                    {
+                        foreach (MapNode adj in inNode.GetAdyacents())
+                        {
+                            if (originsNodes.Contains(adj.origin))
+                            {
+                                int index = originsNodes.IndexOf(adj.origin);
+                                MapNode adjacent = realNodes[index];
+
+                                List<Arist> addArists = new List<Arist>();
+                                List<Arist> deleteArists = new List<Arist>();
+
+                                foreach (Arist inArist in inNode.adjacents.Values)
+                                    foreach (Arist localArist in adjacent.adjacents.Values)
+                                        if (inArist.origin == localArist.origin)
+                                        {
+                                            addArists.Add(localArist);
+                                            deleteArists.Add(inArist);
+                                            break;
+                                        }
+
+                                foreach (Arist aristOfInNode in inNode.adjacents.Values)
+                                {
+
+                                    if (!deleteArists.Contains(aristOfInNode))
+                                    {
+                                        foreach (PointNode pointInNode in aristOfInNode.points)
+                                            foreach (Arist localArist in addArists)
+                                                foreach (PointNode pointInLocal in localArist.points)
+                                                {
+                                                    pointInNode.AddAdjacent(pointInLocal);
+                                                    pointInLocal.AddAdjacent(pointInNode);
+                                                }
+                                    }
+                                    else
+                                    {
+                                        foreach (Arist aristOfInNode2 in inNode.adjacents.Values)
+                                        {
+                                            foreach (PointNode pointInNode in aristOfInNode2.points)
+                                            {
+                                                foreach (PointNode pointToDeleteAdj in aristOfInNode.points)
+                                                {
+                                                    pointInNode.RemoveAdjacent(pointToDeleteAdj);
+                                                    pointToDeleteAdj.RemoveAdjacent(pointInNode);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    foreach (MapNode inNode in inNodes)
+                    {
+                        originsNodes.Add(inNode.origin);
+                        realNodes.Add(inNode);
+                    }
+                }
+                else
+                {
+                    List<MapNode> originNew = new List<MapNode>();
+                    List<MapNode> realNew = new List<MapNode>();
+                    foreach (MapNode node in inNodes)
+                    {
+                        realNew.Add(node);
+                        originNew.Add(node.origin);
+                    }
+                    origins.Add(triangle, originNew);
+                    trianglePathToTriangle.Add(triangle, realNew);
+                }
+            }
         }
     }
 }

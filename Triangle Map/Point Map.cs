@@ -17,6 +17,7 @@ namespace Point_Map
         public Arist arist { get; private set; }
         /// a point has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
+        public PointNode origin { get; private set; }
         public bool visitedInCreation = false;
         public Dictionary<Agent, bool> visitedInPath = new Dictionary<Agent, bool>();
         public bool visitedAsAdjacent = false;
@@ -26,6 +27,7 @@ namespace Point_Map
 
         public PointNode(Point point, PointNode end = null, bool inArist = true, Arist arist = null)
         {
+            origin = this;
             this.arist = arist;
             this.inArist = inArist;
             this.point = point;
@@ -35,6 +37,7 @@ namespace Point_Map
             init = null;
             triangles = new List<MapNode>();
         }
+        public void SetOrigin(PointNode point) { origin = point; }
         public float get_x() { return point.x; }
         public float get_y() { return point.y; }
         public float get_z() { return point.z; }
@@ -211,8 +214,12 @@ namespace Point_Map
             currentTriangle = null;
             empty = true;
         }
+
+        Heap q = new Heap();
         public PointNode Pop(bool onCollision = false)
         {
+            // if(currentPoint == nextPoint)
+
             if (onCollision)
             {
                 if (currentPoint != null)
@@ -222,6 +229,7 @@ namespace Point_Map
                     currentPoint = new PointNode(agent.position);
                     currentPoint.AddTriangle(currentTriangle);
                 }
+                nextPoint = currentPoint;
             }
             else
                 currentPoint = nextPoint;
@@ -231,13 +239,13 @@ namespace Point_Map
             if (currentPoint.adjacents.Count == 0)
             {
                 empty = true;
-                nextPoint = currentPoint;
+                // nextPoint = currentPoint;
                 return currentPoint;
             }
 
             PushToRecently(currentPoint);
 
-            Heap q = new Heap();
+            q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
                 if (!node.visitedInPath.ContainsKey(agent) || !node.visitedInPath[agent])
                 {
@@ -255,6 +263,15 @@ namespace Point_Map
                     ///Esto es para que no llegue a un camino sin fin
                     currentPoint.RemoveAdjacent(next);
                     continue;
+                }
+                if (Agent_Space.Environment.stopOnPath)
+                {
+                    if (next.distance > currentPoint.distance + Agent_Space.Environment.stopOnPathDistance)
+                    {
+                        Stop();
+                        nextPoint = currentPoint;
+                        return currentPoint;
+                    }
                 }
 
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
@@ -275,8 +292,6 @@ namespace Point_Map
                 else
                 {
                     nextPoint = next;
-                    // currentPoint.SetDistance(nextPoint.distance + currentPoint.Distance(nextPoint));
-
                     if (Agent_Space.Environment.drawPaths)
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 

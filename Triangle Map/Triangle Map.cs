@@ -199,10 +199,12 @@ namespace Triangle_Map
         /// si ya fue visitada no se vuelve a crear </summary>
         public bool visited = false;
 
+        public Arist origin { get; private set; }
         /// a arist has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
         public Arist(Point p1, Point p2)
         {
+            origin = this;
             this.p1 = p1;
             this.p2 = p2;
             points = new List<PointNode>();
@@ -210,6 +212,7 @@ namespace Triangle_Map
         }
         public Arist(Arist a)
         {
+            origin = a;
             p1 = a.p1;
             p2 = a.p2;
             points = new List<PointNode>();
@@ -217,16 +220,24 @@ namespace Triangle_Map
         }
         public List<Point> ToPoints(float n = 1f, List<PointNode> map = null, bool set = false)
         {
+            List<Point> result = new List<Point>();
+
+            if (points.Count > 0)
+            {
+                foreach (PointNode point in points)
+                    result.Add(point.point);
+                return result;
+            }
+
             Point vector = p2 - p1;
 
-            List<Point> result = new List<Point>();
             points = new List<PointNode>();
 
             float k = p1.Distance(p2) * n;
 
             result.Add(p1);
 
-            PointNode node = new PointNode(p1,arist: this); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
+            PointNode node = new PointNode(p1, arist: this); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
             points.Add(node);
 
             if (map != null)
@@ -248,6 +259,18 @@ namespace Triangle_Map
 
             if (map != null)
                 map.Add(node); foreach (MapNode triangle in triangles) node.AddTriangle(triangle);
+
+            if (origin.points.Count == 0)
+            {
+                origin.ToPoints(n);
+                for (int i = 0; i < points.Count; i++)
+                    points[i].SetOrigin(origin.points[i]);
+            }
+            else
+            {
+                for (int i = 0; i < points.Count; i++)
+                    points[i].SetOrigin(origin.points[i]);
+            }
 
             return result;
         }

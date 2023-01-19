@@ -190,6 +190,10 @@ namespace BaseNode
         {
             return vector / (float)Math.Sqrt((vector.x * vector.x + vector.z * vector.z));
         }
+        public static Point MidPoint(Point p1, Point p2)
+        {
+            return (p2 + p1) / 2;
+        }
         public bool InTriangles(ICollection<Triangle> triangles)
         {
             foreach (Triangle triangle in triangles)

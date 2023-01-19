@@ -29,15 +29,10 @@ namespace Agent_Space
 
         public List<MapNode> triangleList { get; private set; }
         private PointPath pointPath;
-        public List<PointNode> pointsMap { get; private set; }
         public Point destination { get; private set; }
 
         public Stack<Point> visualPath { get; private set; }
         public bool inMove { get; /*private*/ set; }
-
-        ///<summary> La maxima cantidad de pasos proximos </summary>
-        public int nextStepMax { get; private set; }
-
 
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
@@ -289,11 +284,10 @@ namespace Agent_Space
         public void SetPointPath(Point point)
         {
             pointPath.Move();
-            pointsMap = new List<PointNode>();
             destination = point;
             GetPointPath(point);
+            Metaheuristic.Proccess(triangleList[0], point);
             NextPoint();
-            // inMove=true;
         }
         void DynamicSetPoint()
         {
@@ -475,8 +469,32 @@ namespace Agent_Space
             public static Dictionary<Triangle, List<MapNode>> trianglePathToTriangle;
             public static Dictionary<Triangle, List<MapNode>> origins;
 
+            public static void Proccess(MapNode endTriangle, Point endPoint)
+            {
+                if (!Environment.metaheuristic) return;
+
+                foreach (Triangle triangle in endTriangle.origin.triangle.trianglesSub)
+                {
+                    if (triangle.PointIn(endPoint))
+                    {
+                        Debug.Log("Encontro el triangulo");
+                        PointNode.Static.DrawTwoPoints(triangle.vertex1, triangle.vertex2, Color.green);
+                        PointNode.Static.DrawTwoPoints(triangle.vertex1, triangle.vertex3, Color.green);
+                        PointNode.Static.DrawTwoPoints(triangle.vertex3, triangle.vertex2, Color.green);
+                        break;
+                    }
+                }
+
+            }
             static void Merge(Triangle triangle, ICollection<MapNode> inNodes)
             {
+                if (trianglePathToTriangle == null)
+                {
+                    trianglePathToTriangle = new Dictionary<Triangle, List<MapNode>>();
+                    origins = new Dictionary<Triangle, List<MapNode>>();
+                }
+
+
                 if (trianglePathToTriangle.ContainsKey(triangle))
                 {
                     List<MapNode> originsNodes = origins[triangle];
@@ -527,16 +545,12 @@ namespace Agent_Space
                                     else
                                     {
                                         foreach (Arist aristOfInNode2 in inNode.adjacents.Values)
-                                        {
                                             foreach (PointNode pointInNode in aristOfInNode2.points)
-                                            {
                                                 foreach (PointNode pointToDeleteAdj in aristOfInNode.points)
                                                 {
                                                     pointInNode.RemoveAdjacent(pointToDeleteAdj);
                                                     pointToDeleteAdj.RemoveAdjacent(pointInNode);
                                                 }
-                                            }
-                                        }
                                     }
                                 }
                             }

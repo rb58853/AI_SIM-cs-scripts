@@ -63,6 +63,12 @@ namespace Agent_Space
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
         public readonly static int densityVisualPath = 50;
 
+        /// <summary> Use metaheuristic [default value: true]</summary>
+        public readonly static bool metaheuristic = true;
+        /// <summary> Perimetro maximo de las sudivisiones de los triangulos, para metaheuristic</summary>
+        public readonly static float maxPerTriang = 12;
+
+
         /// <summary> Draw path of agents </summary>
         public readonly static bool drawPaths = false;
         public readonly static bool drawBorder = false;

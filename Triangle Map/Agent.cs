@@ -30,10 +30,11 @@ namespace Agent_Space
         public List<MapNode> triangleList { get; private set; }
         private PointPath pointPath;
         public Point destination { get; private set; }
+        public PointNode endPointNode { get; private set; }
 
         public Stack<Point> visualPath { get; private set; }
         public bool inMove { get; /*private*/ set; }
-
+        internal bool metaPath = false;
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
 
@@ -173,7 +174,6 @@ namespace Agent_Space
                         temp.AddAdjacent(r[n], aristClone);
                         aristClone.AddTriangle(r[n]);
                         aristClone.AddTriangle(temp);
-                        //temp.SetDistance(Math.Min(temp.distance, r[n].distance + temp.Distance(n)));
                         q.Enqueue(adj);
 
                         localMap.Add(temp);
@@ -186,8 +186,6 @@ namespace Agent_Space
                             r[adj].AddAdjacent(r[n], aristClone);
                             aristClone.AddTriangle(r[n]);
                             aristClone.AddTriangle(r[adj]);
-
-                            //r[adj].SetDistance(Math.Min(r[adj].distance, r[n].distance + r[adj].Distance(n)));
                         }
                     }
                 }
@@ -207,6 +205,20 @@ namespace Agent_Space
 
             if (end == null)
                 return null;
+
+            PointNode endPointNode = new PointNode(endPoint, agent: this);
+            endPointNode.SetDistance(0);
+
+            if (Environment.metaheuristic)
+                if (Metaheuristic.Path(currentNode, end as MapNode, endPointNode, currentPosition))
+                {
+                    metaPath = true;
+                    this.pointPath.pushMetaMap(currentPosition);
+                    endPointNode.AddTriangle(end as MapNode);
+                    this.endPointNode = endPointNode;
+
+                    return null;
+                }
 
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
             List<Node> path = dijkstra.GetPath();
@@ -253,11 +265,11 @@ namespace Agent_Space
                     return countAdj <= 1;
                 }
             }
-
         }
         public PointNode[] GetPointPath(Point endPoint)
         {
             MapNode[] tPath = GetTrianglePath(endPoint);
+            if (metaPath == true) return null;
 
             if (tPath == null)
             {
@@ -268,8 +280,9 @@ namespace Agent_Space
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
 
-            PointNode endNode = new PointNode(endPoint, inArist: false);
+            PointNode endNode = new PointNode(endPoint, inArist: false, agent: this);
             endNode.AddTriangle(triangleList[0]);
+            endPointNode = endNode;
 
             List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
 
@@ -283,10 +296,13 @@ namespace Agent_Space
         }
         public void SetPointPath(Point point)
         {
+            metaPath = false;
+            pointPath.clear();
             pointPath.Move();
             destination = point;
             GetPointPath(point);
-            Metaheuristic.Proccess(triangleList[0], point);
+            if (metaPath == false)
+                Metaheuristic.Proccess(triangleList[0], point, triangleList, endPointNode);
             NextPoint();
         }
         void DynamicSetPoint()
@@ -358,13 +374,13 @@ namespace Agent_Space
         void NextPoint(bool onCollision = false)
         {
             visualPath.Clear();
-
             if (!pointPath.empty)
             {
                 inMove = true;
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
                 SetCurrentTriangle();
+
                 if (nextPosition == currentPosition)
                 {
                     visualPath.Push(currentPosition.point);
@@ -469,7 +485,45 @@ namespace Agent_Space
             public static Dictionary<Triangle, List<MapNode>> trianglePathToTriangle;
             public static Dictionary<Triangle, List<MapNode>> origins;
 
-            public static void Proccess(MapNode endTriangle, Point endPoint)
+            public static bool Path(MapNode initTriangle, MapNode endTriangle,
+            PointNode endPoint, PointNode InitPoint)
+            {
+                if (origins == null) return false;
+                foreach (Triangle triangle in endTriangle.origin.triangle.trianglesSub)
+                {
+                    if (triangle.PointIn(endPoint.point))
+                    {
+                        if (origins.ContainsKey(triangle))
+                            if (origins[triangle].Contains(initTriangle))
+                            {
+                                List<MapNode> originsNodes = origins[triangle];
+                                List<MapNode> realNodes = trianglePathToTriangle[triangle];
+
+                                int index = originsNodes.IndexOf(initTriangle.origin);
+                                int indexEnd = originsNodes.IndexOf(endTriangle.origin);
+                                MapNode localInit = realNodes[index];
+                                MapNode localEnd = realNodes[indexEnd];
+
+                                foreach (Arist arist in localInit.adjacents.Values)
+                                    foreach (PointNode point in arist.points)
+                                    {
+                                        if (!InitPoint.adjacents.ContainsKey(point))
+                                            InitPoint.AddAdjacent(point, localInit.MaterialCost(new Agent(1)));
+                                        // PointNode.Static.DrawTwoPoints(InitPoint.point, point.point, Color.magenta);
+                                    }
+
+                                foreach (Arist arist in localEnd.adjacents.Values)
+                                    foreach (PointNode point in arist.points)
+                                        point.AddAdjacent(endPoint, localEnd.MaterialCost(new Agent(1)));
+                                return true;
+                            }
+                        return false;
+                    }
+                }
+                return false;
+            }
+            public static void Proccess(MapNode endTriangle, Point endPoint,
+            ICollection<MapNode> nodes, PointNode endPointNode)
             {
                 if (!Environment.metaheuristic) return;
 
@@ -477,23 +531,25 @@ namespace Agent_Space
                 {
                     if (triangle.PointIn(endPoint))
                     {
+                        Merge(triangle, nodes, endPointNode, endTriangle);
+
                         Debug.Log("Encontro el triangulo");
-                        PointNode.Static.DrawTwoPoints(triangle.vertex1, triangle.vertex2, Color.green);
-                        PointNode.Static.DrawTwoPoints(triangle.vertex1, triangle.vertex3, Color.green);
-                        PointNode.Static.DrawTwoPoints(triangle.vertex3, triangle.vertex2, Color.green);
-                        break;
+
+                        move.triangle = triangle;
+                        triangle.draw(Color.green);
+                        return;
                     }
                 }
 
             }
-            static void Merge(Triangle triangle, ICollection<MapNode> inNodes)
+            static void Merge(Triangle triangle, ICollection<MapNode> inNodes,
+            PointNode endPointNode, MapNode endMapNode)
             {
                 if (trianglePathToTriangle == null)
                 {
                     trianglePathToTriangle = new Dictionary<Triangle, List<MapNode>>();
                     origins = new Dictionary<Triangle, List<MapNode>>();
                 }
-
 
                 if (trianglePathToTriangle.ContainsKey(triangle))
                 {
@@ -506,7 +562,21 @@ namespace Agent_Space
 
                     foreach (MapNode node in temp)
                         if (originsNodes.Contains(node.origin))
-                            inNodes.Remove(node);
+                        {
+                            if (node != endMapNode)
+                                inNodes.Remove(node);
+                            else
+                            {
+                                inNodes.Remove(node);
+                                MapNode localEnd = realNodes[originsNodes.IndexOf(node.origin)];
+
+                                foreach (Arist arist in localEnd.adjacents.Values)
+                                    foreach (PointNode point in arist.points)
+                                        ///Crear adyacencia hacia el nuevo nodo final
+                                        point.AddAdjacent(endPointNode);
+
+                            }
+                        }
 
                     foreach (MapNode inNode in inNodes)
                     {
@@ -514,6 +584,7 @@ namespace Agent_Space
                         {
                             if (originsNodes.Contains(adj.origin))
                             {
+                                // inNode.triangle.draw(Color.yellow);
                                 int index = originsNodes.IndexOf(adj.origin);
                                 MapNode adjacent = realNodes[index];
 
@@ -526,23 +597,13 @@ namespace Agent_Space
                                         {
                                             addArists.Add(localArist);
                                             deleteArists.Add(inArist);
+                                            // PointNode.Static.DrawTwoPoints(localArist.p1, localArist.p2, Color.magenta);
                                             break;
                                         }
 
                                 foreach (Arist aristOfInNode in inNode.adjacents.Values)
                                 {
-
-                                    if (!deleteArists.Contains(aristOfInNode))
-                                    {
-                                        foreach (PointNode pointInNode in aristOfInNode.points)
-                                            foreach (Arist localArist in addArists)
-                                                foreach (PointNode pointInLocal in localArist.points)
-                                                {
-                                                    pointInNode.AddAdjacent(pointInLocal);
-                                                    pointInLocal.AddAdjacent(pointInNode);
-                                                }
-                                    }
-                                    else
+                                    if (deleteArists.Contains(aristOfInNode))
                                     {
                                         foreach (Arist aristOfInNode2 in inNode.adjacents.Values)
                                             foreach (PointNode pointInNode in aristOfInNode2.points)
@@ -550,6 +611,17 @@ namespace Agent_Space
                                                 {
                                                     pointInNode.RemoveAdjacent(pointToDeleteAdj);
                                                     pointToDeleteAdj.RemoveAdjacent(pointInNode);
+                                                }
+                                    }
+                                    else
+                                    {
+                                        foreach (PointNode pointInNode in aristOfInNode.points)
+                                            foreach (Arist localArist in addArists)
+                                                foreach (PointNode pointInLocal in localArist.points)
+                                                {
+                                                    pointInNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));
+                                                    pointInLocal.AddAdjacent(pointInNode, inNode.MaterialCost(new Agent(1)));
+                                                    // PointNode.Static.DrawTwoPoints(pointInNode.point, pointInLocal.point, Color.yellow);
                                                 }
                                     }
                                 }

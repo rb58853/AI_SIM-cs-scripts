@@ -17,6 +17,7 @@ namespace Point_Map
         public Arist arist { get; private set; }
         /// a point has maximum 2 triangles
         public List<MapNode> triangles { get; private set; }
+        public Agent agent { get; private set; }
         public PointNode origin { get; private set; }
         public bool visitedInCreation = false;
         public Dictionary<Agent, bool> visitedInPath = new Dictionary<Agent, bool>();
@@ -25,9 +26,10 @@ namespace Point_Map
 
         //public bool borderPoint = false;
 
-        public PointNode(Point point, PointNode end = null, bool inArist = true, Arist arist = null)
+        public PointNode(Point point, PointNode end = null, bool inArist = true, Arist arist = null, Agent agent = null)
         {
             origin = this;
+            this.agent = agent;
             this.arist = arist;
             this.inArist = inArist;
             this.point = point;
@@ -110,19 +112,19 @@ namespace Point_Map
                 foreach (MapNode triangle in mapNodes)
                 {
                     foreach (MapNode adj in triangle.adjacents.Keys)
-                        if (mapNodes.Contains(adj))
-                            if (triangle.adjacents[adj].points.Count == 0)
-                                triangle.adjacents[adj].ToPoints(n);
+                        // if (mapNodes.Contains(adj))
+                        if (triangle.adjacents[adj].points.Count == 0)
+                            triangle.adjacents[adj].ToPoints(n);
 
                     if (triangle == mapNodes[0])
                     {
                         foreach (MapNode adj in triangle.adjacents.Keys)
                         {
                             Arist arist = triangle.adjacents[adj];
-                            if (mapNodes.Contains(adj))
-                                if (arist.points.Count > 0)
-                                    CreateSimplePath(initNode, arist.points, agent, triangle.origin,
-                                              triangle.MaterialCost(agent), endNode, result);
+                            // if (mapNodes.Contains(adj))
+                            if (arist.points.Count > 0)
+                                CreateSimplePath(initNode, arist.points, agent, triangle.origin,
+                                          triangle.MaterialCost(agent), endNode, result);
                         }
                         continue;
                     }
@@ -135,10 +137,10 @@ namespace Point_Map
                         {
                             Arist arist = triangle.adjacents[adj];
 
-                            if (mapNodes.Contains(adj))
-                                foreach (PointNode point in arist.points)
-                                    CreateSimplePath(point, temp, agent, triangle.origin,
-                                    triangle.MaterialCost(agent), endNode, result);
+                            // if (mapNodes.Contains(adj))
+                            foreach (PointNode point in arist.points)
+                                CreateSimplePath(point, temp, agent, triangle.origin,
+                                triangle.MaterialCost(agent), endNode, result);
                         }
                         continue;
                     }
@@ -149,7 +151,7 @@ namespace Point_Map
                             Arist arist1 = triangle.adjacents[adj1];
                             Arist arist2 = triangle.adjacents[adj2];
 
-                            if (mapNodes.Contains(adj1) && mapNodes.Contains(adj2))
+                            // if (mapNodes.Contains(adj1) && mapNodes.Contains(adj2))
                             {
                                 if (arist1 == arist2)
                                 {
@@ -186,6 +188,12 @@ namespace Point_Map
 
                     if (Agent_Space.Environment.drawAllPossiblePaths)
                         DrawTwoPoints(init.point, node.point, Color.white);
+
+                    if (!node.visitedInCreation)
+                    {
+                        node.visitedInCreation = true;
+                        result.Add(node);
+                    }
                 }
             }
             public static void DrawTwoPoints(Point p1, Point p2, Color color)
@@ -213,6 +221,7 @@ namespace Point_Map
             this.agent = agent;
             currentTriangle = null;
             empty = true;
+            recentlyVisited = new Queue<PointNode>();
         }
 
         Heap q = new Heap();
@@ -235,7 +244,6 @@ namespace Point_Map
                 currentPoint = nextPoint;
 
             if (empty) return currentPoint;
-
             if (currentPoint.adjacents.Count == 0)
             {
                 empty = true;
@@ -249,6 +257,15 @@ namespace Point_Map
             foreach (PointNode node in currentPoint.adjacents.Keys)
                 if (!node.visitedInPath.ContainsKey(agent) || !node.visitedInPath[agent])
                 {
+                    if (node.distance == 0)
+                    {
+                        if (agent.endPointNode == node)
+                        {
+                            node.SetInit(currentPoint);
+                            q.Push(node);
+                        }
+                        continue;
+                    }
                     node.SetInit(currentPoint);
                     q.Push(node);
                 }
@@ -279,6 +296,7 @@ namespace Point_Map
 
                 if (!onCollision)
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
+                // maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
                 else
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
                     maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
@@ -297,7 +315,6 @@ namespace Point_Map
 
                     GetCurrentTriangle();
                     // currentTriangle = triangleTemp;
-                    CleanExtras();
                     return next;
                 }
             }
@@ -360,6 +377,15 @@ namespace Point_Map
             return null;
         }
 
+        public void pushMetaMap(PointNode currentPosition)
+        {
+            stopCount = 0;
+            recentlyVisited = new Queue<PointNode>();
+            empty = false;
+            currentPoint = null;
+            this.nextPoint = currentPosition;
+            Debug.Log("Count del next point (el que se entro) " + nextPoint.adjacents.Count);
+        }
         public void PushPointMap(PointNode[] nodes)
         {
             stopCount = 0;
@@ -432,9 +458,9 @@ namespace Point_Map
         }
         public void clear()
         {
-            currentTriangle = null;
-            nextPoint = null;
-            currentPoint = null;
+            while (recentlyVisited.Count > 0)
+                recentlyVisited.Dequeue().visitedInPath.Remove(agent);
+            CleanExtras();
         }
         void Border(PointNode initIn, PointNode end,
                 Agent agent, MapNode mapNode, float cost,

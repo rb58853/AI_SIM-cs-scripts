@@ -65,8 +65,10 @@ namespace Agent_Space
 
         /// <summary> Use metaheuristic [default value: true]</summary>
         public readonly static bool metaheuristic = true;
-        /// <summary> Perimetro maximo de las sudivisiones de los triangulos, para metaheuristic</summary>
-        public readonly static float maxPerTriang = 12;
+        /// <summary> 
+        ///Perimetro maximo de las sudivisiones de los triangulos, para metaheuristic[default value: 10]
+        ///</summary>
+        public readonly static float maxPerTriang = 30;
 
 
         /// <summary> Draw path of agents </summary>

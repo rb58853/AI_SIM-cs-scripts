@@ -6,6 +6,7 @@ using Agent_Space;
 
 public class move : MonoBehaviour
 {
+    public static Triangle_Map.Triangle triangle;
     public NavAgent navAgent { get; private set; }
     public bool noMove;
     void Start()
@@ -16,7 +17,8 @@ public class move : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            // transform.position = agent.position.ToVector3();
+            foreach (Triangle_Map.MapNode node in Agent.Metaheuristic.trianglePathToTriangle[triangle])
+                node.triangle.draw(Color.red);
         }
 
         if (noMove) return;

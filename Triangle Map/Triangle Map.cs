@@ -24,6 +24,7 @@ namespace Triangle_Map
         public MapNode(Triangle triangle)
         {
             this.triangle = triangle;
+            this.triangle.mapOrigin = this;
             this.triangle.Subdivide();
             adjacents = new Dictionary<MapNode, Arist>();
             agentsIn = new List<Agent>();
@@ -152,7 +153,8 @@ namespace Triangle_Map
         public Point barycenter { get => Barycenter(); }
         public List<Triangle> trianglesSub { get; private set; }
         public float maxSide { get => Math.Max(Math.Max(vertex1.Distance(vertex2), vertex1.Distance(vertex3)), vertex2.Distance(vertex3)); }
-
+        public Triangle father { get; private set; }
+        public MapNode mapOrigin;
         public Triangle(Point v1, Point v2, Point v3)
         {
             this.vertex1 = v1;
@@ -180,7 +182,10 @@ namespace Triangle_Map
                     q.Enqueue(new Triangle(m3, m1, m2));
                 }
                 else
+                {
                     trianglesSub.Add(t);
+                    t.father = this;
+                }
             }
 
         }
@@ -217,6 +222,12 @@ namespace Triangle_Map
             return vertex1.Distance(vertex2) +
                     vertex1.Distance(vertex3) +
                     vertex3.Distance(vertex2);
+        }
+        public void draw(Color color)
+        {
+            PointNode.Static.DrawTwoPoints(vertex1, vertex2, color);
+            PointNode.Static.DrawTwoPoints(vertex1, vertex3, color);
+            PointNode.Static.DrawTwoPoints(vertex3, vertex2, color);
         }
     }
     public class Arist

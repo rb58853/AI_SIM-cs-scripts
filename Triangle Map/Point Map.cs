@@ -126,7 +126,7 @@ namespace Point_Map
                                 CreateSimplePath(initNode, arist.points, agent, triangle.origin,
                                           triangle.MaterialCost(agent), endNode, result);
                         }
-                        continue;
+                        // continue;
                     }
 
                     if (triangle == mapNodes[mapNodes.Count - 1])
@@ -142,7 +142,7 @@ namespace Point_Map
                                 CreateSimplePath(point, temp, agent, triangle.origin,
                                 triangle.MaterialCost(agent), endNode, result);
                         }
-                        continue;
+                        // continue;
                     }
 
                     foreach (MapNode adj1 in triangle.adjacents.Keys)
@@ -247,7 +247,7 @@ namespace Point_Map
             if (currentPoint.adjacents.Count == 0)
             {
                 empty = true;
-                // nextPoint = currentPoint;
+                nextPoint = currentPoint;
                 return currentPoint;
             }
 
@@ -384,7 +384,7 @@ namespace Point_Map
             empty = false;
             currentPoint = null;
             this.nextPoint = currentPosition;
-            Debug.Log("Count del next point (el que se entro) " + nextPoint.adjacents.Count);
+            Debug.Log("Selecciono camino de meta");
         }
         public void PushPointMap(PointNode[] nodes)
         {

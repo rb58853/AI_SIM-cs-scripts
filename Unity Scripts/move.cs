@@ -17,7 +17,7 @@ public class move : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            foreach (Triangle_Map.MapNode node in Agent.Metaheuristic.trianglePathToTriangle[triangle])
+            foreach (Triangle_Map.MapNode node in Agent.Metaheuristic.origins[triangle].Keys)
                 node.triangle.draw(Color.red);
         }
 

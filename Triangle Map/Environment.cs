@@ -1,4 +1,5 @@
 ﻿using BaseNode;
+using System.Collections.Generic;
 
 namespace Agent_Space
 {
@@ -16,7 +17,7 @@ namespace Agent_Space
         water = 30,
         hierba = 15,
     }
-    class Environment
+    public class Environment
     {
         public readonly static Map map = new Map();
 
@@ -74,7 +75,7 @@ namespace Agent_Space
         public readonly static int densityVisualPath = 50;
 
         /// <summary> Use metaheuristic [default value: true]</summary>
-        public readonly static bool metaheuristic = true;
+        public readonly static bool metaheuristic = false;
         /// <summary> 
         ///Perimetro maximo de las sudivisiones de los triangulos, para metaheuristic[default value: 30]
         ///</summary>
@@ -82,9 +83,15 @@ namespace Agent_Space
 
 
         /// <summary> Draw path of agents </summary>
-        public readonly static bool drawPaths = false;
+        public readonly static bool drawPaths = true;
         public readonly static bool drawBorder = false;
         public readonly static bool drawAllPossiblePaths = false;
+
+        static internal class Interactive
+        {
+            public static List<Agent> grup = new List<Agent>();
+        
+        }
     }
     class Obsolete
     {

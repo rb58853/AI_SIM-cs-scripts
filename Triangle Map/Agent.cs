@@ -23,8 +23,11 @@ namespace Agent_Space
         public float radius { get; private set; }
 
         public MapNode currentNode { get; private set; }
+        public MapNode endMapNodeCurrent { get; private set; }
+        public MapNode initMapNodeCurrent { get; private set; }
         public Point position { get; private set; }
         public PointNode currentPosition { get; private set; }
+        public PointNode currentPositionDynamic { get; private set; }
         public PointNode nextPosition { get; private set; }
 
         public List<MapNode> triangleList { get; private set; }
@@ -37,6 +40,7 @@ namespace Agent_Space
         internal bool metaPath = false;
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
+        public bool grupalMove { get; private set; }
 
         public Agent(float radius, string name = "agent")
         {
@@ -47,6 +51,18 @@ namespace Agent_Space
             ocupedNodes = new List<MapNode>();
             this.radius = radius;
             inMove = false;
+        }
+        public void setGrup(bool inGrup = true)
+        {
+            if (inGrup)
+            {
+                grupalMove = true;
+                Environment.Interactive.grup.Add(this);
+            }
+            else
+            {
+                grupalMove = false;
+            }
         }
         public void SetCompatibility(Material material, float value)
         {
@@ -203,31 +219,42 @@ namespace Agent_Space
             Node init = localMap.Item2;
             Node end = localMap.Item3;
 
+            endMapNodeCurrent = end as MapNode;
+            initMapNodeCurrent = init as MapNode;
+
             if (end == null)
                 return null;
 
             PointNode endPointNode = new PointNode(endPoint, agent: this);
             endPointNode.SetDistance(0);
 
-            currentPosition = new PointNode(position);
+            currentPositionDynamic = new PointNode(position);
 
             if (Environment.metaheuristic)
-                if (Metaheuristic.Path(currentNode, end as MapNode, endPointNode, currentPosition))
+                if (Metaheuristic.Path(currentNode, end as MapNode, endPointNode, currentPositionDynamic))
                 {
                     metaPath = true;
-                    this.pointPath.pushMetaMap(currentPosition);
+                    this.pointPath.pushMetaMap(currentPositionDynamic);
                     this.endPointNode = endPointNode;
                     return null;
                 }
 
-            this.currentPosition.AddTriangle(currentNode);
+            // this.currentPosition.AddTriangle(currentNode);
             endPointNode.AddTriangle(end as MapNode);
             this.endPointNode = endPointNode;
 
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
+            if (grupalMove)
+            {
+                List<MapNode> grup = new List<MapNode>();
+                foreach (Agent agent in Environment.Interactive.grup)
+                    grup.Add(agent.currentNode.origin);
+                dijkstra = new Dijkstra(end, init, nodes, grup);
+            }
             List<Node> path = dijkstra.GetPath();
-            pointPath.PushCurrenTriangle((path[path.Count - 1] as MapNode).origin);
 
+            pointPath.PushCurrenTriangle(init as MapNode);
+            // if (!grupalMove)
             DilatePath();
             triangleList = tools.ToListAsMapNode(path);
 
@@ -254,20 +281,20 @@ namespace Agent_Space
                     path.Add(temp);
                 }
 
-                foreach (MapNode node in path.ToArray())
-                    if (node != path[0] && node != path[path.Count - 1])
-                        if (OnlyOneAdj(node))
-                            path.Remove(node);
+                // foreach (MapNode node in path.ToArray())
+                //     if (node != path[0] && node != path[path.Count - 1])
+                //         if (OnlyOneAdj(node))
+                //             path.Remove(node);
 
-                bool OnlyOneAdj(MapNode triangle)
-                {
-                    int countAdj = 0;
-                    foreach (MapNode adj in triangle.adjacents.Keys)
-                        if (path.Contains(adj))
-                            countAdj++;
+                // bool OnlyOneAdj(MapNode triangle)
+                // {
+                //     int countAdj = 0;
+                //     foreach (MapNode adj in triangle.adjacents.Keys)
+                //         if (path.Contains(adj))
+                //             countAdj++;
 
-                    return countAdj <= 1;
-                }
+                //     return countAdj <= 1;
+                // }
             }
         }
         public PointNode[] GetPointPath(Point endPoint)
@@ -284,32 +311,38 @@ namespace Agent_Space
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
 
-            PointNode endNode = new PointNode(endPoint, inArist: false, agent: this);
-            endNode.AddTriangle(triangleList[0]);
-            endPointNode = endNode;
+            // PointNode endNode = new PointNode(endPoint, inArist: false, agent: this);
+            // endNode.AddTriangle(endMapNodeCurrent);
+            // endNode.AddTriangle(triangleList[0]);
+            // endPointNode = endNode;
 
-            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
+            // List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
+            List<PointNode> mapPoints = PointNode.Static.CreatePointMap(this.endPointNode, position, this, density, mCost);
 
             ///MapPoints[0] = initNode
             ///MapPoints[MapPoints.Count-1] = endNode
             Dijkstra dijkstra = new Dijkstra(mapPoints[0], mapPoints[mapPoints.Count - 1], mapPoints.ToArray());
             List<Node> pointPath = dijkstra.GetPath(false);
 
-            currentPosition = mapPoints[mapPoints.Count - 1];///Nuevo
-
-            this.pointPath.PushPointMap(mapPoints);
+            // currentPositionDynamic = mapPoints[mapPoints.Count - 1];///Nuevo
+            initMapNodeCurrent.triangle.draw(Color.black);
+            // this.pointPath.PushPointMap(mapPoints);
+            this.pointPath.PushPointMap(mapPoints[0], mapPoints[mapPoints.Count - 1], initMapNodeCurrent);
 
             return tools.ToArrayAsPointNode(pointPath);///Debugguer
         }
         public void SetPointPath(Point point)
         {
+            
             metaPath = false;
             pointPath.clear();
             pointPath.Move();
             destination = point;
             GetPointPath(point);
             if (metaPath == false)
-                Metaheuristic.Proccess(triangleList[0], point, triangleList, endPointNode, currentNode, currentPosition);
+            {
+                Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList, endPointNode, currentNode, currentPositionDynamic);
+            }
             NextPoint();
         }
         void DynamicSetPoint()
@@ -373,11 +406,20 @@ namespace Agent_Space
                 }
                 freq--;
 
+                Point temp = position;
+                int count = visualPath.Count;
                 if (visualPath.Count == 0) NextPoint();
                 try { if (inMove && !pointPath.stop) position = visualPath.Pop(); }
                 catch { Debug.Log("Error: la pila tiene " + visualPath.Count + " elementos y esta intentando hacer Pop()."); }
+                if (temp.Distance(position, false) > 0.6f)
+                {
+                    Debug.Log("Salto desde " + temp + " hasta " + position +
+                    "  cuando el count del visual path es " + count);
+                    PointNode.Static.DrawTwoPoints(temp, position, Color.green);
+                }
             }
         }
+        
         void NextPoint(bool onCollision = false)
         {
             visualPath.Clear();
@@ -387,7 +429,7 @@ namespace Agent_Space
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
                 SetCurrentTriangle();
-
+               
                 if (nextPosition == currentPosition)
                 {
                     visualPath.Push(currentPosition.point);
@@ -494,7 +536,6 @@ namespace Agent_Space
         internal static class Metaheuristic
         {
             public static Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins;
-
 
             public static bool Path(MapNode initTriangle, MapNode endTriangle,
             PointNode endPoint, PointNode initPoint)

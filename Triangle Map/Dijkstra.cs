@@ -16,10 +16,26 @@ namespace DijkstraSpace
         private Node initNode;
         private Node endNode;
         private List<Node> endPath;
+        private Dictionary<MapNode, bool> grupalDic;
+        private ICollection<MapNode> grupalList;
 
+
+        private bool grupalMove;
         private Node[] nodes;
-        public Dijkstra(Node init, Node end, Node[] nodes)
+        public Dijkstra(Node init, Node end, Node[] nodes, ICollection<MapNode> grupal = null)
         {
+            if (grupal == null)
+                grupalMove = false;
+            else
+            {
+                this.grupalDic = new Dictionary<MapNode, bool>();
+                grupalList = new List<MapNode>();
+
+                foreach (MapNode node in grupal)
+                    this.grupalDic.Add(node, false);
+                grupalMove = true;
+            }
+
             this.initNode = init;
             this.endNode = end;
             this.nodes = nodes;
@@ -29,9 +45,37 @@ namespace DijkstraSpace
         public List<Node> GetPath(bool stop = true)
         {
             Start(stop);
-            GetPath(endNode);
-            endPath.Reverse();
-            return endPath;
+            if (grupalMove)
+            {
+                return GetPathGrupal();
+            }
+            else
+            {
+                GetPath(endNode);
+                endPath.Reverse();
+                return endPath;
+            }
+        }
+        List<Node> GetPathGrupal()
+        {
+            List<Node> result = new List<Node>();
+            Queue<Node> q = new Queue<Node>();
+            foreach (Node node in grupalList)
+                q.Enqueue(node);
+
+            while (q.Count > 0)
+            {
+                Node node = q.Dequeue();
+                result.Add(node);
+                // (node as MapNode).triangle.draw(Color.yellow);
+
+                if (node.father != null && !node.father.visitedAsGrupal)
+                {
+                    node.father.visitedAsGrupal = true;
+                    q.Enqueue(node.father);
+                }
+            }
+            return result;
         }
         void GetPath(Node node)
         {
@@ -42,7 +86,8 @@ namespace DijkstraSpace
 
         void Start(bool stop = true)
         {
-            DateTime t0 = DateTime.Now;
+
+            // DateTime t0 = DateTime.Now;
             initNode.SetDistance(0);
 
             List<Node> nodes = this.nodes.ToList<Node>();
@@ -57,8 +102,28 @@ namespace DijkstraSpace
             {
                 Node node = Q.Pop();
                 node.SetVisited();
-                if (stop && node == endNode)
+
+                if (stop && node == endNode && !grupalMove)
                     break;
+
+                if (grupalMove)
+                {
+                    if (grupalDic.ContainsKey((node as MapNode).origin))
+                    {
+                        // (node as MapNode).triangle.draw(Color.magenta);
+                        grupalDic.Remove((node as MapNode).origin);
+                        grupalList.Add(node as MapNode);
+                        node.visitedAsGrupal = true;
+                        if (grupalDic.Count == 0)
+                            break;
+                    }
+                    while (grupalDic.ContainsKey((node as MapNode).origin))
+                    {
+                        grupalDic.Remove((node as MapNode).origin);
+                        if (grupalDic.Count == 0)
+                            break;
+                    }
+                }
 
                 foreach (Node adj in node.GetAdyacents())
                     if (!adj.visited)

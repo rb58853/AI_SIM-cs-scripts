@@ -12,11 +12,13 @@ public class NavAgent : MonoBehaviour
     public float radius = 1;
     public Agent agent { get; private set; }
     public int speed = 15;
-    public float water = 1;
-    public float fire = 1;
+    public bool grupalMove = false;
     void Start()
     {
         agent = new Agent(radius, name);
+        if (grupalMove)
+            agent.setGrup();
+            
         GetTriangles.Start();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         agent.searchCurrentNode();
@@ -27,7 +29,7 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-        
+
 
         if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
         {

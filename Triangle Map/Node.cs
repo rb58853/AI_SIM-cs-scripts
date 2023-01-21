@@ -15,6 +15,7 @@ namespace BaseNode
 
         /// <summary> This HeapNode is used by Heapify in Relax .</summary>
         public Heap heapNode { get; protected set; }
+        public bool visitedAsGrupal = false; 
 
         public abstract float Value();
         public abstract List<Node> GetAdyacents();
@@ -23,9 +24,10 @@ namespace BaseNode
         public virtual void SetFather(Node node) { father = node; }
         public virtual void SetVisited(bool value = true) { visited = value; }
         public virtual void SetHeapNode(Heap heapNode) { this.heapNode = heapNode; }
+
         public int CompareTo(Node other) { return this.value.CompareTo(other.value); }
     }
-    class Map
+    public class Map
     {
         internal List<Node> nodes { get; private set; }
 

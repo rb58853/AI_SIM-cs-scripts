@@ -88,10 +88,12 @@ namespace Point_Map
                 List<PointNode> result = new List<PointNode>();
                 List<MapNode> mapNodes = agent.triangleList;
 
-                if (mapNodes.Count == 1)
+                // if (mapNodes.Count == 1)
+                if (agent.initMapNodeCurrent.origin == agent.endMapNodeCurrent.origin)
                 {
                     PointNode e = new PointNode(end, inArist: false);
-                    e.AddTriangle(mapNodes[mapNodes.Count - 1]);
+                    // e.AddTriangle(mapNodes[mapNodes.Count - 1]);
+                    e.AddTriangle(agent.initMapNodeCurrent);
                     PointNode i = initNode;
 
                     result.Add(i);
@@ -104,7 +106,8 @@ namespace Point_Map
                 }
 
                 PointNode endNode = new PointNode(end, inArist: false);
-                endNode.AddTriangle(mapNodes[mapNodes.Count - 1]);
+                endNode.AddTriangle(agent.initMapNodeCurrent);
+                // endNode.AddTriangle(mapNodes[mapNodes.Count - 1]);
 
                 initNode.visitedInCreation = true;
                 result.Add(initNode);
@@ -116,8 +119,10 @@ namespace Point_Map
                         if (triangle.adjacents[adj].points.Count == 0)
                             triangle.adjacents[adj].ToPoints(n);
 
-                    if (triangle == mapNodes[0])
+                    // if (triangle == mapNodes[0])
+                    if (triangle == agent.endMapNodeCurrent)
                     {
+                        triangle.triangle.draw(Color.blue);
                         foreach (MapNode adj in triangle.adjacents.Keys)
                         {
                             Arist arist = triangle.adjacents[adj];
@@ -129,8 +134,11 @@ namespace Point_Map
                         // continue;
                     }
 
-                    if (triangle == mapNodes[mapNodes.Count - 1])
+                    // if (triangle == mapNodes[mapNodes.Count - 1])
+                    if (triangle == agent.initMapNodeCurrent)
                     {
+                        triangle.triangle.draw(Color.cyan);
+
                         List<PointNode> temp = new List<PointNode>(); temp.Add(endNode);
 
                         foreach (MapNode adj in triangle.adjacents.Keys)
@@ -177,7 +185,8 @@ namespace Point_Map
                 if (!init.visitedInCreation)
                 {
                     init.visitedInCreation = true;
-                    result.Add(init);
+                    if (init != endNode)
+                        result.Add(init);
                 }
 
                 List<PointNode> temp = new List<PointNode>();
@@ -192,7 +201,8 @@ namespace Point_Map
                     if (!node.visitedInCreation)
                     {
                         node.visitedInCreation = true;
-                        result.Add(node);
+                        if (node != endNode)
+                            result.Add(node);
                     }
                 }
             }
@@ -255,7 +265,7 @@ namespace Point_Map
 
             q = new Heap();
             foreach (PointNode node in currentPoint.adjacents.Keys)
-                if (!node.visitedInPath.ContainsKey(agent) || !node.visitedInPath[agent])
+                if (!node.visitedInPath.ContainsKey(agent))
                 {
                     if (node.distance == 0)
                     {
@@ -296,7 +306,7 @@ namespace Point_Map
 
                 if (!onCollision)
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
-                // maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
+                //, maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
                 else
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
                     maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
@@ -315,6 +325,8 @@ namespace Point_Map
 
                     GetCurrentTriangle();
                     // currentTriangle = triangleTemp;
+                    Debug.Log(i + ") " + next.value);
+                    i++;
                     return next;
                 }
             }
@@ -323,8 +335,10 @@ namespace Point_Map
             nextPoint = currentPoint;
             return currentPoint;
         }
+        int i = 1;
         void CleanExtras()
         {
+            i = 1;
             foreach (PointNode extra in extras)
                 (extra.father as PointNode).adjacents.Remove(extra);
             extras = new List<PointNode>();
@@ -382,8 +396,8 @@ namespace Point_Map
             stopCount = 0;
             recentlyVisited = new Queue<PointNode>();
             empty = false;
-            currentPoint = null;
             this.nextPoint = currentPosition;
+            currentPoint = null;
             Debug.Log("Selecciono camino de meta");
         }
         public void PushPointMap(PointNode[] nodes)
@@ -415,7 +429,7 @@ namespace Point_Map
             currentPoint = null;
             nextPoint = nodes[nodes.Length - 1];
         }
-        public void PushPointMap(List<PointNode> nodes)
+        public void PushPointMap(PointNode initNode, PointNode endNode, MapNode endMapNode)
         {
             stopCount = 0;
 
@@ -423,7 +437,7 @@ namespace Point_Map
 
             empty = false;
             ///Invertir la direccion de las aristas ultimo y primero
-            PointNode node = nodes[0];
+            PointNode node = initNode;
 
             List<PointNode> temp = new List<PointNode>();
             foreach (PointNode adj in node.adjacents.Keys) temp.Add(adj);
@@ -431,18 +445,21 @@ namespace Point_Map
             foreach (PointNode adj in temp)
             {
                 adj.AddAdjacent(node, node.adjacents[adj]);
+                PointNode.Static.DrawTwoPoints(node.point, adj.point, Color.green);
                 node.RemoveAdjacent(adj);
             }
 
-            foreach (PointNode point in nodes)
-                if (point.adjacents.ContainsKey(nodes[nodes.Count - 1]))
-                {
-                    nodes[nodes.Count - 1].AddAdjacent(point, point.adjacents[nodes[nodes.Count - 1]]);
-                    point.RemoveAdjacent(nodes[nodes.Count - 1]);
-                }
+            foreach (Arist arist in endMapNode.adjacents.Values)
+                foreach (PointNode point in arist.points)
+                    if (point.adjacents.ContainsKey(endNode))
+                    {
+                        PointNode.Static.DrawTwoPoints(endNode.point, point.point, Color.yellow);
+                        endNode.AddAdjacent(point, point.adjacents[endNode]);
+                        point.RemoveAdjacent(endNode);
+                    }
 
             currentPoint = null;
-            nextPoint = nodes[nodes.Count - 1];
+            nextPoint = endNode;
         }
         public void PushCurrenTriangle(MapNode triangle)
         {
@@ -450,7 +467,7 @@ namespace Point_Map
         }
         void PushToRecently(PointNode node)
         {
-            if (recentlyVisited.Count >= 10)
+            if (recentlyVisited.Count >= 20)
                 recentlyVisited.Dequeue().visitedInPath.Remove(agent);
             if (!currentPoint.visitedInPath.ContainsKey(agent))
                 node.visitedInPath.Add(agent, true);

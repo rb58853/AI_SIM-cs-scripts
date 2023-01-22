@@ -21,7 +21,6 @@ public class NavAgent : MonoBehaviour
 
         GetTriangles.Start();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
-        agent.searchCurrentNode();
     }
     int countFrames = 0;
     int framesForUpdatePath = 0;
@@ -29,7 +28,7 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-        if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
+        if (!agent.inMove)//&& transform.position.x == agent.position.x && transform.position.z == agent.position.z)
         {
             countFrames = 0;
             return;
@@ -52,10 +51,10 @@ public class NavAgent : MonoBehaviour
     IEnumerator setDestination(Point destination)
     {
         // int len = r.Next(0, 50);
-        int len = agent.posInGrup / 5;
+        int len = agent.posInGrup / 1;
         // int minDistance = 100;
-        int minDistance = int.MaxValue;
-        int maxDistance = 100;
+        // int minDistance = int.MaxValue;
+        // int maxDistance = 100;
         // agent.inMove = false;
         // for (int i = 0; i < 100; i++)
         // {

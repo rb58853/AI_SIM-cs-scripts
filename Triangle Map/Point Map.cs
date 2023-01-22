@@ -225,10 +225,10 @@ namespace Point_Map
         Queue<PointNode> recentlyVisited;
         List<PointNode> extras = new List<PointNode>();
 
-        public PointPath(Agent agent)
+        public PointPath(Agent agent, MapNode triangle)
         {
             this.agent = agent;
-            currentTriangle = null;
+            currentTriangle = triangle;
             empty = true;
             recentlyVisited = new Queue<PointNode>();
         }
@@ -248,7 +248,12 @@ namespace Point_Map
                         foreach (PointNode adj in currentPoint.adjacents.Keys)
                             temp.AddAdjacent(adj, currentPoint.adjacents[adj]);
                         foreach (MapNode triangle in currentPoint.triangles)
-                            temp.AddTriangle(triangle);
+                            temp.AddTriangle(triangle.origin);
+
+                        if (!temp.triangles.Contains(currentTriangle.origin))
+                            temp.AddTriangle(currentTriangle.origin);
+                        temp.SetDistance(nextPoint.distance +
+                         nextPoint.EuclideanDistance(temp) * currentTriangle.MaterialCost(agent));
                         currentPoint = temp;
                     }
                     else
@@ -317,6 +322,7 @@ namespace Point_Map
                 }
 
                 MapNode triangleTemp = TriangleBetweenPoints(currentPoint, next);
+
                 Tuple<bool, Agent> collision = null;
 
                 if (!onCollision)
@@ -325,6 +331,11 @@ namespace Point_Map
                 else
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
                     maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
+
+                // if (agent.name == "Init (8)")
+                //     Debug.Log("entre los puntos " + currentPoint + "," + nextPoint +
+                //     " encontro el triangulo " + triangleTemp +
+                //     " encontro colision = " + collision.Item1);
 
                 if (collision.Item1)
                 {
@@ -338,8 +349,8 @@ namespace Point_Map
                     if (Agent_Space.Environment.drawPaths)
                         PointNode.Static.DrawTwoPoints(currentPoint.point, nextPoint.point, Color.cyan);
 
-                    GetCurrentTriangle();
-                    // currentTriangle = triangleTemp;
+                    // GetCurrentTriangle();
+                    currentTriangle = triangleTemp;
                     CleanExtras();
                     // Debug.Log(i + ") " + next.value);
                     return next;
@@ -480,7 +491,7 @@ namespace Point_Map
         }
         void PushToRecently(PointNode node)
         {
-            if (recentlyVisited.Count >= 50)
+            if (recentlyVisited.Count >= 10)
                 recentlyVisited.Dequeue().visitedInPath.Remove(agent);
             if (!currentPoint.visitedInPath.ContainsKey(agent))
                 node.visitedInPath.Add(agent, true);

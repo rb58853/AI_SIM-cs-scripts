@@ -44,7 +44,7 @@ namespace Agent_Space
         public int posInGrup { get; private set; }
         public Agent(float radius, string name = "agent")
         {
-            pointPath = new PointPath(this);
+            pointPath = new PointPath(this, currentNode);
             this.name = name;
             compatibility = new Dictionary<Material, float>();
             visualPath = new Stack<Point>();
@@ -74,7 +74,7 @@ namespace Agent_Space
             else
                 compatibility.Add(material, value);
         }
-        public void searchCurrentNode()
+        void searchCurrentNode()
         {
             foreach (Node node in Environment.map.nodes)
                 if ((node as MapNode).triangle.PointIn(position))
@@ -87,37 +87,39 @@ namespace Agent_Space
                     break;
                 }
             Agent.Collision(position, position, this, currentNode);
+            pointPath.SetCurrentTriangle(currentNode);
         }
         public void setPosition(Point point)
         {
             position = point;
             currentPosition = new PointNode(position);
+            searchCurrentNode();
         }
-        public void SetOcupedFromPosition(float extendArea = 1)
+        void SetOcupedFromPosition(float extendArea = 1)
         {
             Queue<MapNode> ocuped = new Queue<MapNode>();
 
             ocuped.Enqueue(currentNode);
 
-            if (!ocupedNodes.Contains(currentNode))
+            if (!ocupedNodes.Contains(currentNode.origin))
             {
-                ocupedNodes.Add(currentNode);
-                currentNode.AddAgent(this);
+                ocupedNodes.Add(currentNode.origin);
+                currentNode.origin.AddAgent(this);
             }
 
             for (int i = 0; i < ocupedNodes.Count; i++)
             {
-                MapNode node = ocupedNodes[i];
-                if (node != currentNode)
+                MapNode node = ocupedNodes[i].origin;
+                if (node != currentNode.origin)
                 {
                     if (position.DistanceToTriangle(node.triangle) > radius * extendArea)
                     {
                         node.RemoveAgent(this);
-                        ocupedNodes.Remove(node);
+                        ocupedNodes.Remove(node.origin);
                         i -= 1;
                     }
                     else
-                        ocuped.Enqueue(node);
+                        ocuped.Enqueue(node.origin);
                 }
             }
 
@@ -129,9 +131,9 @@ namespace Agent_Space
                     if (position.DistanceToTriangle(adj.triangle) < radius + extendArea)
                         if (!ocupedNodes.Contains(adj))
                         {
-                            ocuped.Enqueue(adj);
-                            ocupedNodes.Add(adj);
-                            adj.AddAgent(this);
+                            ocuped.Enqueue(adj.origin);
+                            ocupedNodes.Add(adj.origin);
+                            adj.origin.AddAgent(this);
                         }
             }
             ///Tambien cada esta frecuencia separar a los agentes    
@@ -237,11 +239,13 @@ namespace Agent_Space
             endPointNode.SetDistance(0);
 
             PointNode tempPosition = new PointNode(position);
+            tempPosition.SetDistance(currentPosition.distance);
             DateTime t0 = DateTime.Now;
-            if (Environment.metaheuristic)
-                if (Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition))
+
+            if (Environment.metaheuristic && endMapNodeCurrent.origin != initMapNodeCurrent.origin)
+                if (/*random.Next(0, 5) != 0 &&*/ Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition))
                 {
-                    Debug.Log("En encontrar el camino meta demora " + (DateTime.Now - t0));
+                    // Debug.Log("En encontrar el camino meta demora " + (DateTime.Now - t0));
 
                     metaPath = true;
                     if (!endPointNode.triangles.Contains(endMapNodeCurrent))
@@ -367,6 +371,7 @@ namespace Agent_Space
             if (metaPath == false)
             {
                 PointNode tempPosition = new PointNode(position);
+                tempPosition.SetDistance(currentPosition.distance);
                 foreach (MapNode triangle in currentPosition.triangles)
                     tempPosition.AddTriangle(triangle);
                 Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList, endPointNode, currentNode, tempPosition);
@@ -377,7 +382,7 @@ namespace Agent_Space
         void setInMoveGrupal()
         {
             if (!grupalMove) return;
-            if (currentPosition.distance < 0.9f * radius * Environment.Interactive.countInStop)
+            if (position.Distance(destination) < 2f * radius * Math.Sqrt(Environment.Interactive.countInStop))
             {
                 inMove = false;
                 Environment.Interactive.allGroupInMove = false;
@@ -498,6 +503,7 @@ namespace Agent_Space
                 }
                 // float cost = currentPosition.adjacents[nextPosition] * 25;
                 float cost = currentNode.MaterialCost(this) * Environment.densityVisualPath;
+
                 List<Point> temp = new Arist(currentPosition.point, nextPosition.point).ToPoints(cost);
                 for (int i = temp.Count - 1; i >= 0; i--)
                 {
@@ -514,9 +520,10 @@ namespace Agent_Space
             }
             else
             {
-                Environment.Interactive.countInStop += 10;
+                Environment.Interactive.countInStop += 5;
                 inMove = false;
             }
+            SetOcupedFromPosition(Environment.ocupedArea);
         }
         void SetCurrentTriangle()
         {
@@ -530,8 +537,8 @@ namespace Agent_Space
             if (!Environment.exactCollision)
             {
                 l1 = l1 + Point.VectorUnit(l2 - l1) * agent.radius;
-                if (l1.Distance(node1, false) > l2.Distance(node1, false))
-                    l1 = l2;
+                // if (l1.Distance(node1, false) > l2.Distance(node1, false))
+                //     l1 = l2;
             }
             float epsilon = 0.005f;
 
@@ -560,7 +567,7 @@ namespace Agent_Space
                     Point vector = Point.VectorUnit(result.Item2.position, agent.position) * ((radius - distance) / 2 + epsilon);
 
                     agent.position = agent.position + vector * 1.1f;
-                    Collision(node1, node2, agent, mapNode);/// Es lo que debe, pero se puede poner muy lento
+                    Collision(node1, node2, agent, mapNode);/// Es lo que debe
                 }
             }
 
@@ -683,6 +690,21 @@ namespace Agent_Space
                         if (originsNodes.ContainsKey(node.origin))
                         {
                             tempInputNodes.Remove(node);
+                            MapNode localNode = originsNodes[node.origin];
+
+                            foreach (Arist inArist in node.adjacents.Values)
+                                foreach (Arist localArist in localNode.adjacents.Values)
+                                    if (inArist.origin == localArist.origin)
+                                    {
+                                        ///Actualizar para la mejor distancia por todos los puntos del triangulo
+                                        for (int i = 0; i < localArist.points.Count; i++)
+                                        {
+                                            float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
+                                            localArist.points[0].SetDistance(min);
+                                        }
+                                        break;
+                                    }
+
                             if (node == endMapNode)
                             {
                                 MapNode localEnd = originsNodes[node.origin];
@@ -723,6 +745,12 @@ namespace Agent_Space
                                         {
                                             addArists.Add(localArist);
                                             deleteArists.Add(inArist);
+                                            for (int i = 0; i < localArist.points.Count; i++)
+                                            {
+                                                ///Actualizar para la mejor distancia
+                                                float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
+                                                localArist.points[0].SetDistance(min);
+                                            }
                                             break;
                                         }
 

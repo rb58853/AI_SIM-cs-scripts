@@ -342,8 +342,6 @@ namespace Point_Map
                     // currentTriangle = triangleTemp;
                     CleanExtras();
                     // Debug.Log(i + ") " + next.value);
-                    if (new Point(125.2031f, 0.025f, 12.39343f).Distance(next.point, false) < 0.1f)
-                        Debug.Log("devolvio el punto como next");
                     return next;
                 }
             }
@@ -351,8 +349,6 @@ namespace Point_Map
             Stop();
             CleanExtras();
             nextPoint = currentPoint;
-            if (new Point(125.2031f, 0.025f, 12.39343f).Distance(currentPoint.point, false) < 0.1f)
-                Debug.Log("devolvio el punto como next");
             return currentPoint;
         }
         void CleanExtras()
@@ -484,7 +480,7 @@ namespace Point_Map
         }
         void PushToRecently(PointNode node)
         {
-            if (recentlyVisited.Count >= 20)
+            if (recentlyVisited.Count >= 50)
                 recentlyVisited.Dequeue().visitedInPath.Remove(agent);
             if (!currentPoint.visitedInPath.ContainsKey(agent))
                 node.visitedInPath.Add(agent, true);

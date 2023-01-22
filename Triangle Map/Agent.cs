@@ -10,6 +10,7 @@ namespace Agent_Space
 {
     public class Agent
     {
+        System.Random random = new System.Random();
         public string name { get; private set; }
         public List<MapNode> ocupedNodes { get; private set; }
         public List<Triangle> ocupedTriangles { get => UcupedTriangles(); }
@@ -40,7 +41,7 @@ namespace Agent_Space
         /// <summary> Compatibility of this Agent whit a material.</summary>
         public Dictionary<Material, float> compatibility;
         public bool grupalMove { get; private set; }
-
+        public int posInGrup { get; private set; }
         public Agent(float radius, string name = "agent")
         {
             pointPath = new PointPath(this);
@@ -56,6 +57,7 @@ namespace Agent_Space
             if (inGrup)
             {
                 grupalMove = true;
+                posInGrup = Environment.Interactive.grup.Count;
                 Environment.Interactive.grup.Add(this);
             }
             else
@@ -375,7 +377,7 @@ namespace Agent_Space
         void setInMoveGrupal()
         {
             if (!grupalMove) return;
-            if (position.Distance(destination) < 0.6f * radius * Environment.Interactive.countInStop)
+            if (currentPosition.distance < 0.9f * radius * Environment.Interactive.countInStop)
             {
                 inMove = false;
                 Environment.Interactive.allGroupInMove = false;
@@ -450,6 +452,7 @@ namespace Agent_Space
             {
                 if (freq <= 0 && !pointPath.stop && inMove)
                 {
+                    // freq = random.Next(1, Environment.freqReview);
                     freq = Environment.freqReview;
                     DynamicSetPoint();
                 }
@@ -511,7 +514,7 @@ namespace Agent_Space
             }
             else
             {
-                Environment.Interactive.countInStop += 3;
+                Environment.Interactive.countInStop += 10;
                 inMove = false;
             }
         }
@@ -616,6 +619,7 @@ namespace Agent_Space
                     {
                         if (origins.ContainsKey(triangle))
                             if (origins[triangle].ContainsKey(initTriangle.origin))
+                            // try
                             {
                                 Dictionary<MapNode, MapNode> originsNodes = origins[triangle];
 
@@ -624,10 +628,7 @@ namespace Agent_Space
 
                                 foreach (Arist arist in initTriangle.adjacents.Values)
                                     foreach (PointNode point in arist.points)
-                                    {
                                         initPoint.AddAdjacent(point, initTriangle.MaterialCost(new Agent(1)));
-                                        PointNode.Static.DrawTwoPoints(initPoint.point, point.point, Color.cyan);
-                                    }
 
                                 foreach (Arist arist in endTriangle.adjacents.Values)
                                     foreach (PointNode point in arist.points)
@@ -635,6 +636,10 @@ namespace Agent_Space
 
                                 return true;
                             }
+                        // catch
+                        // {
+                        //     Debug.Log("se rompe. Vale la pena??");
+                        // }
                         return false;
                     }
                 }
@@ -687,19 +692,18 @@ namespace Agent_Space
                                         ///Crear adyacencia hacia el nuevo nodo final
                                         point.AddAdjacent(endPointNode);
                             }
-                            if (node == initMapNode)
-                            {
-                                // initPointNode.adjacents.Clear();
-                                // MapNode localInit = originsNodes[node.origin];
-                                // foreach (Arist arist in localInit.adjacents.Values)
-                                //     foreach (PointNode point in arist.points)
-                                //     {
-                                //         ///Crear adyacencia desde el nodo inicio
-                                //         initPointNode.AddAdjacent(point);
-                                //         Point p = new Point(-0.05f, 0, 0);
-                                //         PointNode.Static.DrawTwoPoints(initPointNode.point, point.point, Color.magenta);
-                                //     }
-                            }
+                            if (node == initMapNode)                                //
+                            {//
+                                initPointNode.adjacents.Clear();//
+                                MapNode localInit = originsNodes[node.origin];//
+                                foreach (Arist arist in localInit.adjacents.Values)//
+                                    foreach (PointNode point in arist.points)//
+                                    {//
+                                        ///Crear adyacencia desde el nodo inicio
+                                        initPointNode.AddAdjacent(point);//
+                                        Point p = new Point(-0.05f, 0, 0);//
+                                    }//
+                            }//
                         }
 
                     foreach (MapNode inNode in tempInputNodes)
@@ -708,8 +712,6 @@ namespace Agent_Space
                         {
                             if (originsNodes.ContainsKey(adj.origin))
                             {
-                                // inNode.triangle.draw(Color.yellow);
-                                // int index = originsNodes.IndexOf(adj.origin);
                                 MapNode adjacent = originsNodes[adj.origin];
 
                                 List<Arist> addArists = new List<Arist>();
@@ -721,8 +723,6 @@ namespace Agent_Space
                                         {
                                             addArists.Add(localArist);
                                             deleteArists.Add(inArist);
-
-                                            // PointNode.Static.DrawTwoPoints(localArist.p1, localArist.p2, Color.magenta);
                                             break;
                                         }
 
@@ -737,7 +737,6 @@ namespace Agent_Space
                                                     point2.AddAdjacent(point1);
                                                     point1.AddTriangle(inNode);
                                                     point2.AddTriangle(inNode);
-                                                    PointNode.Static.DrawTwoPoints(point1.point, point2.point, Color.green);
                                                 }
 
                                 foreach (Arist aristOfInNode in inNode.adjacents.Values)
@@ -750,16 +749,10 @@ namespace Agent_Space
                                                 {
                                                     pointInNode.RemoveAdjacent(pointToDeleteAdj);
                                                     pointToDeleteAdj.RemoveAdjacent(pointInNode);
-                                                    // if (initMapNode == inNode)
-                                                    //     if (initPointNode.adjacents.ContainsKey(pointToDeleteAdj))
-                                                    //     {
-                                                    //         initPointNode.RemoveAdjacent(pointToDeleteAdj);
-                                                    //         // Point p = new Point(0.04f, 0, 0);
-                                                    //         // PointNode.Static.DrawTwoPoints(initPointNode.point + p, pointToDeleteAdj.point + p, Color.red);
-                                                    //     }
+                                                    if (initMapNode == inNode)                                                                                 //              
+                                                        if (initPointNode.adjacents.ContainsKey(pointToDeleteAdj))                                             //
+                                                            initPointNode.RemoveAdjacent(pointToDeleteAdj);                                                    //
                                                     Point p = new Point(0.04f, 0, 0);
-                                                    PointNode.Static.DrawTwoPoints(pointInNode.point + p, pointToDeleteAdj.point + p, Color.red);
-
                                                 }
                                     }
                                     else
@@ -770,16 +763,11 @@ namespace Agent_Space
                                                 {
                                                     pointInNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));
                                                     pointInLocal.AddAdjacent(pointInNode, inNode.MaterialCost(new Agent(1)));
-                                                    // if (inNode == initMapNode)
-                                                    //     if (!initPointNode.adjacents.ContainsKey(pointInLocal))
-                                                    //     {
-                                                    //         initPointNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));
-                                                    //         PointNode.Static.DrawTwoPoints(initPointNode.point, pointInLocal.point, Color.yellow);
-                                                    //     }
+                                                    if (inNode == initMapNode)                                                           //           
+                                                        if (!initPointNode.adjacents.ContainsKey(pointInLocal))                          //
+                                                            initPointNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));  //
                                                     PointNode.Static.DrawTwoPoints(pointInNode.point, pointInLocal.point, Color.yellow);
                                                     pointInLocal.AddTriangle(inNode);
-
-                                                    // Debug.Log(pointInLocal.distance);
                                                 }
                                     }
                                 }
@@ -793,7 +781,6 @@ namespace Agent_Space
                 }
                 else
                 {
-                    Debug.Log("Entra al else");
                     Dictionary<MapNode, MapNode> originNew = new Dictionary<MapNode, MapNode>();
                     foreach (MapNode node in inNodes)
                         originNew.Add(node.origin, node);

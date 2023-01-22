@@ -51,23 +51,37 @@ public class NavAgent : MonoBehaviour
     System.Random r = new System.Random();
     IEnumerator setDestination(Point destination)
     {
-        int i = r.Next(0, 10);
-        while (i > 0)
-        {
+        // int len = r.Next(0, 50);
+        int len = agent.posInGrup / 5;
+        // int minDistance = 100;
+        int minDistance = int.MaxValue;
+        int maxDistance = 100;
+        // agent.inMove = false;
+        // for (int i = 0; i < 100; i++)
+        // {
+        //     Agent temp = Agent_Space.Environment.Interactive.grup[i];
+        //     minDistance = Math.Min(minDistance, (int)temp.position.Distance(destination));
+        // }
+
+        // int len = (int)agent.position.Distance(destination) - minDistance;
+        // int len = maxDistance - (int)agent.position.Distance(destination);
+        for (int i = 0; i < len; i++)
             yield return new WaitForEndOfFrame();
-            i--;
-        }
         agent.SetPointPath(destination);
     }
     public void SetDestination(Vector3 destination)
     {
-        agent.SetPointPath(new Point(destination.x, destination.y, destination.z));
-
-        SetDestination(destination);
+        SetDestination(new Point(destination.x, destination.y, destination.z));
     }
     public void SetDestination(Point destination)
     {
-        StartCoroutine(setDestination(destination));
+        if (grupalMove)
+        {
+            // StopCoroutine(setDestination(destination));
+            StartCoroutine(setDestination(destination));
+        }
+        else
+            agent.SetPointPath(destination);
     }
 
     public bool InMove()

@@ -32,7 +32,8 @@ namespace DijkstraSpace
                 grupalList = new List<MapNode>();
 
                 foreach (MapNode node in grupal)
-                    this.grupalDic.Add(node, false);
+                    if (!this.grupalDic.ContainsKey(node))
+                        this.grupalDic.Add(node, false);
                 grupalMove = true;
             }
 

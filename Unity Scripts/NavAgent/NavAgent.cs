@@ -18,7 +18,7 @@ public class NavAgent : MonoBehaviour
         agent = new Agent(radius, name);
         if (grupalMove)
             agent.setGrup();
-            
+
         GetTriangles.Start();
         agent.setPosition(new Point(transform.position.x, transform.position.y, transform.position.z));
         agent.searchCurrentNode();
@@ -29,8 +29,6 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-
-
         if (!agent.inMove && transform.position.x == agent.position.x && transform.position.z == agent.position.z)
         {
             countFrames = 0;
@@ -50,13 +48,26 @@ public class NavAgent : MonoBehaviour
         }
         transform.Translate(dir);
     }
+    System.Random r = new System.Random();
+    IEnumerator setDestination(Point destination)
+    {
+        int i = r.Next(0, 10);
+        while (i > 0)
+        {
+            yield return new WaitForEndOfFrame();
+            i--;
+        }
+        agent.SetPointPath(destination);
+    }
     public void SetDestination(Vector3 destination)
     {
         agent.SetPointPath(new Point(destination.x, destination.y, destination.z));
+
+        SetDestination(destination);
     }
     public void SetDestination(Point destination)
     {
-        agent.SetPointPath(destination);
+        StartCoroutine(setDestination(destination));
     }
 
     public bool InMove()

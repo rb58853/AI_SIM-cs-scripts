@@ -114,10 +114,10 @@ namespace Point_Map
 
                 foreach (MapNode triangle in mapNodes)
                 {
-                    foreach (MapNode adj in triangle.adjacents.Keys)
+                    foreach (Arist arist in triangle.adjacents.Values)
                         // if (mapNodes.Contains(adj))
-                        if (triangle.adjacents[adj].points.Count == 0)
-                            triangle.adjacents[adj].ToPoints(n);
+                        if (arist.points.Count == 0)
+                            arist.ToPoints(n);
 
                     // if (triangle == mapNodes[0])
                     if (triangle == agent.endMapNodeCurrent)
@@ -189,7 +189,6 @@ namespace Point_Map
                         result.Add(init);
                 }
 
-                List<PointNode> temp = new List<PointNode>();
                 foreach (PointNode node in list)
                 {
                     try { init.AddAdjacent(node, cost); }
@@ -242,13 +241,27 @@ namespace Point_Map
             if (onCollision)
             {
                 if (currentPoint != null)
-                    currentPoint.SetPoint(agent.position);
+                {
+                    if (Agent_Space.Environment.metaheuristic)
+                    {
+                        PointNode temp = new PointNode(agent.position);
+                        foreach (PointNode adj in currentPoint.adjacents.Keys)
+                            temp.AddAdjacent(adj, currentPoint.adjacents[adj]);
+                        foreach (MapNode triangle in currentPoint.triangles)
+                            temp.AddTriangle(triangle);
+                        currentPoint = temp;
+                    }
+                    else
+                    {
+                        currentPoint.SetPoint(agent.position);
+                    }
+                }
                 else
                 {
                     currentPoint = new PointNode(agent.position);
                     currentPoint.AddTriangle(currentTriangle);
                 }
-                nextPoint = currentPoint;
+                // nextPoint = currentPoint;
             }
             else
                 currentPoint = nextPoint;
@@ -257,6 +270,7 @@ namespace Point_Map
             if (currentPoint.adjacents.Count == 0)
             {
                 empty = true;
+                CleanExtras();
                 nextPoint = currentPoint;
                 return currentPoint;
             }
@@ -297,6 +311,7 @@ namespace Point_Map
                     {
                         Stop();
                         nextPoint = currentPoint;
+                        CleanExtras();
                         return currentPoint;
                     }
                 }
@@ -305,8 +320,8 @@ namespace Point_Map
                 Tuple<bool, Agent> collision = null;
 
                 if (!onCollision)
-                    collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp);
-                //, maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
+                    collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
+                    maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
                 else
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
                     maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
@@ -325,20 +340,23 @@ namespace Point_Map
 
                     GetCurrentTriangle();
                     // currentTriangle = triangleTemp;
-                    Debug.Log(i + ") " + next.value);
-                    i++;
+                    CleanExtras();
+                    // Debug.Log(i + ") " + next.value);
+                    if (new Point(125.2031f, 0.025f, 12.39343f).Distance(next.point, false) < 0.1f)
+                        Debug.Log("devolvio el punto como next");
                     return next;
                 }
             }
 
             Stop();
+            CleanExtras();
             nextPoint = currentPoint;
+            if (new Point(125.2031f, 0.025f, 12.39343f).Distance(currentPoint.point, false) < 0.1f)
+                Debug.Log("devolvio el punto como next");
             return currentPoint;
         }
-        int i = 1;
         void CleanExtras()
         {
-            i = 1;
             foreach (PointNode extra in extras)
                 (extra.father as PointNode).adjacents.Remove(extra);
             extras = new List<PointNode>();
@@ -432,10 +450,9 @@ namespace Point_Map
         public void PushPointMap(PointNode initNode, PointNode endNode, MapNode endMapNode)
         {
             stopCount = 0;
-
             recentlyVisited = new Queue<PointNode>();
-
             empty = false;
+
             ///Invertir la direccion de las aristas ultimo y primero
             PointNode node = initNode;
 
@@ -489,7 +506,6 @@ namespace Point_Map
             init.AddTriangle(mapNode);
             initIn.AddAdjacent(init);
             init.SetFather(initIn);
-            extras.Add(init);
             CreateObstacleBorder(init, end, agent, mapNode, cost, visitedObstacles, destination);
 
             if (init.adjacents.Count == 0)//no se encontro nada que no sea lo mismo 
@@ -497,7 +513,7 @@ namespace Point_Map
                 initIn.RemoveAdjacent(init);
                 return;
             }
-
+            extras.Add(init);
             q.Push(init);
         }
         void CreateObstacleBorder(PointNode init, PointNode end,

@@ -26,15 +26,15 @@ namespace Agent_Space
         /// <summary> count of nodes to visit(with bfs) after found the destination node </summary>
         public readonly static int bfsArea = 60;
         /// <summary> heuristic weigth for path between triangles </summary>
-        public readonly static float heuristicTriangleWeigth = 2f;
+        public readonly static float heuristicTriangleWeigth = 1f;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 2;
+        public readonly static int trianglePathDilatation = 5;
         /// <summary> Length of view agent detected collisions [default value = 1.5f] </summary>
-        public readonly static float viewLenAgent = 5f;
+        public readonly static float viewLenAgent = 1.5f;
         /// <summary> 
         ///If sum of radius of two agents * this var is low than distance analize, else no analize [default value = 1.5f] 
         ///</summary>
-        public readonly static float distanceAnalizeCollision = 5f;
+        public readonly static float distanceAnalizeCollision = 1.5f;
         /// <summary> 
         /// Freq of review collisions for agents, update frequence = ([freqReview]/[speed/5]) frames 
         /// grosso modo 50 frames = 1s, ejemplo: freqReview = 50 con 100 de speed = 2.5 frames 
@@ -53,7 +53,7 @@ namespace Agent_Space
         public readonly static int stopCountForEmpty = 100000;
 
         /// <summary> Create border in runtime when collision [default value: true] </summary>
-        public readonly static bool createBorder = true;
+        public readonly static bool createBorder = false;
         ///<summary> Create points of path for border only in current triangle  [default value: true] </summary>
         public readonly static bool onlyTriangleBorder = true;
         ///<summary> 
@@ -67,13 +67,13 @@ namespace Agent_Space
         /// cierto punto del recorrido [default value: true]
         ///</summary>
         public readonly static bool exactCollision = false;
-        /// <summary> Detenerse si la proxima posicion es muy alta [default value: false] </summary>
-        public readonly static bool stopOnPath = true;
-        public readonly static float stopOnPathDistance = 3f;
+        /// <summary> Detenerse si la proxima posicion es muy alta su distancia [default value: false] </summary>
+        public readonly static bool stopOnPath = false;
+        public readonly static float stopOnPathDistance = 10f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
-        public readonly static int densityVisualPath = 50;
+        public readonly static int densityVisualPath = 25;
 
         /// <summary> Use metaheuristic [default value: true]</summary>
         public readonly static bool metaheuristic = true;

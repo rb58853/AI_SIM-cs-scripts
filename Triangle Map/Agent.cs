@@ -270,7 +270,7 @@ namespace Agent_Space
 
             if (Environment.metaheuristic && endMapNodeCurrent.origin != initMapNodeCurrent.origin)
                 if (/*random.Next(0, 5) != 0 &&*/
-                Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition, type))
+                Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition, this))
                 {
                     Debug.Log("En encontrar el camino meta demora " + (DateTime.Now - t0));
 
@@ -361,7 +361,7 @@ namespace Agent_Space
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
 
-            // PointNode endNode = new PointNode(endPoint, inArist: false, agent: this);
+            // PointNode endNode = new PointNode(endPoint, inputArist: false, agent: this);
             // endNode.AddTriangle(endMapNodeCurrent);
             // endNode.AddTriangle(triangleList[0]);
             // endPointNode = endNode;
@@ -409,7 +409,7 @@ namespace Agent_Space
 
                 if (endMapNodeCurrent != initMapNodeCurrent && endMapNodeCurrent != null)
                     Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList,
-                    endPointNode, currentNode, tempPosition, type);
+                    endPointNode, currentNode, tempPosition, this);
                 currentPosition = tempPosition;
             }
             NextPoint();
@@ -648,14 +648,14 @@ namespace Agent_Space
             = new Dictionary<AgentType, Dictionary<Triangle, Dictionary<MapNode, MapNode>>>();
 
             public static bool Path(MapNode initTriangle, MapNode endTriangle,
-            PointNode endPoint, PointNode initPoint, AgentType type)
+            PointNode endPoint, PointNode initPoint, Agent agent)
             {
-                if (!originsFromType.ContainsKey(type))
-                    originsFromType.Add(type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
-                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[type];
+                if (!originsFromType.ContainsKey(agent.type))
+                    originsFromType.Add(agent.type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
+                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[agent.type];
 
                 if (origins == null || initPoint == null) return false;
-                initPoint.adjacents.Clear();
+                // initPoint.adjacents.Clear();
                 initPoint.SetDistance(float.MaxValue);
 
                 foreach (Triangle triangle in endTriangle.origin.triangle.trianglesSub)
@@ -672,11 +672,11 @@ namespace Agent_Space
 
                                 foreach (Arist arist in initTriangle.adjacents.Values)
                                     foreach (PointNode point in arist.points)
-                                        initPoint.AddAdjacent(point, initTriangle.MaterialCost(new Agent(1)));
+                                        initPoint.AddAdjacent(point, initTriangle.MaterialCost(agent));
 
                                 foreach (Arist arist in endTriangle.adjacents.Values)
                                     foreach (PointNode point in arist.points)
-                                        point.AddAdjacent(endPoint, endTriangle.MaterialCost(new Agent(1)));
+                                        point.AddAdjacent(endPoint, endTriangle.MaterialCost(agent));
 
                                 return true;
                             }
@@ -686,14 +686,14 @@ namespace Agent_Space
                 return false;
             }
             public static void Proccess(MapNode endTriangle, Point endPoint, List<MapNode> nodes,
-            PointNode endPointNode, MapNode initMapNode, PointNode initPointNode, AgentType type)
+            PointNode endPointNode, MapNode initMapNode, PointNode initPointNode, Agent agent)
             {
                 if (!Environment.metaheuristic) return;
                 foreach (Triangle triangle in endTriangle.origin.triangle.trianglesSub)
                 {
                     if (triangle.PointIn(endPoint))
                     {
-                        Merge(triangle, nodes, endPointNode, endTriangle, initPointNode, type);
+                        Merge(triangle, nodes, endPointNode, endTriangle, initPointNode, agent);
                         move.triangle = triangle;
                         triangle.draw(Color.green);
                         return;
@@ -701,38 +701,39 @@ namespace Agent_Space
                 }
 
             }
-            static void Merge(Triangle triangle, List<MapNode> inNodes,
-            PointNode endPointNode, MapNode endMapNode, PointNode initPointNode, AgentType type)
+            static void Merge(Triangle triangle, List<MapNode> inputNodes,
+            PointNode endPointNode, MapNode endMapNode, PointNode initPointNode, Agent agent)
             {
-                if (!originsFromType.ContainsKey(type))
-                    originsFromType.Add(type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
-                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[type];
+                if (!originsFromType.ContainsKey(agent.type))
+                    originsFromType.Add(agent.type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
+                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[agent.type];
 
                 List<MapNode> tempInputNodes = new List<MapNode>();
 
-                MapNode initMapNode = inNodes[inNodes.Count - 1];
+                MapNode initMapNode = inputNodes[inputNodes.Count - 1];
 
                 if (origins.ContainsKey(triangle))
                 {
                     Dictionary<MapNode, MapNode> originsNodes = origins[triangle];
 
-                    foreach (MapNode node in inNodes)
+                    foreach (MapNode node in inputNodes)
                         tempInputNodes.Add(node);
 
-                    foreach (MapNode node in inNodes)
+                    #region Delete Triangles whit same origin
+                    foreach (MapNode node in inputNodes)
                         if (originsNodes.ContainsKey(node.origin))
                         {
                             tempInputNodes.Remove(node);
                             MapNode localNode = originsNodes[node.origin];
 
-                            foreach (Arist inArist in node.adjacents.Values)
+                            foreach (Arist inputArist in node.adjacents.Values)
                                 foreach (Arist localArist in localNode.adjacents.Values)
-                                    if (inArist.origin == localArist.origin)
+                                    if (inputArist.origin == localArist.origin)
                                     {
                                         ///Actualizar para la mejor distancia por todos los puntos del triangulo
                                         for (int i = 0; i < localArist.points.Count; i++)
                                         {
-                                            float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
+                                            float min = Math.Min(localArist.points[i].distance, inputArist.points[i].distance);
                                             localArist.points[i].SetDistance(min);
                                         }
                                         break;
@@ -747,6 +748,7 @@ namespace Agent_Space
                                         ///Crear adyacencia hacia el nuevo nodo final
                                         point.AddAdjacent(endPointNode);
                             }
+
                             if (node == initMapNode)                                //
                             {//
                                 initPointNode.adjacents.Clear();//
@@ -760,33 +762,44 @@ namespace Agent_Space
                                     }//
                             }//
                         }
-
-                    foreach (MapNode inNode in tempInputNodes)
+                    #endregion
+                    #region Create adj in news arists and triangles
+                    foreach (MapNode inputNode in tempInputNodes)
                     {
-                        foreach (MapNode adj in inNode.GetAdyacents())
+                        List<Node> adjacentsOfInputMapNode = inputNode.GetAdyacents();
+                        foreach (MapNode adj in adjacentsOfInputMapNode)
                         {
                             if (originsNodes.ContainsKey(adj.origin))
                             {
-                                MapNode adjacent = originsNodes[adj.origin];
+                                MapNode localNodeTemp = originsNodes[adj.origin];
 
                                 List<Arist> addArists = new List<Arist>();
                                 List<Arist> deleteArists = new List<Arist>();
 
-                                foreach (Arist inArist in inNode.adjacents.Values)
-                                    foreach (Arist localArist in adjacent.adjacents.Values)
-                                        if (inArist.origin == localArist.origin)
+                                foreach (MapNode inputNodeAdj in inputNode.GetAdyacents())
+                                    foreach (MapNode localNodeAdj in localNodeTemp.adjacents.Keys)
+                                    {
+                                        Arist inputArist = inputNode.adjacents[inputNodeAdj];
+                                        Arist localArist = localNodeTemp.adjacents[localNodeAdj];
+                                        if (inputArist.origin == localArist.origin)
                                         {
+                                            ///Crear la adyacencia entre triangulos y remover las obsoletas
+                                            inputNode.adjacents.Remove(inputNodeAdj);
+                                            // if (!inputNode.adjacents.ContainsKey(localNodeAdj))
+                                            inputNode.adjacents.Add(localNodeAdj, localArist);
+
+
                                             addArists.Add(localArist);
-                                            deleteArists.Add(inArist);
+                                            deleteArists.Add(inputArist);
                                             for (int i = 0; i < localArist.points.Count; i++)
                                             {
                                                 ///Actualizar para la mejor distancia
-                                                float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
+                                                float min = Math.Min(localArist.points[i].distance, inputArist.points[i].distance);
                                                 localArist.points[i].SetDistance(min);
                                             }
                                             break;
                                         }
-
+                                    }
                                 foreach (Arist aristAdd1 in addArists)
                                     foreach (Arist aristAdd2 in addArists)
                                         if (aristAdd1 != aristAdd2)
@@ -796,54 +809,63 @@ namespace Agent_Space
                                                     /// Caso que una arista cierra un triangulo
                                                     point1.AddAdjacent(point2);
                                                     point2.AddAdjacent(point1);
-                                                    point1.AddTriangle(inNode);
-                                                    point2.AddTriangle(inNode);
+                                                    point1.AddTriangle(inputNode);
+                                                    point2.AddTriangle(inputNode);
+                                                    // PointNode.Static.DrawTwoPoints(point1.point, point2.point, Color.magenta);
                                                 }
 
-                                foreach (Arist aristOfInNode in inNode.adjacents.Values)
+                                foreach (Arist aristOfInputNode in inputNode.adjacents.Values)
                                 {
-                                    if (deleteArists.Contains(aristOfInNode))
+                                    if (deleteArists.Contains(aristOfInputNode))
                                     {
-                                        foreach (Arist aristOfInNode2 in inNode.adjacents.Values)
-                                            foreach (PointNode pointInNode in aristOfInNode2.points)
-                                                foreach (PointNode pointToDeleteAdj in aristOfInNode.points)
-                                                {
-                                                    pointInNode.RemoveAdjacent(pointToDeleteAdj);
-                                                    pointToDeleteAdj.RemoveAdjacent(pointInNode);
-                                                    if (initMapNode == inNode)                                                                                 //              
-                                                        if (initPointNode.adjacents.ContainsKey(pointToDeleteAdj))                                             //
-                                                            initPointNode.RemoveAdjacent(pointToDeleteAdj);                                                    //
-                                                    Point p = new Point(0.04f, 0, 0);
-                                                }
+                                        foreach (PointNode pointToDeleteAdj in aristOfInputNode.points)
+                                        {
+                                            List<Node> temp = pointToDeleteAdj.GetAdyacents();
+                                            foreach (PointNode adjOfDeletePoint in temp)//
+                                            {
+                                                adjOfDeletePoint.RemoveAdjacent(pointToDeleteAdj);
+                                                pointToDeleteAdj.RemoveAdjacent(adjOfDeletePoint);
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        foreach (PointNode pointInNode in aristOfInNode.points)
+                                        foreach (PointNode pointInputNode in aristOfInputNode.points)
                                             foreach (Arist localArist in addArists)
                                                 foreach (PointNode pointInLocal in localArist.points)
                                                 {
-                                                    pointInNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));
-                                                    pointInLocal.AddAdjacent(pointInNode, inNode.MaterialCost(new Agent(1)));
-                                                    if (inNode == initMapNode)                                                           //           
-                                                        if (!initPointNode.adjacents.ContainsKey(pointInLocal))                          //
-                                                            initPointNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));  //
-                                                    // PointNode.Static.DrawTwoPoints(pointInNode.point, pointInLocal.point, Color.white);
-                                                    pointInLocal.AddTriangle(inNode);
+                                                    if (!pointInputNode.adjacents.ContainsKey(pointInLocal))
+                                                        pointInputNode.AddAdjacent(pointInLocal, inputNode.MaterialCost(agent));
+                                                    if (!pointInLocal.adjacents.ContainsKey(pointInputNode))
+                                                        pointInLocal.AddAdjacent(pointInputNode, inputNode.MaterialCost(agent));
+
+                                                    if (inputNode == initMapNode)
+                                                        if (!initPointNode.adjacents.ContainsKey(pointInLocal))
+                                                        {
+                                                            initPointNode.AddAdjacent(pointInLocal, inputNode.MaterialCost(agent));
+                                                            if (!initPointNode.triangles.Contains(inputNode))
+                                                                pointInLocal.AddTriangle(inputNode);
+                                                            // PointNode.Static.DrawTwoPoints(initPointNode.point, pointInLocal.point, Color.red);
+
+                                                        }
+
+                                                    // PointNode.Static.DrawTwoPoints(pointInputNode.point, pointInLocal.point, Color.white);
+                                                    if (!pointInLocal.triangles.Contains(inputNode))
+                                                        pointInLocal.AddTriangle(inputNode);
                                                 }
                                     }
                                 }
                             }
                         }
                     }
-                    foreach (MapNode inNode in tempInputNodes)
-                    {
-                        originsNodes.Add(inNode.origin, inNode);
-                    }
+                    #endregion
+                    foreach (MapNode inputNode in tempInputNodes)
+                        originsNodes.Add(inputNode.origin, inputNode);
                 }
                 else
                 {
                     Dictionary<MapNode, MapNode> originNew = new Dictionary<MapNode, MapNode>();
-                    foreach (MapNode node in inNodes)
+                    foreach (MapNode node in inputNodes)
                         originNew.Add(node.origin, node);
                     origins.Add(triangle, originNew);
                 }

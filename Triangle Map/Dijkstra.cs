@@ -111,7 +111,6 @@ namespace DijkstraSpace
                 {
                     if (grupalDic.ContainsKey((node as MapNode).origin))
                     {
-                        // (node as MapNode).triangle.draw(Color.magenta);
                         grupalDic.Remove((node as MapNode).origin);
                         grupalList.Add(node as MapNode);
                         node.visitedAsGrupal = true;

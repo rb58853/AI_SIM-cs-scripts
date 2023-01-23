@@ -467,7 +467,7 @@ namespace Point_Map
             foreach (PointNode adj in temp)
             {
                 adj.AddAdjacent(node, node.adjacents[adj]);
-                PointNode.Static.DrawTwoPoints(node.point, adj.point, Color.green);
+                // PointNode.Static.DrawTwoPoints(node.point, adj.point, Color.green);
                 node.RemoveAdjacent(adj);
             }
 
@@ -475,7 +475,7 @@ namespace Point_Map
                 foreach (PointNode point in arist.points)
                     if (point.adjacents.ContainsKey(endNode))
                     {
-                        PointNode.Static.DrawTwoPoints(endNode.point, point.point, Color.yellow);
+                        // PointNode.Static.DrawTwoPoints(endNode.point, point.point, Color.yellow);
                         endNode.AddAdjacent(point, point.adjacents[endNode]);
                         point.RemoveAdjacent(endNode);
                     }

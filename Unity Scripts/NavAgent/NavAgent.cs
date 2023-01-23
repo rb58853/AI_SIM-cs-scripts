@@ -52,8 +52,7 @@ public class NavAgent : MonoBehaviour
     IEnumerator setDestination(Point destination)
     {
         // int len = r.Next(0, 50);
-        // int len = agent.posInGrup / 1;
-        int len =  1;
+        int len = agent.posInGrup / 1;
         // int minDistance = 100;
         // int minDistance = int.MaxValue;
         // int maxDistance = 100;

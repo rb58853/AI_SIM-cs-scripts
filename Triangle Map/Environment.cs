@@ -35,7 +35,7 @@ namespace Agent_Space
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 0;
+        public readonly static int trianglePathDilatation = 3;
         /// <summary> Length of view agent detected collisions [default value = 3f] </summary>
         public readonly static float viewLenAgent = 3f;
         /// <summary> 

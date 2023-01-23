@@ -362,6 +362,7 @@ namespace Agent_Space
                         agent.inMove = true;
                 Environment.Interactive.allGroupInMove = true;
                 Environment.Interactive.countInStop = 0;
+                inMoveGroup = true;
             }
             metaPath = false;
             pointPath.clear();
@@ -374,16 +375,20 @@ namespace Agent_Space
                 tempPosition.SetDistance(currentPosition.distance);
                 foreach (MapNode triangle in currentPosition.triangles)
                     tempPosition.AddTriangle(triangle);
-                Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList, endPointNode, currentNode, tempPosition);
+
+                if (endMapNodeCurrent != initMapNodeCurrent && endMapNodeCurrent != null)
+                    Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList, endPointNode, currentNode, tempPosition);
                 currentPosition = tempPosition;
             }
             NextPoint();
         }
+        bool inMoveGroup = true;
         void setInMoveGrupal()
         {
             if (!grupalMove) return;
-            if (position.Distance(destination) < 2f * radius * Math.Sqrt(Environment.Interactive.countInStop))
+            if (position.Distance(destination) < Environment.Interactive.distanceToStop * radius * Math.Sqrt(Environment.Interactive.countInStop))
             {
+                inMoveGroup = false;
                 inMove = false;
                 Environment.Interactive.allGroupInMove = false;
                 Environment.Interactive.countInStop += 1;
@@ -404,7 +409,6 @@ namespace Agent_Space
         void DynamicSetPoint()
         {
             // if (nextPosition.point.Distance(position) < 0.01f) return;
-
             float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
 
@@ -487,12 +491,13 @@ namespace Agent_Space
         void NextPoint(bool onCollision = false)
         {
             visualPath.Clear();
-            if (!pointPath.empty)
+            if (!pointPath.empty || !inMoveGroup)
             {
                 inMove = true;
-                setInMoveGrupal();
                 nextPosition = pointPath.Pop(onCollision);
                 currentPosition = pointPath.currentPoint;
+
+                setInMoveGrupal();
                 SetCurrentTriangle();
 
                 if (nextPosition == currentPosition)
@@ -512,11 +517,6 @@ namespace Agent_Space
                             Debug.Log("se creo un punto largo que no va");
                     visualPath.Push(temp[i]);
                 }
-
-                // Debug.Log("currentPosition = " + currentPosition + "   nextPosition = " + nextPosition +
-                // "Count de path visual " + visualPath.Count);
-
-                // NextMoveBasic();
             }
             else
             {

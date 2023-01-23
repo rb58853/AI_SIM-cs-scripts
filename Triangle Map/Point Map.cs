@@ -300,10 +300,13 @@ namespace Point_Map
                 }
 
             PointNode next = null;
-
+            PointNode best = null;
             while (q.size > 0)
             {
                 next = q.Pop() as PointNode;
+                if (best == null)
+                    best = next;
+
                 if (next.distance >= float.MaxValue - 100)
                 {
                     ///Esto es para que no llegue a un camino sin fin
@@ -312,7 +315,7 @@ namespace Point_Map
                 }
                 if (Agent_Space.Environment.stopOnPath)
                 {
-                    if (next.distance > currentPoint.distance + Agent_Space.Environment.stopOnPathDistance)
+                    if (next.value > best.value + Agent_Space.Environment.stopOnPathDistance)
                     {
                         Stop();
                         nextPoint = currentPoint;
@@ -331,11 +334,6 @@ namespace Point_Map
                 else
                     collision = Agent.Collision(currentPoint.point, next.point, agent, triangleTemp,
                     maxDistance: Agent_Space.Environment.distanceAnalizeCollision);
-
-                // if (agent.name == "Init (8)")
-                //     Debug.Log("entre los puntos " + currentPoint + "," + nextPoint +
-                //     " encontro el triangulo " + triangleTemp +
-                //     " encontro colision = " + collision.Item1);
 
                 if (collision.Item1)
                 {
@@ -491,7 +489,7 @@ namespace Point_Map
         }
         void PushToRecently(PointNode node)
         {
-            if (recentlyVisited.Count >= 15)
+            if (recentlyVisited.Count >= 25)
                 recentlyVisited.Dequeue().visitedInPath.Remove(agent);
             if (!currentPoint.visitedInPath.ContainsKey(agent))
                 node.visitedInPath.Add(agent, true);

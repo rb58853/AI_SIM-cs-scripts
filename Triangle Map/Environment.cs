@@ -29,21 +29,22 @@ namespace Agent_Space
         public readonly static float heuristicTriangleWeigth = 1f;
         /// <summary> Dilate the path of triangles</summary>
         public readonly static int trianglePathDilatation = 5;
-        /// <summary> Length of view agent detected collisions [default value = 2f] </summary>
-        public readonly static float viewLenAgent = 2f;
+        /// <summary> Length of view agent detected collisions [default value = 3f] </summary>
+        public readonly static float viewLenAgent = 3f;
         /// <summary> 
-        ///If sum of radius of two agents * this var is low than distance analize, else no analize [default value = 2f] 
+        ///If sum of radius of two agents * this var is low than distance analize, else no analize [default value = 3f] 
         ///</summary>
-        public readonly static float distanceAnalizeCollision = 2f;
+        public readonly static float distanceAnalizeCollision = 3f;
+        
         /// <summary> 
         /// Freq of review collisions for agents, update frequence = ([freqReview]/[speed/5]) frames 
-        /// grosso modo 50 frames = 1s, ejemplo: freqReview = 50 con 100 de speed = 2.5 frames 
-        //  => 20 revisiones por segundo 
+        /// grosso modo 25-50 frames = 1s, ejemplo: freqReview = 25 con 50 de speed = 2.5 frames 
+        /// => 10-20 revisiones por segundo 
         ///</summary>
-        public readonly static int freqReview = 50;
+        public readonly static int freqReview = 25;
         ///<summary> radius* ocupedArea are the ocuped triangles [default value = 2.2f] </summary>
         public readonly static float ocupedArea = 2.5f;
-      
+
         ///<summary> Move from vertices to vertices in the same arist </summary>
         public readonly static bool moveInArist = true;
         ///<summary> Stop if not found a path from the current position </summary>
@@ -55,7 +56,7 @@ namespace Agent_Space
         public readonly static bool createBorder = false;
         ///<summary> Create points of path for border only in current triangle  [default value: true] </summary>
         public readonly static bool onlyTriangleBorder = true;
-          ///<summary> higth quality => better path, low => better eficience </summary>
+        ///<summary> higth quality => better path, low => better eficience </summary>
         public readonly static Quality qualityBorder = Quality.higth;
         ///<summary> 
         ///Create paths from dinamyc point to all arist of triangle that contains this point [default value: true] 
@@ -69,8 +70,9 @@ namespace Agent_Space
         ///</summary>
         public readonly static bool exactCollision = false;
         /// <summary> Detenerse si la proxima posicion es muy alta su distancia [default value: false] </summary>
-        public readonly static bool stopOnPath = false;
-        public readonly static float stopOnPathDistance = 10f;
+        public readonly static bool stopOnPath = true;
+        /// <summary> Tolerancia a tomar un camino largo </summary>
+        public readonly static float stopOnPathDistance = 13f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
@@ -94,10 +96,7 @@ namespace Agent_Space
             public static List<Agent> grup = new List<Agent>();
             public static bool allGroupInMove = true;
             public static int countInStop = 0;
-            public static float distanceToStop = 2.2f;
+            public static float distanceToStop = 2.3f;
         }
-    }
-    class Obsolete
-    {
     }
 }

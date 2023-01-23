@@ -700,7 +700,7 @@ namespace Agent_Space
                                         for (int i = 0; i < localArist.points.Count; i++)
                                         {
                                             float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
-                                            localArist.points[0].SetDistance(min);
+                                            localArist.points[i].SetDistance(min);
                                         }
                                         break;
                                     }
@@ -749,7 +749,7 @@ namespace Agent_Space
                                             {
                                                 ///Actualizar para la mejor distancia
                                                 float min = Math.Min(localArist.points[i].distance, inArist.points[i].distance);
-                                                localArist.points[0].SetDistance(min);
+                                                localArist.points[i].SetDistance(min);
                                             }
                                             break;
                                         }

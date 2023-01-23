@@ -43,8 +43,7 @@ namespace Agent_Space
         public readonly static int freqReview = 50;
         ///<summary> radius* ocupedArea are the ocuped triangles [default value = 2.2f] </summary>
         public readonly static float ocupedArea = 2.5f;
-        ///<summary> higth quality => better path, low => better eficience </summary>
-        public readonly static Quality qualityBorder = Quality.higth;
+      
         ///<summary> Move from vertices to vertices in the same arist </summary>
         public readonly static bool moveInArist = true;
         ///<summary> Stop if not found a path from the current position </summary>
@@ -56,6 +55,8 @@ namespace Agent_Space
         public readonly static bool createBorder = false;
         ///<summary> Create points of path for border only in current triangle  [default value: true] </summary>
         public readonly static bool onlyTriangleBorder = true;
+          ///<summary> higth quality => better path, low => better eficience </summary>
+        public readonly static Quality qualityBorder = Quality.higth;
         ///<summary> 
         ///Create paths from dinamyc point to all arist of triangle that contains this point [default value: true] 
         ///</summary>

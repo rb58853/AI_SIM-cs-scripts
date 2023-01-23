@@ -28,7 +28,7 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-        if (!agent.inMove)//&& transform.position.x == agent.position.x && transform.position.z == agent.position.z)
+        if (!agent.inMove && Vector3.Distance(transform.position, agent.position.ToVector3()) < 0.1f)
         {
             countFrames = 0;
             return;

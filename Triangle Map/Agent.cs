@@ -520,7 +520,7 @@ namespace Agent_Space
             }
             else
             {
-                Environment.Interactive.countInStop += 5;
+                Environment.Interactive.countInStop += 1;
                 inMove = false;
             }
             SetOcupedFromPosition(Environment.ocupedArea);

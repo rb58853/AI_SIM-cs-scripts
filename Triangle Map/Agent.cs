@@ -11,6 +11,7 @@ namespace Agent_Space
     public class Agent
     {
         System.Random random = new System.Random();
+        public AgentType type { get; private set; }
         public string name { get; private set; }
         public List<MapNode> ocupedNodes { get; private set; }
         public List<Triangle> ocupedTriangles { get => UcupedTriangles(); }
@@ -42,15 +43,40 @@ namespace Agent_Space
         public Dictionary<Material, float> compatibility;
         public bool grupalMove { get; private set; }
         public int posInGrup { get; private set; }
-        public Agent(float radius, string name = "agent")
+        public Agent(float radius, string name = "agent", AgentType type = AgentType.normal)
         {
+            compatibility = new Dictionary<Material, float>();
+            this.setType(type);
             pointPath = new PointPath(this, currentNode);
             this.name = name;
-            compatibility = new Dictionary<Material, float>();
             visualPath = new Stack<Point>();
             ocupedNodes = new List<MapNode>();
             this.radius = radius;
             inMove = false;
+        }
+        void setType(AgentType type)
+        {
+            this.type = type;
+            if (type == AgentType.acuatic)
+            {
+                SetCompatibility(Material.water, 6);
+                SetCompatibility(Material.fire, 60);
+            }
+            if (type == AgentType.fire)
+            {
+                SetCompatibility(Material.fire, 6);
+                SetCompatibility(Material.water, 60);
+            }
+            if (grupalMove)
+            {
+                if (Environment.Interactive.groupFromType.ContainsKey(this.type))
+                    Environment.Interactive.groupFromType[this.type].Add(this);
+                else
+                {
+                    Environment.Interactive.groupFromType.Add(this.type, new List<Agent>());
+                    Environment.Interactive.groupFromType[this.type].Add(this);
+                }
+            }
         }
         public void setGrup(bool inGrup = true)
         {
@@ -67,7 +93,7 @@ namespace Agent_Space
                     Environment.Interactive.grup.Remove(this);
             }
         }
-        public void SetCompatibility(Material material, float value)
+        void SetCompatibility(Material material, float value)
         {
             if (compatibility.ContainsKey(material))
                 compatibility[material] = value;
@@ -243,9 +269,10 @@ namespace Agent_Space
             DateTime t0 = DateTime.Now;
 
             if (Environment.metaheuristic && endMapNodeCurrent.origin != initMapNodeCurrent.origin)
-                if (/*random.Next(0, 5) != 0 &&*/ Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition))
+                if (/*random.Next(0, 5) != 0 &&*/
+                Metaheuristic.Path(initMapNodeCurrent, endMapNodeCurrent, endPointNode, tempPosition, type))
                 {
-                    // Debug.Log("En encontrar el camino meta demora " + (DateTime.Now - t0));
+                    Debug.Log("En encontrar el camino meta demora " + (DateTime.Now - t0));
 
                     metaPath = true;
                     if (!endPointNode.triangles.Contains(endMapNodeCurrent))
@@ -265,11 +292,15 @@ namespace Agent_Space
             Dijkstra dijkstra = new Dijkstra(end, init, nodes);
             if (grupalMove)
             {
-                List<MapNode> grup = new List<MapNode>();
-                foreach (Agent agent in Environment.Interactive.grup)
-                    grup.Add(agent.currentNode.origin);
-                dijkstra = new Dijkstra(end, init, nodes, grup);
+                if (Environment.Interactive.groupFromType.ContainsKey(type))
+                {
+                    List<MapNode> grup = new List<MapNode>();
+                    foreach (Agent agent in Environment.Interactive.groupFromType[type])
+                        grup.Add(agent.currentNode.origin);
+                    dijkstra = new Dijkstra(end, init, nodes, grup);
+                }
             }
+
             List<Node> path = dijkstra.GetPath();
 
             pointPath.PushCurrenTriangle(initMapNodeCurrent);
@@ -377,7 +408,8 @@ namespace Agent_Space
                     tempPosition.AddTriangle(triangle);
 
                 if (endMapNodeCurrent != initMapNodeCurrent && endMapNodeCurrent != null)
-                    Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList, endPointNode, currentNode, tempPosition);
+                    Metaheuristic.Proccess(endMapNodeCurrent, point, triangleList,
+                    endPointNode, currentNode, tempPosition, type);
                 currentPosition = tempPosition;
             }
             NextPoint();
@@ -611,11 +643,17 @@ namespace Agent_Space
         }
         internal static class Metaheuristic
         {
-            public static Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins;
+
+            public static Dictionary<AgentType, Dictionary<Triangle, Dictionary<MapNode, MapNode>>> originsFromType
+            = new Dictionary<AgentType, Dictionary<Triangle, Dictionary<MapNode, MapNode>>>();
 
             public static bool Path(MapNode initTriangle, MapNode endTriangle,
-            PointNode endPoint, PointNode initPoint)
+            PointNode endPoint, PointNode initPoint, AgentType type)
             {
+                if (!originsFromType.ContainsKey(type))
+                    originsFromType.Add(type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
+                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[type];
+
                 if (origins == null || initPoint == null) return false;
                 initPoint.adjacents.Clear();
                 initPoint.SetDistance(float.MaxValue);
@@ -626,7 +664,6 @@ namespace Agent_Space
                     {
                         if (origins.ContainsKey(triangle))
                             if (origins[triangle].ContainsKey(initTriangle.origin))
-                            // try
                             {
                                 Dictionary<MapNode, MapNode> originsNodes = origins[triangle];
 
@@ -643,24 +680,20 @@ namespace Agent_Space
 
                                 return true;
                             }
-                        // catch
-                        // {
-                        //     Debug.Log("se rompe. Vale la pena??");
-                        // }
                         return false;
                     }
                 }
                 return false;
             }
-            public static void Proccess(MapNode endTriangle, Point endPoint,
-            List<MapNode> nodes, PointNode endPointNode, MapNode initMapNode, PointNode initPointNode)
+            public static void Proccess(MapNode endTriangle, Point endPoint, List<MapNode> nodes,
+            PointNode endPointNode, MapNode initMapNode, PointNode initPointNode, AgentType type)
             {
                 if (!Environment.metaheuristic) return;
                 foreach (Triangle triangle in endTriangle.origin.triangle.trianglesSub)
                 {
                     if (triangle.PointIn(endPoint))
                     {
-                        Merge(triangle, nodes, endPointNode, endTriangle, initPointNode);
+                        Merge(triangle, nodes, endPointNode, endTriangle, initPointNode, type);
                         move.triangle = triangle;
                         triangle.draw(Color.green);
                         return;
@@ -669,12 +702,12 @@ namespace Agent_Space
 
             }
             static void Merge(Triangle triangle, List<MapNode> inNodes,
-            PointNode endPointNode, MapNode endMapNode, PointNode initPointNode)
+            PointNode endPointNode, MapNode endMapNode, PointNode initPointNode, AgentType type)
             {
-                if (origins == null)
-                {
-                    origins = new Dictionary<Triangle, Dictionary<MapNode, MapNode>>();
-                }
+                if (!originsFromType.ContainsKey(type))
+                    originsFromType.Add(type, new Dictionary<Triangle, Dictionary<MapNode, MapNode>>());
+                Dictionary<Triangle, Dictionary<MapNode, MapNode>> origins = originsFromType[type];
+
                 List<MapNode> tempInputNodes = new List<MapNode>();
 
                 MapNode initMapNode = inNodes[inNodes.Count - 1];
@@ -794,7 +827,7 @@ namespace Agent_Space
                                                     if (inNode == initMapNode)                                                           //           
                                                         if (!initPointNode.adjacents.ContainsKey(pointInLocal))                          //
                                                             initPointNode.AddAdjacent(pointInLocal, inNode.MaterialCost(new Agent(1)));  //
-                                                    PointNode.Static.DrawTwoPoints(pointInNode.point, pointInLocal.point, Color.yellow);
+                                                    // PointNode.Static.DrawTwoPoints(pointInNode.point, pointInLocal.point, Color.white);
                                                     pointInLocal.AddTriangle(inNode);
                                                 }
                                     }

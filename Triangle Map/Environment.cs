@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace Agent_Space
 {
+    public enum AgentType
+    {
+        normal,
+        acuatic,
+        fire
+    }
+
     public enum Quality
     {
         low = 0,
@@ -13,9 +20,9 @@ namespace Agent_Space
     public enum Material
     {
         basic = 10,
-        fire = 80,
-        water = 30,
-        hierba = 15,
+        fire = 40,
+        water = 20,
+        hierba = 13,
     }
     public class Environment
     {
@@ -28,20 +35,20 @@ namespace Agent_Space
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 5;
+        public readonly static int trianglePathDilatation = 1;
         /// <summary> Length of view agent detected collisions [default value = 3f] </summary>
         public readonly static float viewLenAgent = 3f;
         /// <summary> 
         ///If sum of radius of two agents * this var is low than distance analize, else no analize [default value = 3f] 
         ///</summary>
         public readonly static float distanceAnalizeCollision = 3f;
-        
+
         /// <summary> 
         /// Freq of review collisions for agents, update frequence = ([freqReview]/[speed/5]) frames 
         /// grosso modo 25-50 frames = 1s, ejemplo: freqReview = 25 con 50 de speed = 2.5 frames 
         /// => 10-20 revisiones por segundo 
         ///</summary>
-        public readonly static int freqReview = 25;
+        public readonly static int freqReview = 10;
         ///<summary> radius* ocupedArea are the ocuped triangles [default value = 2.2f] </summary>
         public readonly static float ocupedArea = 2.5f;
 
@@ -71,12 +78,15 @@ namespace Agent_Space
         public readonly static bool exactCollision = false;
         /// <summary> Detenerse si la proxima posicion es muy alta su distancia [default value: false] </summary>
         public readonly static bool stopOnPath = true;
-        /// <summary> Tolerancia a tomar un camino largo </summary>
-        public readonly static float stopOnPathDistance = 13f;
+        /// <summary> 
+        /// Tolerancia a tomar un camino largo, si hay muchos materiales se recomienda valor alto(ex: 30),
+        /// en caso de haber pocos materiales un valor bajo (ex:10)
+        /// </summary>
+        public readonly static float stopOnPathDistance = 30f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
-        public readonly static int densityVisualPath = 25;
+        public readonly static int densityVisualPath = 10;
 
         /// <summary> Use metaheuristic [default value: true]</summary>
         public readonly static bool metaheuristic = true;
@@ -94,6 +104,7 @@ namespace Agent_Space
         static internal class Interactive
         {
             public static List<Agent> grup = new List<Agent>();
+            public static Dictionary<AgentType, List<Agent>> groupFromType = new Dictionary<AgentType, List<Agent>>();
             public static bool allGroupInMove = true;
             public static int countInStop = 0;
             public static float distanceToStop = 2.3f;

@@ -489,7 +489,7 @@ namespace Point_Map
         }
         void PushToRecently(PointNode node)
         {
-            if (recentlyVisited.Count >= 25)
+            if (recentlyVisited.Count >= 20)
                 recentlyVisited.Dequeue().visitedInPath.Remove(agent);
             if (!currentPoint.visitedInPath.ContainsKey(agent))
                 node.visitedInPath.Add(agent, true);

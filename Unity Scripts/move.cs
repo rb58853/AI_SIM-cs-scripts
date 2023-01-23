@@ -18,8 +18,17 @@ public class move : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            foreach (Triangle_Map.MapNode node in Agent.Metaheuristic.origins[triangle].Keys)
+            foreach (Triangle_Map.MapNode node in
+            Agent.Metaheuristic.originsFromType[AgentType.acuatic][triangle].Keys)
+                node.triangle.draw(Color.cyan);
+
+            foreach (Triangle_Map.MapNode node in
+            Agent.Metaheuristic.originsFromType[AgentType.fire][triangle].Keys)
                 node.triangle.draw(Color.red);
+
+            foreach (Triangle_Map.MapNode node in
+            Agent.Metaheuristic.originsFromType[AgentType.normal][triangle].Keys)
+                node.triangle.draw(Color.black);
         }
 
         if (Input.GetKeyDown(KeyCode.Q))

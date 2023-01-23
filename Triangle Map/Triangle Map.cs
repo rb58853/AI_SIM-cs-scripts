@@ -135,13 +135,13 @@ namespace Triangle_Map
         float MaterialCost()
         {
             if (agent.compatibility.ContainsKey(this.material))
-                return agent.compatibility[this.material];
+                return agent.compatibility[this.material] / 10;
             return (float)this.material / 10f;
         }
         public float MaterialCost(Agent agent)
         {
             if (agent.compatibility.ContainsKey(this.material))
-                return agent.compatibility[this.material];
+                return agent.compatibility[this.material] / 10;
             return (float)this.material / 10f;
         }
     }

@@ -12,10 +12,11 @@ public class NavAgent : MonoBehaviour
     public float radius = 1;
     public Agent agent { get; private set; }
     public int speed = 15;
+    public Agent_Space.AgentType agentType = Agent_Space.AgentType.normal;
     public bool grupalMove = false;
     void Start()
     {
-        agent = new Agent(radius, name);
+        agent = new Agent(radius, name,agentType);
         if (grupalMove)
             agent.setGrup();
 

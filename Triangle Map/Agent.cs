@@ -785,8 +785,8 @@ namespace Agent_Space
                                         {
                                             ///Crear la adyacencia entre triangulos y remover las obsoletas
                                             inputNode.adjacents.Remove(inputNodeAdj);
-                                            // if (!inputNode.adjacents.ContainsKey(localNodeAdj))
-                                            inputNode.adjacents.Add(localNodeAdj, localArist);
+                                            if (!inputNode.adjacents.ContainsKey(localNodeAdj))
+                                                inputNode.adjacents.Add(localNodeAdj, localArist);
 
 
                                             addArists.Add(localArist);

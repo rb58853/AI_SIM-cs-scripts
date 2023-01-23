@@ -35,7 +35,7 @@ namespace Agent_Space
         /// <summary> heuristic weigth for path between triangles </summary>
         public readonly static float heuristicTriangleWeigth = 1f;
         /// <summary> Dilate the path of triangles</summary>
-        public readonly static int trianglePathDilatation = 3;
+        public readonly static int trianglePathDilatation = 2;
         /// <summary> Length of view agent detected collisions [default value = 3f] </summary>
         public readonly static float viewLenAgent = 3f;
         /// <summary> 
@@ -82,7 +82,7 @@ namespace Agent_Space
         /// Tolerancia a tomar un camino largo, si hay muchos materiales se recomienda valor alto(ex: 30),
         /// en caso de haber pocos materiales un valor bajo (ex:10)
         /// </summary>
-        public readonly static float stopOnPathDistance = 30f;
+        public readonly static float stopOnPathDistance = 10f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>

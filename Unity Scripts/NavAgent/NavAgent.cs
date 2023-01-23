@@ -16,7 +16,7 @@ public class NavAgent : MonoBehaviour
     public bool grupalMove = false;
     void Start()
     {
-        agent = new Agent(radius, name,agentType);
+        agent = new Agent(radius, name, agentType);
         if (grupalMove)
             agent.setGrup();
 
@@ -29,9 +29,10 @@ public class NavAgent : MonoBehaviour
     bool inMove = true;
     void Update()
     {
-        if (!agent.inMove && Vector3.Distance(transform.position, agent.position.ToVector3()) < 0.1f)
+        if (!agent.inMove && Vector3.Distance(transform.position, agent.position.ToVector3()) < 0.01f)
         {
             countFrames = 0;
+            transform.position = new Vector3(agent.position.x, transform.position.y, agent.position.z);
             return;
         }
 

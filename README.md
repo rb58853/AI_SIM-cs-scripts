@@ -29,3 +29,6 @@ La toma de decisiones de los agentes se resuelve naturalmente mediante algoritmo
 * Técnicas de percepción, ordenamiento espacial y detección de colisiones
 * Algoritmos para comportamientos grupales de locomoción y comunicación
 * Uso de metaheurísticas para la optimización de los algoritmos anteriores, y como base del movimiento grupal
+
+
+[Ejecutable en Telegram] https://t.me/+Eh4DRMgqdtYzMDlh

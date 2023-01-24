@@ -71,7 +71,10 @@ namespace Triangle_Map
         }
         float Heuristic()
         {
-            return triangle.barycenter.Distance(end);
+            if (agent.type == AgentType.acuatic || agent.type == AgentType.fire)
+                return triangle.barycenter.Distance(end) * 0.6f;
+                
+            return triangle.barycenter.Distance(end) * 1f;
         }
         public void DefaultValues()
         {

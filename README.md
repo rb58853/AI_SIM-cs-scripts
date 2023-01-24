@@ -31,4 +31,4 @@ La toma de decisiones de los agentes se resuelve naturalmente mediante algoritmo
 * Uso de metaheurísticas para la optimización de los algoritmos anteriores, y como base del movimiento grupal
 
 
-[Ejecutable en Telegram] (https://t.me/+Eh4DRMgqdtYzMDlh)
+[Ejecutable en Telegram](https://t.me/+Eh4DRMgqdtYzMDlh)

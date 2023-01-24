@@ -361,12 +361,6 @@ namespace Agent_Space
             float density = Environment.densityPath;
             float mCost = currentNode.MaterialCost(this);
 
-            // PointNode endNode = new PointNode(endPoint, inputArist: false, agent: this);
-            // endNode.AddTriangle(endMapNodeCurrent);
-            // endNode.AddTriangle(triangleList[0]);
-            // endPointNode = endNode;
-
-            // List<PointNode> mapPoints = PointNode.Static.CreatePointMap(endNode, position, this, density, mCost);
             List<PointNode> mapPoints = PointNode.Static.CreatePointMap(this.endPointNode, position, this, density, mCost);
 
             ///MapPoints[0] = initNode
@@ -374,10 +368,7 @@ namespace Agent_Space
             Dijkstra dijkstra = new Dijkstra(mapPoints[0], mapPoints[mapPoints.Count - 1], mapPoints.ToArray());
             List<Node> pointPath = dijkstra.GetPath(false);
 
-            // currentPositionDynamic = mapPoints[mapPoints.Count - 1];///Nuevo
             initMapNodeCurrent.triangle.draw(Color.black);
-            // this.pointPath.PushPointMap(mapPoints[0], mapPoints[mapPoints.Count - 1], initMapNodeCurrent);
-            // currentPosition = mapPoints[mapPoints.Count - 1];
             endPointNode = mapPoints[0];
             this.pointPath.PushPointMap(endPointNode, mapPoints[mapPoints.Count - 1], initMapNodeCurrent);
 
@@ -440,9 +431,10 @@ namespace Agent_Space
         }
         void DynamicSetPoint()
         {
-            // if (nextPosition.point.Distance(position) < 0.01f) return;
             float dist = radius * Environment.viewLenAgent;
             Point pointDest = position + Point.VectorUnit(position, nextPosition.point) * dist;
+            if (Environment.drawView)
+                PointNode.Static.DrawTwoPoints(position, pointDest, Color.red);
 
             Tuple<bool, Agent> collision =
             Collision(position, pointDest, this, ocupedNodes, multArea: 1,

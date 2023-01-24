@@ -234,6 +234,7 @@ namespace Point_Map
         }
 
         Heap q = new Heap();
+        float tolerance = 0;
         public PointNode Pop(bool onCollision = false)
         {
             // if(currentPoint == nextPoint)
@@ -277,6 +278,7 @@ namespace Point_Map
                 empty = true;
                 CleanExtras();
                 nextPoint = currentPoint;
+                tolerance = Agent_Space.Environment.stopOnPathDistance;
                 return currentPoint;
             }
 
@@ -315,11 +317,12 @@ namespace Point_Map
                 }
                 if (Agent_Space.Environment.stopOnPath)
                 {
-                    if (next.value > best.value + Agent_Space.Environment.stopOnPathDistance)
+                    if (next.value > best.value + tolerance)
                     {
                         Stop();
                         nextPoint = currentPoint;
                         CleanExtras();
+                        tolerance += 2;
                         return currentPoint;
                     }
                 }
@@ -351,6 +354,7 @@ namespace Point_Map
                     currentTriangle = triangleTemp;
                     CleanExtras();
                     // Debug.Log(i + ") " + next.value);
+                    tolerance = Agent_Space.Environment.stopOnPathDistance;
                     return next;
                 }
             }
@@ -358,6 +362,7 @@ namespace Point_Map
             Stop();
             CleanExtras();
             nextPoint = currentPoint;
+            tolerance = Agent_Space.Environment.stopOnPathDistance;
             return currentPoint;
         }
         void CleanExtras()
@@ -733,7 +738,10 @@ namespace Point_Map
 
                 while (temp.father.distance >= float.MaxValue - 100)
                 {
-                    temp.father.SetDistance(temp.distance + temp.EuclideanDistance(temp.father as PointNode) * cost);
+                    float min = Math.Min(temp.distance + temp.EuclideanDistance(temp.father as PointNode) * cost,
+                     temp.father.distance);
+
+                    temp.father.SetDistance(min);
                     temp = temp.father as PointNode;
                     if (temp.father == null) break;
                 }

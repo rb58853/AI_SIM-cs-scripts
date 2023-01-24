@@ -41,6 +41,7 @@ public class NavAgent : MonoBehaviour
         if (countFrames <= 0)
         {
             countFrames = 5;
+            transform.position = new Vector3(agent.position.x, transform.position.y, agent.position.z);
             agent.NextMove(speed);
             Vector3 position = new Vector3(agent.position.x,
             transform.position.y + agent.position.ToVector3().y,

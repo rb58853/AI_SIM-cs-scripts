@@ -87,13 +87,13 @@ namespace DijkstraSpace
 
         void Start(bool stop = true)
         {
-
             // DateTime t0 = DateTime.Now;
             initNode.SetDistance(0);
 
             List<Node> nodes = this.nodes.ToList<Node>();
 
-            Heap Q = new Heap(nodes[0]);
+            // Heap Q = new Heap(nodes[0]);
+            Heap Q = new Heap(initNode);
             Stack<Node> A = new Stack<Node>();
 
             foreach (Node node in nodes.GetRange(1, nodes.Count - 1))

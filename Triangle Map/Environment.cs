@@ -37,11 +37,11 @@ namespace Agent_Space
         /// <summary> Dilate the path of triangles</summary>
         public readonly static int trianglePathDilatation = 2;
         /// <summary> Length of view agent detected collisions [default value = 3f] </summary>
-        public readonly static float viewLenAgent = 3f;
+        public readonly static float viewLenAgent = 2f;
         /// <summary> 
         ///If sum of radius of two agents * this var is low than distance analize, else no analize [default value = 3f] 
         ///</summary>
-        public readonly static float distanceAnalizeCollision = 3f;
+        public readonly static float distanceAnalizeCollision = 2f;
 
         /// <summary> 
         /// Freq of review collisions for agents, update frequence = ([freqReview]/[speed/5]) frames 
@@ -82,7 +82,7 @@ namespace Agent_Space
         /// Tolerancia a tomar un camino largo, si hay muchos materiales se recomienda valor alto(ex: 30),
         /// en caso de haber pocos materiales un valor bajo (ex:10)
         /// </summary>
-        public readonly static float stopOnPathDistance = 10f;
+        public readonly static float stopOnPathDistance = 4f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
@@ -100,6 +100,7 @@ namespace Agent_Space
         public readonly static bool drawPaths = false;
         public readonly static bool drawBorder = false;
         public readonly static bool drawAllPossiblePaths = false;
+        public readonly static bool drawView = true;
 
         static internal class Interactive
         {

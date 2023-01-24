@@ -82,7 +82,7 @@ namespace Agent_Space
         /// Tolerancia a tomar un camino largo, si hay muchos materiales se recomienda valor alto(ex: 30),
         /// en caso de haber pocos materiales un valor bajo (ex:10)
         /// </summary>
-        public readonly static float stopOnPathDistance = 4f;
+        public readonly static float stopOnPathDistance = 5f;
 
 
         /// <summary> Densidad del camino que se muestra, mas densidad implica mas precision</summary>
